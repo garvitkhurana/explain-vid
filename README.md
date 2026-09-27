@@ -16,7 +16,7 @@ uv run scripts/check.py       # hard gates
 ```
 
 ## Write a new video
-Add `specs/<name>.json` (scene types: title, pipeline, race, bars, metrics, outro), then:
+Add `specs/<name>.json` (scene types: title, pipeline, readout, race, branch, bars, metrics, outro), then:
 ```bash
 ./scripts/render_all.sh <name>.json
 uv run scripts/check.py <name>.json

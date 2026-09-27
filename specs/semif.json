@@ -23,18 +23,78 @@
     {
       "id": "how",
       "type": "pipeline",
-      "duration_s": 8,
-      "caption": "One forward pass. Read the logits of the declared options. No answer tokens sampled.",
+      "duration_s": 7,
+      "caption": "Options become single-token letters. One forward pass scores them. No answer is generated.",
       "data": {
         "inputs": [
-          "Unstructured state",
-          "Runtime criteria",
-          "Typed options"
+          "State",
+          "Question",
+          "Options → A, B, C"
         ],
-        "model": "4B model",
+        "model": "Qwen3.5-4B",
         "stages": [
-          "Option logits",
+          "A / B / C scores",
           "Probabilities"
+        ]
+      }
+    },
+    {
+      "id": "readout",
+      "type": "readout",
+      "duration_s": 10,
+      "caption": "Keep only the A/B/C scores and softmax them. Every other token is ignored. (Illustrative values.)",
+      "data": {
+        "question": "Which queue should handle this request?",
+        "note": "last position only · no token sampled",
+        "vocab": [
+          {
+            "tok": "The",
+            "logit": 18.6
+          },
+          {
+            "tok": "A",
+            "logit": 25.0,
+            "slot": true
+          },
+          {
+            "tok": "I",
+            "logit": 20.3
+          },
+          {
+            "tok": "B",
+            "logit": 21.9,
+            "slot": true
+          },
+          {
+            "tok": "Account",
+            "logit": 22.4
+          },
+          {
+            "tok": "C",
+            "logit": 21.2,
+            "slot": true
+          },
+          {
+            "tok": "{",
+            "logit": 17.8
+          }
+        ],
+        "slots": [
+          {
+            "letter": "A",
+            "option": "account_access",
+            "p": 0.94
+          },
+          {
+            "letter": "B",
+            "option": "billing",
+            "p": 0.04
+          },
+          {
+            "letter": "C",
+            "option": "sales",
+            "p": 0.02
+          }
         ]
       }
     },
@@ -61,34 +121,38 @@
       }
     },
     {
-      "id": "example",
-      "type": "bars",
-      "duration_s": 6,
-      "caption": "You get a distribution over your options, not a sentence. (Illustrative values.)",
+      "id": "shared",
+      "type": "branch",
+      "duration_s": 10,
+      "caption": "Read the long state once, copy its KV cache, answer all 21 questions as one batch.",
       "data": {
-        "state": "Customer asks to reset a forgotten password; the reset email never arrived.",
-        "question": "Which queue should handle this request?",
-        "options": [
+        "prefix_label": "Shared state, ~8,000 chars",
+        "cache_label": "KV cache",
+        "branches": 21,
+        "branch_label": "21 questions, one batch",
+        "unit": "decisions / s",
+        "rates": [
           {
-            "id": "account_access",
-            "p": 0.94
+            "label": "Fresh scoring",
+            "v": 2.33
           },
           {
-            "id": "billing",
-            "p": 0.04
+            "label": "Serial prefix reuse",
+            "v": 10.75
           },
           {
-            "id": "sales",
-            "p": 0.02
+            "label": "Parallel suffixes",
+            "v": 20.03
           }
-        ]
+        ],
+        "workload": "37 states × 21 questions"
       }
     },
     {
       "id": "numbers",
       "type": "metrics",
       "duration_s": 7,
-      "caption": "Close to the closed service, calibrated, and fast when state is shared.",
+      "caption": "Close to the closed service, calibratable, and portable down to the browser.",
       "data": {
         "cards": [
           {
@@ -102,9 +166,9 @@
             "compare": "temperature scaling"
           },
           {
-            "label": "Decisions / second",
-            "value": "20.03",
-            "compare": "vs 2.33 fresh scoring"
+            "label": "Backends, same prompt",
+            "value": "4",
+            "compare": "Torch · llama.cpp · MLX · WebGPU"
           }
         ]
       }

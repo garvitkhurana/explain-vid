@@ -4,7 +4,7 @@ import {theme} from './theme';
 
 export type Scene = {
   id: string;
-  type: 'title' | 'pipeline' | 'race' | 'bars' | 'metrics' | 'outro';
+  type: 'title' | 'pipeline' | 'readout' | 'race' | 'branch' | 'bars' | 'metrics' | 'outro';
   duration_s: number;
   caption: string;
   data: any;
@@ -185,6 +185,101 @@ const Bars: React.FC<{d: any}> = ({d}) => {
   );
 };
 
+const Readout: React.FC<{d: any}> = ({d}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  const dim = interpolate(t, [2, 2.6], [1, 0.15], clamp);
+  const rowH = 70;
+  return (
+    <AbsoluteFill>
+      <div style={{position: 'absolute', top: 70, width: '100%', textAlign: 'center', fontSize: 36, color: theme.muted, ...useEnter(0)}}>
+        Q: {d.question}
+      </div>
+      <div style={{position: 'absolute', left: 160, top: 170, fontSize: 30, color: theme.fg, fontWeight: 700, ...useEnter(0.1)}}>
+        Next-token scores (whole vocabulary)
+      </div>
+      {d.vocab.map((v: any, i: number) => {
+        const enter = interpolate(t, [0.2 + i * 0.1, 0.6 + i * 0.1], [0, 1], clamp);
+        return (
+          <div key={v.tok} style={{position: 'absolute', left: 160, top: 240 + i * rowH, display: 'flex', alignItems: 'center', gap: 24, opacity: enter * (v.slot ? 1 : dim)}}>
+            <div style={{width: 150, textAlign: 'right', fontFamily: theme.mono, fontSize: 34, color: v.slot && t > 2 ? theme.accent : theme.fg}}>{v.tok}</div>
+            <div style={{width: (v.logit - 15) * 50 * enter, height: 40, borderRadius: 6, background: v.slot && t > 2 ? theme.accent : theme.muted}} />
+            <div style={{fontFamily: theme.mono, fontSize: 28, color: theme.muted}}>{v.logit.toFixed(1)}</div>
+          </div>
+        );
+      })}
+      <div style={{position: 'absolute', left: 160, top: 240 + d.vocab.length * rowH, fontSize: 28, color: theme.muted, opacity: interpolate(t, [1, 1.4], [0, 1], clamp) * dim}}>
+        … every other token in the vocabulary
+      </div>
+      <div style={{position: 'absolute', left: 1000, top: 400, fontSize: 64, color: theme.accent, opacity: interpolate(t, [2.8, 3.2], [0, 1], clamp)}}>→</div>
+      <div style={{position: 'absolute', left: 1100, top: 300, fontSize: 30, color: theme.fg, fontWeight: 700, ...useEnter(3)}}>softmax over A, B, C</div>
+      {d.slots.map((s: any, i: number) => {
+        const grow = interpolate(t, [3.3 + i * 0.12, 4.1 + i * 0.12], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
+        return (
+          <div key={s.letter} style={{position: 'absolute', left: 1100, top: 370 + i * 90, ...useEnter(3.1 + i * 0.1)}}>
+            <div style={{fontFamily: theme.mono, fontSize: 28, color: theme.muted}}>{s.letter} → {s.option}</div>
+            <div style={{display: 'flex', alignItems: 'center', gap: 16, marginTop: 6}}>
+              <div style={{width: Math.max(4, 560 * s.p * grow), height: 36, borderRadius: 6, background: i === 0 ? theme.accent : theme.muted}} />
+              <div style={{fontFamily: theme.mono, fontSize: 30, color: theme.fg}}>{(s.p * grow).toFixed(2)}</div>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{position: 'absolute', left: 1100, top: 680, fontSize: 30, color: theme.warn, ...useEnter(4.6)}}>{d.note}</div>
+    </AbsoluteFill>
+  );
+};
+
+const Branch: React.FC<{d: any}> = ({d}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  const n = d.branches as number;
+  const fill = interpolate(t, [0.3, 1.6], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)});
+  const fan = interpolate(t, [2.2, 3.2], [0, 1], clamp);
+  const lit = t > 3.5;
+  const cache = {x: 860, y: 290, w: 240, h: 120};
+  const strip = {x: 1300, y0: 150, h: 14, gap: 7, w: 460};
+  const maxV = Math.max(...d.rates.map((r: any) => r.v));
+  return (
+    <AbsoluteFill>
+      <div style={{position: 'absolute', left: 160, top: 260, fontSize: 30, color: theme.fg, fontWeight: 700, ...useEnter(0)}}>{d.prefix_label}</div>
+      <div style={{position: 'absolute', left: 160, top: 310, width: 600, height: 80, borderRadius: 10, background: '#2a2e37', overflow: 'hidden'}}>
+        <div style={{width: 600 * fill, height: '100%', background: theme.muted}} />
+      </div>
+      <div style={{position: 'absolute', left: 160, top: 400, fontSize: 26, color: theme.muted, opacity: fill}}>prefilled once</div>
+      <svg width={1920} height={1080} style={{position: 'absolute'}}>
+        <line x1={760} y1={350} x2={760 + (cache.x - 770) * interpolate(t, [1.6, 2], [0, 1], clamp)} y2={350} stroke={theme.muted} strokeWidth={4} />
+        {Array.from({length: n}, (_, i) => {
+          const y = strip.y0 + i * (strip.h + strip.gap) + strip.h / 2;
+          const x1 = cache.x + cache.w, y1 = cache.y + cache.h / 2;
+          return <line key={i} x1={x1} y1={y1} x2={x1 + (strip.x - x1) * fan} y2={y1 + (y - y1) * fan} stroke={lit ? theme.accent : theme.muted} strokeWidth={2} opacity={0.7} />;
+        })}
+      </svg>
+      <div style={{position: 'absolute', left: cache.x, top: cache.y, width: cache.w, height: cache.h, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.panel, border: `3px solid ${theme.accent}`, borderRadius: 16, color: theme.fg, fontSize: 32, fontWeight: 700, ...useEnter(1.8)}}>
+        {d.cache_label}
+      </div>
+      <div style={{position: 'absolute', left: strip.x, top: 95, fontSize: 30, color: theme.fg, fontWeight: 700, ...useEnter(2.2)}}>{d.branch_label}</div>
+      {Array.from({length: n}, (_, i) => (
+        <div key={i} style={{position: 'absolute', left: strip.x, top: strip.y0 + i * (strip.h + strip.gap), width: strip.w, height: strip.h, borderRadius: 4, background: lit ? theme.accent : '#2a2e37', opacity: fan}} />
+      ))}
+      <div style={{position: 'absolute', left: 160, top: 640, fontSize: 30, color: theme.muted, ...useEnter(4.2)}}>{d.unit} · {d.workload}</div>
+      {d.rates.map((r: any, i: number) => {
+        const grow = interpolate(t, [4.4 + i * 0.25, 5.4 + i * 0.25], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
+        const best = r.v === maxV;
+        return (
+          <div key={r.label} style={{position: 'absolute', left: 160, top: 700 + i * 75, display: 'flex', alignItems: 'center', gap: 24, opacity: interpolate(t, [4.3 + i * 0.25, 4.5 + i * 0.25], [0, 1], clamp)}}>
+            <div style={{width: 360, textAlign: 'right', fontSize: 32, color: theme.fg}}>{r.label}</div>
+            <div style={{width: Math.max(4, 1000 * (r.v / maxV) * grow), height: 44, borderRadius: 6, background: best ? theme.accent : theme.muted}} />
+            <div style={{fontFamily: theme.mono, fontSize: 32, color: best ? theme.accent : theme.fg}}>{(r.v * grow).toFixed(2)}</div>
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
 const Metrics: React.FC<{d: any}> = ({d}) => (
   <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 50}}>
     {d.cards.map((c: any, i: number) => (
@@ -209,7 +304,9 @@ export const SceneView: React.FC<{scene: Scene}> = ({scene}) => {
   const body = {
     title: <Title d={d} />,
     pipeline: <Pipeline d={d} />,
+    readout: <Readout d={d} />,
     race: <Race d={d} duration={scene.duration_s} />,
+    branch: <Branch d={d} />,
     bars: <Bars d={d} />,
     metrics: <Metrics d={d} />,
     outro: <Outro d={d} />,

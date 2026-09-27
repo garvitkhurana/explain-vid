@@ -1,16 +1,36 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["meta", "scenes"],
+  "required": [
+    "meta",
+    "scenes"
+  ],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["title", "fps", "size"],
+      "required": [
+        "title",
+        "fps",
+        "size"
+      ],
       "properties": {
-        "title": {"type": "string"},
-        "source": {"type": "string"},
-        "fps": {"const": 30},
-        "size": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2}
+        "title": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "fps": {
+          "const": 30
+        },
+        "size": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
       }
     },
     "scenes": {
@@ -18,14 +38,42 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "type", "duration_s", "caption", "data"],
+        "required": [
+          "id",
+          "type",
+          "duration_s",
+          "caption",
+          "data"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": {"type": "string"},
-          "type": {"enum": ["title", "pipeline", "race", "bars", "metrics", "outro"]},
-          "duration_s": {"type": "number", "minimum": 2, "maximum": 30},
-          "caption": {"type": "string", "maxLength": 120},
-          "data": {"type": "object"}
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "title",
+              "pipeline",
+              "race",
+              "bars",
+              "metrics",
+              "outro",
+              "readout",
+              "branch"
+            ]
+          },
+          "duration_s": {
+            "type": "number",
+            "minimum": 2,
+            "maximum": 30
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "data": {
+            "type": "object"
+          }
         }
       }
     }
