@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Usage: ./scripts/render_all.sh [spec.json]   (default semif.json, looked up in specs/)
-# Render the spec with both stacks, then build a labeled side-by-side comparison.
+# Reference only: render with BOTH stacks + side-by-side. Day-to-day, use scripts/render.sh (Manim).
+# Manim uses THEME=midnight here so the comparison matches the Remotion styling.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SPEC="${1:-semif.json}"
@@ -13,7 +14,7 @@ echo "remotion: $(( $(date +%s) - start ))s"
 
 echo "== Manim"
 start=$(date +%s)
-(cd renderers/manim && SPEC="$SPEC" uv run manim -qh --disable_caching --progress_bar none \
+(cd renderers/manim && SPEC="$SPEC" THEME=midnight uv run manim -qh --disable_caching --progress_bar none \
   -o manim.mp4 --media_dir ../../out/manim_media main.py Explainer 2>/dev/null)
 cp out/manim_media/videos/main/1080p30/manim.mp4 out/manim.mp4
 echo "manim: $(( $(date +%s) - start ))s"

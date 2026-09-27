@@ -31,14 +31,35 @@ try:
 except jsonschema.ValidationError as e:
     gate(False, f"spec schema: {e.message}")
 
-expected = sum(s["duration_s"] for s in spec["scenes"])
+timing_path = ROOT / "out" / "voice" / "timing.json"
+timing = json.loads(timing_path.read_text()) if timing_path.exists() else None
+gate(timing is not None and timing.get("spec") == spec_path.name, "timing.json exists and matches this spec")
+# Narration drives length; fall back to the spec minimums if timing is missing (that gate already failed).
+expected = timing["total"] if timing else sum(s["duration_s"] for s in spec["scenes"])
+
+if timing:
+    long_cues = [c["text"] for sc in timing["scenes"].values() for c in sc["cues"] if len(c["text"]) > 64]
+    gate(not long_cues, f"caption cues <= 64 chars ({len(long_cues)} too long)")
+
+# Jargon rule: an on-screen glossary term needs its plain phrase in narration of the same or an earlier scene.
+said = ""
+unexplained = []
+for sc in spec["scenes"]:
+    said += " " + " ".join(sc["narration"]).lower()
+    shown = json.dumps(sc["data"]).lower()
+    for g in spec["meta"].get("glossary", []):
+        if g["term"].lower() in shown and g["plain"].lower() not in said:
+            unexplained.append(f"{sc['id']}:{g['term']}")
+gate(not unexplained, f"on-screen jargon explained in narration first ({', '.join(unexplained) or 'all ok'})")
 w, h = spec["meta"]["size"]
 fps = spec["meta"]["fps"]
 
-for name in ["remotion", "manim"]:
+# final.mp4 and manim.mp4 are required; remotion.mp4 is checked only if a comparison render produced it.
+for name in ["remotion", "manim", "final"]:
     f = ROOT / "out" / f"{name}.mp4"
     if not f.exists():
-        gate(False, f"{name}: {f.name} missing")
+        if name in ("manim", "final"):
+            gate(False, f"{name}: {f.name} missing")
         continue
     probe = json.loads(subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -53,5 +74,11 @@ for name in ["remotion", "manim"]:
                          "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
     runs = re.findall(r"black_start:\S+ black_end:\S+ black_duration:(\S+)", bd)
     gate(not runs, f"{name}: no black runs >0.5s ({len(runs)} found)")
+
+final = ROOT / "out" / "final.mp4"
+if final.exists() and timing and timing.get("backend") != "none":
+    audio = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "format=duration",
+                            "-of", "csv=p=0", str(final)], capture_output=True, text=True).stdout.strip()
+    gate(bool(audio) and abs(float(audio) - expected) <= 0.3, f"final: narration audio present, {audio or 'none'}s vs {expected:.2f}s")
 
 sys.exit(1 if failures else 0)
