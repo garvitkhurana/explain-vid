@@ -25,5 +25,5 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - 2026-09-27 — Scene steps are paced by narration sentences (`self.beat(step, sentence)`; spec `data.beats` overrides). Front-loaded animations left 9–14 s of static screen per scene.
 - 2026-09-27 — Templates stay generic and data-driven (loop, checklist, fanout, gantt, balance added for agent-unwrapped + Habitat); outputs go to `out/<spec>/` so videos don't collide.
 
-## Session
-See STATUS.md. Hand-spec judgment calls are logged in specs/NOTES.md (future LLM prompt).
+## Notes
+Hand-spec judgment calls are logged in specs/NOTES.md (future LLM prompt).
