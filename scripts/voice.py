@@ -7,7 +7,7 @@
 Usage: uv run scripts/voice.py [spec.json]
 Env:   TTS=say|none   (none = estimate timing from word count, no audio; for fast silent previews)
 
-Writes out/voice/timing.json (read by the Manim renderer), out/voice/narration.wav, out/subtitles.srt.
+Writes out/<spec>/voice/timing.json (read by the Manim renderer), out/<spec>/voice/narration.wav, out/<spec>/subtitles.srt.
 """
 
 import json
@@ -19,7 +19,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "out" / "voice"
 RATE = 48000
 LEAD_S = 0.4      # silence before a scene's first sentence (lets the visuals land first)
 GAP_S = 0.3       # silence between sentences
@@ -59,6 +58,7 @@ def srt_time(t: float) -> str:
 def main() -> None:
     spec_name = sys.argv[1] if len(sys.argv) > 1 else "semif.json"
     spec = json.loads((ROOT / "specs" / spec_name).read_text())
+    OUT = ROOT / "out" / Path(spec_name).stem / "voice"  # one output dir per spec so videos don't overwrite each other
     voice = spec["meta"].get("voice", {})
     backend = os.environ.get("TTS", voice.get("backend", "say"))
     if backend not in ("say", "none"):
@@ -109,7 +109,7 @@ def main() -> None:
         for c in sc["cues"]:
             n += 1
             lines += [str(n), f"{srt_time(sc['start'] + c['start'])} --> {srt_time(sc['start'] + c['end'])}", c["text"], ""]
-    (ROOT / "out" / "subtitles.srt").write_text("\n".join(lines))
+    (OUT.parent / "subtitles.srt").write_text("\n".join(lines))
 
     if backend == "say":
         # One track: every clip delayed to its absolute start, mixed over silence of the full length.

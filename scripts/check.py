@@ -31,7 +31,8 @@ try:
 except jsonschema.ValidationError as e:
     gate(False, f"spec schema: {e.message}")
 
-timing_path = ROOT / "out" / "voice" / "timing.json"
+OUT = ROOT / "out" / spec_path.stem
+timing_path = OUT / "voice" / "timing.json"
 timing = json.loads(timing_path.read_text()) if timing_path.exists() else None
 gate(timing is not None and timing.get("spec") == spec_path.name, "timing.json exists and matches this spec")
 # Narration drives length; fall back to the spec minimums if timing is missing (that gate already failed).
@@ -56,7 +57,7 @@ fps = spec["meta"]["fps"]
 
 # final.mp4 and manim.mp4 are required; remotion.mp4 is checked only if a comparison render produced it.
 for name in ["remotion", "manim", "final"]:
-    f = ROOT / "out" / f"{name}.mp4"
+    f = OUT / f"{name}.mp4"
     if not f.exists():
         if name in ("manim", "final"):
             gate(False, f"{name}: {f.name} missing")
@@ -75,7 +76,7 @@ for name in ["remotion", "manim", "final"]:
     runs = re.findall(r"black_start:\S+ black_end:\S+ black_duration:(\S+)", bd)
     gate(not runs, f"{name}: no black runs >0.5s ({len(runs)} found)")
 
-final = ROOT / "out" / "final.mp4"
+final = OUT / "final.mp4"
 if final.exists() and timing and timing.get("backend") != "none":
     audio = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "format=duration",
                             "-of", "csv=p=0", str(final)], capture_output=True, text=True).stdout.strip()

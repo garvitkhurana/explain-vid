@@ -46,3 +46,17 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
 20. **A title card can't carry an argument.** The problem ("model writes prose → parse → if") moved from the title's
     narration into its own `problem` scene that shows it, then crosses out the writing and parsing.
 21. For the LLM step: output `data.beats` only when a scene's sentences don't follow the template's default order.
+
+## Pass 5 (2026-09-27): two new subjects — agent-unwrapped (repo) and Habitat (OpenAI blog post)
+22. **Pick one running example from the source itself.** agent-unwrapped: its own eval case "calculator for 21 * 2",
+    carried through loop → transcript → evals. The transcript shows the real message shapes (tool result is
+    `{"ok": true, "expression": "21*2", "value": 42.0}`, read from agent/tools.py), not a paraphrase.
+23. **Prose sources need a story spine, not a section-by-section summary.** Habitat post has ~10 topics; the video keeps
+    one arc ("scale 10x/yr by deliberate tradeoffs"): library → service, Python tail latency, LIFO→FIFO, Rust.
+    Cut: constrained NoSQL API, Rockset/CDC, Envoy fan-in. Say what you cut in the spec review, not in the video.
+24. **Illustrative ≠ invented.** Gantt timings and LIFO/FIFO loads are illustrative (labelled on screen); every stated
+    number (70M+, 1B+, 500 PB+, 20M+, 6x, 15x, 95%, 2 engineers, Q2 2026) is quoted from the post.
+25. **Templates generalise when they're data-shaped.** New ones take lists (nodes/messages, rows, services, segments,
+    series), so an LLM fills data, never code. metrics now adapts to 4 cards and has a footnote; pipeline has a head.
+26. **Glyph fallback bites:** Helvetica has no ✓ — draw marks as paths. Check any symbol that isn't ASCII.
+27. **Blog pages may block fetchers (403):** read them in a real browser; keep the text as the fact source.

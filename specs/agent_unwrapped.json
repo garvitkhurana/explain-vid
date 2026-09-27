@@ -1,0 +1,190 @@
+{
+  "meta": {
+    "title": "agent-unwrapped: see the wire",
+    "source": "https://github.com/garvitkhurana/agent-unwrapped",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "backend": "say",
+      "voice": "Samantha",
+      "rate_wpm": 175
+    },
+    "glossary": [
+      {
+        "term": "tool_calls",
+        "plain": "asks for a tool"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "duration_s": 3,
+      "narration": [
+        "agent-unwrapped: see the wire of an AI agent."
+      ],
+      "data": {
+        "title": "agent-unwrapped",
+        "subtitle": "See the wire",
+        "kicker": "messages → tools → agent loop → evals"
+      }
+    },
+    {
+      "id": "frameworks",
+      "type": "pipeline",
+      "duration_s": 6,
+      "narration": [
+        "Agent frameworks can feel like magic.",
+        "LangChain, Strands, LangGraph: underneath, they all run the same small loop.",
+        "Each turn, the model either asks for a tool, or gives a final answer."
+      ],
+      "data": {
+        "head": "Under every framework",
+        "inputs": [
+          "LangChain",
+          "Strands",
+          "LangGraph"
+        ],
+        "model": "the same loop",
+        "stages": [
+          "asks for a tool",
+          "final answer"
+        ]
+      }
+    },
+    {
+      "id": "loop",
+      "type": "loop",
+      "duration_s": 10,
+      "narration": [
+        "Here's the whole agent, with one task: use the calculator for 21 times 2.",
+        "The loop sends the messages to the model.",
+        "Instead of answering, the model asks for a tool: calculator, 21 times 2.",
+        "Your code runs that tool, and appends the result, 42, to the messages.",
+        "Then it loops. This time the model has what it needs, and answers: 42.",
+        "That's it: a while loop, a list of messages, and a few plain functions."
+      ],
+      "data": {
+        "nodes": {
+          "chat": "chat()",
+          "decide": "tool calls?",
+          "run": "run tool",
+          "append": "append result",
+          "final": "final answer"
+        },
+        "messages": [
+          {
+            "role": "system",
+            "text": "Solve the task. Use tools when helpful. Be brief."
+          },
+          {
+            "role": "user",
+            "text": "Use the calculator tool for 21 * 2."
+          },
+          {
+            "role": "assistant",
+            "text": "calculator(expression=\"21*2\")",
+            "code": true
+          },
+          {
+            "role": "tool",
+            "text": "{\"ok\": true, \"expression\": \"21*2\", \"value\": 42.0}",
+            "code": true
+          },
+          {
+            "role": "assistant",
+            "text": "42"
+          }
+        ],
+        "footnote": "agent/loop.py · 127 lines, no framework"
+      }
+    },
+    {
+      "id": "evals",
+      "type": "checklist",
+      "duration_s": 8,
+      "narration": [
+        "But how do you know an agent works? You test it.",
+        "Lesson ten scores the answer: does it contain 42?",
+        "Lesson eleven scores the behaviour too: did it use the calculator, and finish within four model calls?",
+        "Keep the cases in a file, and rerun them whenever you change a prompt or a model."
+      ],
+      "data": {
+        "title": "Did it work?",
+        "rows": [
+          {
+            "label": "Answer contains \"42\"",
+            "tag": "lesson 10 · the answer"
+          },
+          {
+            "label": "Used the calculator",
+            "tag": "lesson 11 · the behaviour"
+          },
+          {
+            "label": "Finished in ≤ 4 model calls",
+            "tag": "lesson 11 · the behaviour"
+          }
+        ],
+        "footer": "evals/agent_cases.jsonl",
+        "beats": {
+          "row2": 2
+        }
+      }
+    },
+    {
+      "id": "curriculum",
+      "type": "metrics",
+      "duration_s": 7,
+      "narration": [
+        "The repo builds this up in thirteen short lessons: first, plain messages and chat.",
+        "Then tools, MCP, and structured output.",
+        "Then the agent loop itself.",
+        "Then evals to measure it. Frameworks come last, as optional sugar."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Foundation",
+            "value": "00–03",
+            "compare": "messages & chat"
+          },
+          {
+            "label": "Capability",
+            "value": "04–08",
+            "compare": "tools, MCP, structured"
+          },
+          {
+            "label": "Agency",
+            "value": "09",
+            "compare": "the agent loop"
+          },
+          {
+            "label": "Measure",
+            "value": "10–11",
+            "compare": "evals"
+          }
+        ],
+        "footnote": "12 · frameworks: optional sugar on the same loop",
+        "beats": {
+          "footnote": 3
+        }
+      }
+    },
+    {
+      "id": "outro",
+      "type": "outro",
+      "duration_s": 4,
+      "narration": [
+        "No framework required. Every lesson is a script you can run."
+      ],
+      "data": {
+        "headline": "Read the wire yourself",
+        "url": "github.com/garvitkhurana/agent-unwrapped"
+      }
+    }
+  ]
+}
