@@ -11,14 +11,14 @@ cd renderers/manim && uv sync && cd ../..
 
 ## Render
 ```bash
-./scripts/render.sh           # out/final.mp4 with narration + out/subtitles.srt (Manim, brutalist)
+./scripts/render.sh           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
 TTS=none ./scripts/render.sh  # silent, timing estimated from word count (fast)
 ./scripts/render_all.sh       # reference: both stacks + out/compare.mp4
 uv run scripts/check.py       # hard gates
 ```
 
 ## Write a new video
-Add `specs/<name>.json` (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, outro).
+Add `specs/<name>.json` (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, loop, checklist, fanout, gantt, balance, outro).
 Each scene has `narration` (spoken sentences; captions and timing come from it) and `duration_s` (minimum length). Then:
 ```bash
 ./scripts/render.sh <name>.json

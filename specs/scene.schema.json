@@ -81,7 +81,12 @@
               "metrics",
               "outro",
               "readout",
-              "branch"
+              "branch",
+              "loop",
+              "checklist",
+              "fanout",
+              "gantt",
+              "balance"
             ]
           },
           "duration_s": {

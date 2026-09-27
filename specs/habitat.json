@@ -1,0 +1,390 @@
+{
+  "meta": {
+    "title": "Habitat: storage for 1B+ ChatGPT users",
+    "source": "https://openai.com/index/scaling-storage-one-billion-users-part-one/",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "backend": "say",
+      "voice": "Samantha",
+      "rate_wpm": 175
+    },
+    "glossary": [
+      {
+        "term": "asyncio",
+        "plain": "one request's code at a time"
+      },
+      {
+        "term": "LIFO",
+        "plain": "most recently"
+      },
+      {
+        "term": "FIFO",
+        "plain": "oldest"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "duration_s": 3,
+      "narration": [
+        "How OpenAI scaled the storage behind ChatGPT, one tradeoff at a time."
+      ],
+      "data": {
+        "title": "Habitat",
+        "subtitle": "Storage for 1B+ ChatGPT users",
+        "kicker": "From OpenAI's engineering blog · part one"
+      }
+    },
+    {
+      "id": "scale",
+      "type": "metrics",
+      "duration_s": 7,
+      "narration": [
+        "Habitat is the storage layer OpenAI's products read from: over seventy million requests a second.",
+        "It serves more than a billion people a week,",
+        "and holds over five hundred petabytes.",
+        "And it had to grow more than ten times a year, three years running."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Requests per second",
+            "value": "70M+",
+            "compare": "almost 40 regions"
+          },
+          {
+            "label": "People each week",
+            "value": "1B+",
+            "compare": "ChatGPT, API, Codex…"
+          },
+          {
+            "label": "Data served",
+            "value": "500 PB+",
+            "compare": "one storage platform"
+          }
+        ],
+        "footnote": "Growth: more than 10× year over year, for three years"
+      }
+    },
+    {
+      "id": "library",
+      "type": "fanout",
+      "duration_s": 10,
+      "narration": [
+        "Habitat started as a Python library, copied into every product that used it.",
+        "Changing it meant rolling a new version out to dozens of services, which took days.",
+        "Then one team rolled back to an old, buggy version, and caused the very outage they were preventing.",
+        "So Habitat became one central service: one place to deploy, secure, and observe."
+      ],
+      "data": {
+        "services": [
+          "ChatGPT",
+          "API",
+          "Codex",
+          "Sign-in",
+          "Settings",
+          "Billing",
+          "Search",
+          "Internal"
+        ],
+        "lib": "habitat lib",
+        "old": "v1",
+        "new": "v2",
+        "rollback": 5,
+        "rollout_label": "rolling out v2, service by service…",
+        "outage_label": "rolled back → outage",
+        "service": "habitat service"
+      }
+    },
+    {
+      "id": "python",
+      "type": "gantt",
+      "duration_s": 10,
+      "narration": [
+        "They kept the service in Python, knowing a rewrite would come later.",
+        "Python's asyncio can wait on many requests at once, but runs one request's code at a time.",
+        "With heavy CPU work, responses already back from the database sit waiting their turn.",
+        "The fix: keep each process to a few requests at once, and run many more processes."
+      ],
+      "data": {
+        "title": "One Python process, one CPU thread (asyncio)",
+        "unit": "illustrative timing",
+        "legend": {
+          "cpu": "Python code running",
+          "io": "waiting on the database",
+          "stall": "response ready, waiting for CPU"
+        },
+        "panels": [
+          {
+            "label": "Light CPU work",
+            "rows": [
+              [
+                [
+                  "cpu",
+                  0,
+                  1
+                ],
+                [
+                  "io",
+                  1,
+                  6
+                ],
+                [
+                  "cpu",
+                  7,
+                  1
+                ]
+              ],
+              [
+                [
+                  "cpu",
+                  1,
+                  1
+                ],
+                [
+                  "io",
+                  2,
+                  6
+                ],
+                [
+                  "cpu",
+                  8,
+                  1
+                ]
+              ],
+              [
+                [
+                  "cpu",
+                  2,
+                  1
+                ],
+                [
+                  "io",
+                  3,
+                  6
+                ],
+                [
+                  "cpu",
+                  9,
+                  1
+                ]
+              ]
+            ]
+          },
+          {
+            "label": "Heavy CPU work",
+            "rows": [
+              [
+                [
+                  "cpu",
+                  0,
+                  4
+                ],
+                [
+                  "io",
+                  4,
+                  6
+                ],
+                [
+                  "stall",
+                  10,
+                  2
+                ],
+                [
+                  "cpu",
+                  12,
+                  4
+                ]
+              ],
+              [
+                [
+                  "cpu",
+                  4,
+                  4
+                ],
+                [
+                  "io",
+                  8,
+                  6
+                ],
+                [
+                  "stall",
+                  14,
+                  2
+                ],
+                [
+                  "cpu",
+                  16,
+                  4
+                ]
+              ],
+              [
+                [
+                  "cpu",
+                  8,
+                  4
+                ],
+                [
+                  "io",
+                  12,
+                  6
+                ],
+                [
+                  "stall",
+                  18,
+                  2
+                ],
+                [
+                  "cpu",
+                  20,
+                  4
+                ]
+              ]
+            ]
+          }
+        ],
+        "footer": "Fix: few requests per process, many more processes"
+      }
+    },
+    {
+      "id": "pool",
+      "type": "balance",
+      "duration_s": 10,
+      "narration": [
+        "Then a strange one: after a traffic burst, a few servers stayed overloaded, and kept getting worse.",
+        "The connection pool reused the most recently returned connection first.",
+        "Slow servers return their connections last, so they kept getting picked, and got slower still.",
+        "Reusing the oldest connection first broke the loop."
+      ],
+      "data": {
+        "servers": [
+          "A",
+          "B",
+          "C (slow)"
+        ],
+        "note": "illustrative load · concurrent requests per server",
+        "panels": [
+          {
+            "label": "LIFO: most recent connection first",
+            "series": [
+              [
+                3,
+                3,
+                2,
+                2,
+                1,
+                1
+              ],
+              [
+                3,
+                3,
+                2,
+                2,
+                1,
+                1
+              ],
+              [
+                3,
+                4,
+                6,
+                7,
+                9,
+                10
+              ]
+            ]
+          },
+          {
+            "label": "FIFO: oldest connection first",
+            "series": [
+              [
+                3,
+                3,
+                3,
+                3,
+                3,
+                3
+              ],
+              [
+                3,
+                3,
+                3,
+                3,
+                3,
+                3
+              ],
+              [
+                3,
+                4,
+                3,
+                3,
+                3,
+                3
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "rust",
+      "type": "metrics",
+      "duration_s": 8,
+      "narration": [
+        "Python carried Habitat to a peak of over twenty million requests a second.",
+        "Then two engineers, working with Codex and GPT five point five, rewrote the service in Rust.",
+        "It's six times more CPU-efficient and fifteen times more memory-efficient,",
+        "and already serves ninety-five percent of production traffic."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Python at its peak",
+            "value": "20M+",
+            "compare": "requests per second"
+          },
+          {
+            "label": "CPU efficiency",
+            "value": "6×",
+            "compare": "Rust vs Python"
+          },
+          {
+            "label": "Memory efficiency",
+            "value": "15×",
+            "compare": "Rust vs Python"
+          },
+          {
+            "label": "Production requests",
+            "value": "95%",
+            "compare": "already on Rust"
+          }
+        ],
+        "footnote": "Rewritten in Q2 2026 by 2 engineers with Codex and GPT-5.5",
+        "beats": {
+          "card0": 0,
+          "footnote": 1,
+          "card1": 2,
+          "card2": 2,
+          "card3": 3
+        }
+      }
+    },
+    {
+      "id": "outro",
+      "type": "outro",
+      "duration_s": 4,
+      "narration": [
+        "Source: OpenAI's engineering blog. Part two covers the storage layer itself."
+      ],
+      "data": {
+        "headline": "Next: the storage layer",
+        "url": "openai.com/index/scaling-storage-one-billion-users-part-one"
+      }
+    }
+  ]
+}
