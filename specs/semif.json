@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "title": "SemIf: decisions without generation",
+    "source": "https://github.com/TheoLeeCJ/SemIf-OpenJev",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "duration_s": 4,
+      "caption": "Most agent decisions are tiny: route this, retry that.",
+      "data": {
+        "title": "SemIf",
+        "subtitle": "Semantic ifs from open models",
+        "kicker": "Why generate text you immediately parse back into an if?"
+      }
+    },
+    {
+      "id": "how",
+      "type": "pipeline",
+      "duration_s": 8,
+      "caption": "One forward pass. Read the logits of the declared options. No answer tokens sampled.",
+      "data": {
+        "inputs": [
+          "Unstructured state",
+          "Runtime criteria",
+          "Typed options"
+        ],
+        "model": "4B model",
+        "stages": [
+          "Option logits",
+          "Probabilities"
+        ]
+      }
+    },
+    {
+      "id": "race",
+      "type": "race",
+      "duration_s": 10,
+      "caption": "Same Qwen3.5-4B, same state, same 21 questions, one RTX 3090.",
+      "data": {
+        "left": {
+          "label": "Generate JSON array",
+          "seconds": 5.332,
+          "tokens": 111
+        },
+        "right": {
+          "label": "Direct typed logits",
+          "seconds": 1.023,
+          "tokens": 0,
+          "decisions": 21
+        },
+        "speedup": "5.21x",
+        "note": "median of 3 runs",
+        "time_scale": 1.1
+      }
+    },
+    {
+      "id": "example",
+      "type": "bars",
+      "duration_s": 6,
+      "caption": "You get a distribution over your options, not a sentence. (Illustrative values.)",
+      "data": {
+        "state": "Customer asks to reset a forgotten password; the reset email never arrived.",
+        "question": "Which queue should handle this request?",
+        "options": [
+          {
+            "id": "account_access",
+            "p": 0.94
+          },
+          {
+            "id": "billing",
+            "p": 0.04
+          },
+          {
+            "id": "sales",
+            "p": 0.02
+          }
+        ]
+      }
+    },
+    {
+      "id": "numbers",
+      "type": "metrics",
+      "duration_s": 7,
+      "caption": "Close to the closed service, calibrated, and fast when state is shared.",
+      "data": {
+        "cards": [
+          {
+            "label": "TypeSafe-subset agreement",
+            "value": "0.845",
+            "compare": "Jev (closed): 0.883"
+          },
+          {
+            "label": "Calibration error (authored)",
+            "value": "0.068 → 0.038",
+            "compare": "temperature scaling"
+          },
+          {
+            "label": "Decisions / second",
+            "value": "20.03",
+            "compare": "vs 2.33 fresh scoring"
+          }
+        ]
+      }
+    },
+    {
+      "id": "outro",
+      "type": "outro",
+      "duration_s": 4,
+      "caption": "No waitlist. Runs in your browser via WebGPU.",
+      "data": {
+        "headline": "Try it in your browser",
+        "url": "github.com/TheoLeeCJ/SemIf-OpenJev"
+      }
+    }
+  ]
+}
