@@ -10,10 +10,10 @@
 - Narration is the single source (audio, caption cues, subtitles, scene length). Scratch voice: macOS `say`.
 - Render: voice → Manim one process per scene in parallel → frame-exact concat → mux. Race scene uses `on_change()`.
 - Stack: Manim + brutalist theme. MLX: useful for a better TTS voice, not for rendering.
-- Git: PR #1 open (architecture-scenes → main). Everything since the PR commit is uncommitted (large diff).
+- Git: PR #1 merged. PR #2 open (architecture-scenes → main) with all narration/pacing/speed work; tree clean.
 
 ## Next action
-User reviews out/final.mp4. Candidates: commit + push to PR #1; MLX TTS voice; Paperclip as video #2.
+User reviews out/final.mp4. Candidates: review/merge PR #2; MLX TTS voice; Paperclip as video #2.
 
 ## Open first
 out/final.mp4, renderers/manim/main.py (beat/span, scene_problem), specs/semif.json
