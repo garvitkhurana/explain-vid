@@ -23,3 +23,26 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
 11. **Merge redundant scenes:** readout ends on the same probabilities as the old bars scene, so bars was dropped.
     Backends became a metrics card instead of its own scene.
 12. **Illustrative logits** (25.0/21.9/21.2) were chosen so softmax reproduces the bars (0.94/0.04/0.02). Caption says illustrative.
+
+## Pass 3 (2026-09-27): narration as the source, explanation over description
+13. **Captions were a second script.** Hand-written captions drifted from what a narrator would say. Now `narration`
+    (sentences) is the only text field; voice.py derives audio, caption cues (≤64 chars, split at commas) and .srt.
+14. **Describe vs explain.** First narration draft restated the visuals ("keeps the A/B/C scores"). Explaining means
+    giving the *why*: intuition (multiple-choice vs essay) → mechanism (scores exist before any word is written)
+    → proof (111 passes vs 1 → 5x). Every concept gets that order.
+15. **Jargon lives on screen, plain words in the voice.** Visuals keep precise terms (logits, KV cache, token);
+    narration says "scores", "notes", "word". Glossary gate: a term may appear on screen only after its plain
+    phrase was spoken in the same or an earlier scene.
+16. **Show the explanation, don't only say it:** race footer now counts passes (111 vs 1), matching the narration.
+17. **Length:** explanatory narration took the video from 52 s to ~94 s at 175 wpm. Title (15 s) is now long for its
+    static visual — next pass: sync markers so narration beats trigger animations.
+
+## Pass 4 (2026-09-27): pace visuals to the voice
+18. **Front-loaded animation + long narration = dead screen.** Scenes animated in their first 1–5 s, then held for
+    9–14 s while the narrator talked. Measured with ffmpeg freezedetect (caption area cropped out).
+19. **One step per sentence.** Each template names its steps; `beat(step, default_sentence, frac)` waits for that
+    sentence to start. Map every sentence to something visible; a sentence with no step ("Those scores are its
+    answer.") is a still screen. Result: longest still stretch 14 s → 4.4 s.
+20. **A title card can't carry an argument.** The problem ("model writes prose → parse → if") moved from the title's
+    narration into its own `problem` scene that shows it, then crosses out the writing and parsing.
+21. For the LLM step: output `data.beats` only when a scene's sentences don't follow the template's default order.

@@ -1,12 +1,13 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, Easing} from 'remotion';
+import {fitText} from '@remotion/layout-utils';
 import {theme} from './theme';
 
 export type Scene = {
   id: string;
   type: 'title' | 'pipeline' | 'readout' | 'race' | 'branch' | 'bars' | 'metrics' | 'outro';
   duration_s: number;
-  caption: string;
+  narration: string[];
   data: any;
 };
 
@@ -280,17 +281,24 @@ const Branch: React.FC<{d: any}> = ({d}) => {
   );
 };
 
-const Metrics: React.FC<{d: any}> = ({d}) => (
-  <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 50}}>
-    {d.cards.map((c: any, i: number) => (
-      <div key={c.label} style={{width: 500, height: 380, background: theme.panel, borderRadius: 24, padding: 40, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', ...useEnter(0.2 + i * 0.35)}}>
-        <div style={{fontSize: 32, color: theme.muted}}>{c.label}</div>
-        <div style={{fontSize: 76, fontWeight: 800, color: theme.accent}}>{c.value}</div>
-        <div style={{fontSize: 30, color: theme.fg}}>{c.compare}</div>
-      </div>
-    ))}
-  </AbsoluteFill>
-);
+// Shrink text to one line inside its container (the browser would otherwise wrap it).
+const fitSize = (text: string, width: number, max: number, fontWeight = '400') =>
+  Math.min(max, fitText({text, withinWidth: width, fontFamily: theme.font, fontWeight}).fontSize);
+
+const Metrics: React.FC<{d: any}> = ({d}) => {
+  const inner = 500 - 2 * 36;
+  return (
+    <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 50}}>
+      {d.cards.map((c: any, i: number) => (
+        <div key={c.label} style={{width: 500, height: 380, background: theme.panel, borderRadius: 24, padding: '44px 36px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', whiteSpace: 'nowrap', ...useEnter(0.2 + i * 0.35)}}>
+          <div style={{fontSize: fitSize(c.label, inner, 32), color: theme.muted}}>{c.label}</div>
+          <div style={{fontSize: fitSize(c.value, inner, 96, '800'), fontWeight: 800, color: theme.accent, lineHeight: 1}}>{c.value}</div>
+          <div style={{fontSize: fitSize(c.compare, inner, 32), color: theme.fg}}>{c.compare}</div>
+        </div>
+      ))}
+    </AbsoluteFill>
+  );
+};
 
 const Outro: React.FC<{d: any}> = ({d}) => (
   <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 40}}>
@@ -314,7 +322,8 @@ export const SceneView: React.FC<{scene: Scene}> = ({scene}) => {
   return (
     <AbsoluteFill style={{background: theme.bg, fontFamily: theme.font}}>
       {body}
-      <Caption text={scene.caption} />
+      {/* Reference renderer: shows the first narration sentence; no audio or cue timing. */}
+      <Caption text={scene.narration[0]} />
     </AbsoluteFill>
   );
 };

@@ -6,14 +6,43 @@
     "size": [
       1920,
       1080
+    ],
+    "voice": {
+      "backend": "say",
+      "voice": "Samantha",
+      "rate_wpm": 175
+    },
+    "glossary": [
+      {
+        "term": "token",
+        "plain": "word"
+      },
+      {
+        "term": "logits",
+        "plain": "scores"
+      },
+      {
+        "term": "softmax",
+        "plain": "probabilities"
+      },
+      {
+        "term": "KV cache",
+        "plain": "notes"
+      },
+      {
+        "term": "prefilled",
+        "plain": "reads it once"
+      }
     ]
   },
   "scenes": [
     {
       "id": "title",
       "type": "title",
-      "duration_s": 4,
-      "caption": "Most agent decisions are tiny: route this, retry that.",
+      "duration_s": 3,
+      "narration": [
+        "SemIf: semantic ifs, from open models."
+      ],
       "data": {
         "title": "SemIf",
         "subtitle": "Semantic ifs from open models",
@@ -21,10 +50,40 @@
       }
     },
     {
+      "id": "problem",
+      "type": "problem",
+      "duration_s": 6,
+      "narration": [
+        "Agents make tons of tiny decisions: which queue gets this ticket, should I retry.",
+        "The usual way is to ask a model, let it write out an answer, then parse that text back into an if.",
+        "SemIf asks: why write anything at all?"
+      ],
+      "data": {
+        "ticket_label": "Ticket #4812",
+        "ticket": [
+          "Customer can't reset their password.",
+          "The reset email never arrived."
+        ],
+        "question": "Which queue should handle this?",
+        "model": "LLM",
+        "answer": [
+          "This sounds like an account access",
+          "problem, so I'd route it to",
+          "account_access."
+        ],
+        "parser": "parse()",
+        "code": "if queue == \"account_access\":"
+      }
+    },
+    {
       "id": "how",
       "type": "pipeline",
       "duration_s": 7,
-      "caption": "Options become single-token letters. One forward pass scores them. No answer is generated.",
+      "narration": [
+        "Think multiple-choice, not essay.",
+        "You give the model the situation, the question, and your options, labelled A, B and C.",
+        "Instead of writing an answer, it just picks a letter."
+      ],
       "data": {
         "inputs": [
           "State",
@@ -42,7 +101,13 @@
       "id": "readout",
       "type": "readout",
       "duration_s": 10,
-      "caption": "Keep only the A/B/C scores and softmax them. Every other token is ignored. (Illustrative values.)",
+      "narration": [
+        "Here's how.",
+        "Before a model writes a single word, it has already scored every possible next word.",
+        "Those scores are its answer.",
+        "SemIf reads only the scores for A, B and C, and turns them into probabilities.",
+        "Account scores high, but it isn't an option, so it's ignored."
+      ],
       "data": {
         "question": "Which queue should handle this request?",
         "note": "last position only · no token sampled",
@@ -102,18 +167,26 @@
       "id": "race",
       "type": "race",
       "duration_s": 10,
-      "caption": "Same Qwen3.5-4B, same state, same 21 questions, one RTX 3090.",
+      "narration": [
+        "Why is that faster?",
+        "Writing happens one word at a time, and every word is another full pass through the model.",
+        "This JSON answer is 111 pieces, so 111 passes.",
+        "Reading the scores takes one.",
+        "Same model, same questions: five times faster."
+      ],
       "data": {
         "left": {
           "label": "Generate JSON array",
           "seconds": 5.332,
-          "tokens": 111
+          "tokens": 111,
+          "passes": 111
         },
         "right": {
           "label": "Direct typed logits",
           "seconds": 1.023,
           "tokens": 0,
-          "decisions": 21
+          "decisions": 21,
+          "passes": 1
         },
         "speedup": "5.21x",
         "note": "median of 3 runs",
@@ -124,7 +197,12 @@
       "id": "shared",
       "type": "branch",
       "duration_s": 10,
-      "caption": "Read the long state once, copy its KV cache, answer all 21 questions as one batch.",
+      "narration": [
+        "Now ask 21 questions about the same long document.",
+        "The slow part is reading the document, so SemIf reads it once and keeps the model's notes on it.",
+        "Each question then only costs its own few words, and all 21 run together.",
+        "Twenty decisions a second, instead of two."
+      ],
       "data": {
         "prefix_label": "Shared state, ~8,000 chars",
         "cache_label": "KV cache",
@@ -152,7 +230,11 @@
       "id": "numbers",
       "type": "metrics",
       "duration_s": 7,
-      "caption": "Close to the closed service, calibratable, and portable down to the browser.",
+      "narration": [
+        "It gets close to the closed service it's modelled on.",
+        "Its confidence can be tuned to match how often it's actually right.",
+        "And it runs on four backends, down to your browser."
+      ],
       "data": {
         "cards": [
           {
@@ -177,7 +259,9 @@
       "id": "outro",
       "type": "outro",
       "duration_s": 4,
-      "caption": "No waitlist. Runs in your browser via WebGPU.",
+      "narration": [
+        "No waitlist. Try it in your browser."
+      ],
       "data": {
         "headline": "Try it in your browser",
         "url": "github.com/TheoLeeCJ/SemIf-OpenJev"
