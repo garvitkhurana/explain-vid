@@ -16,6 +16,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 ## Key decisions
 - 2026-09-27 — Scene spec JSON + fixed template set (title, pipeline, race, bars, metrics, outro). Keeps renders deterministic and LLM output checkable.
 - 2026-09-27 — Bake-off Remotion vs Manim on the same spec before picking one stack. Compare look, authoring effort, render time.
+- 2026-09-27 — Added readout + branch templates for architecture (mechanism) scenes. Explainers must show why, not just inputs/outputs.
 
 ## Session
 See STATUS.md. Hand-spec judgment calls are logged in specs/NOTES.md (future LLM prompt).

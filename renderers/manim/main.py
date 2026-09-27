@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 from manim import (
-    DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Rectangle,
+    DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Line, Rectangle,
     RoundedRectangle, Scene, Text, ValueTracker, VGroup, always_redraw, config, linear, rate_functions,
 )
 
@@ -49,7 +49,7 @@ class Explainer(Scene):
             self.play(*[FadeOut(m) for m in self.mobjects], run_time=0.25)
 
     def caption(self, text):
-        t = txt(text, 34)
+        t = fit(txt(text, 34), 13.4)
         bg = Rectangle(width=t.width + 0.4, height=t.height + 0.3, fill_color="#000000",
                        fill_opacity=0.55, stroke_width=0).move_to(t)
         return VGroup(bg, t).to_edge(DOWN, buff=0.55)
@@ -150,6 +150,76 @@ class Explainer(Scene):
             self.add(label)
             anims += [GrowFromEdge(bar, LEFT), FadeIn(val)]
         self.play(*anims, run_time=0.9)
+
+    def scene_readout(self, d, cap):
+        q = txt(f"Q: {d['question']}", 36, T.MUTED).to_edge(UP, buff=0.45)
+        head = txt("Next-token scores (whole vocabulary)", 30, weight="BOLD").move_to([-7.1 + 160 / PX, 2.55, 0], aligned_edge=LEFT)
+        rows = []
+        for i, v in enumerate(d["vocab"]):
+            y = 1.95 - i * 70 / PX
+            tok = txt(v["tok"], 34, font=T.MONO).move_to([-7.1 + 310 / PX, y, 0], aligned_edge=RIGHT)
+            bar = Rectangle(width=(v["logit"] - 15) * 50 / PX, height=40 / PX, stroke_width=0, fill_color=T.MUTED,
+                            fill_opacity=1).move_to([-7.1 + 335 / PX, y, 0], aligned_edge=LEFT)
+            val = txt(f"{v['logit']:.1f}", 28, T.MUTED, font=T.MONO).next_to(bar, RIGHT, buff=0.15)
+            rows.append((v, VGroup(tok, bar, val)))
+        rest = txt("… every other token in the vocabulary", 28, T.MUTED).move_to(
+            [-7.1 + 160 / PX, 1.95 - len(rows) * 70 / PX, 0], aligned_edge=LEFT)
+        self.play(FadeIn(q), FadeIn(head), FadeIn(cap), run_time=0.3)
+        self.play(*[FadeIn(r, shift=RIGHT * 0.2) for _, r in rows], FadeIn(rest), run_time=0.8)
+        self.wait(0.6)
+        dims = [r.animate.set_opacity(0.15) for v, r in rows if not v.get("slot")] + [rest.animate.set_opacity(0.15)]
+        hl = [r[0].animate.set_color(T.ACCENT) for v, r in rows if v.get("slot")] + \
+             [r[1].animate.set_fill(T.ACCENT) for v, r in rows if v.get("slot")]
+        self.play(*dims, *hl, run_time=0.6)
+        arrow = txt("→", 64, T.ACCENT).move_to([0.3, 0.9, 0])
+        sm = txt("softmax over A, B, C", 30, weight="BOLD").move_to([1.1, 1.95, 0], aligned_edge=LEFT)
+        self.play(FadeIn(arrow), FadeIn(sm), run_time=0.4)
+        anims = []
+        for i, s in enumerate(d["slots"]):
+            y = 1.35 - i * 90 / PX
+            lab = txt(f"{s['letter']} → {s['option']}", 28, T.MUTED, font=T.MONO).move_to([1.1, y, 0], aligned_edge=LEFT)
+            bar = Rectangle(width=max(0.03, 560 * s["p"] / PX), height=36 / PX, stroke_width=0,
+                            fill_color=T.ACCENT if i == 0 else T.MUTED, fill_opacity=1).move_to([1.1, y - 0.33, 0], aligned_edge=LEFT)
+            val = txt(f"{s['p']:.2f}", 30, font=T.MONO).next_to(bar, RIGHT, buff=0.15)
+            self.add(lab)
+            anims += [GrowFromEdge(bar, LEFT), FadeIn(val)]
+        self.play(*anims, run_time=0.9)
+        note = txt(d["note"], 30, T.WARN).move_to([1.1, -1.4, 0], aligned_edge=LEFT)
+        self.play(FadeIn(note), run_time=0.3)
+
+    def scene_branch(self, d, cap):
+        n = d["branches"]
+        left = -7.1 + 160 / PX
+        label = txt(d["prefix_label"], 30, weight="BOLD").move_to([left, 1.55, 0], aligned_edge=LEFT)
+        track = Rectangle(width=600 / PX, height=80 / PX, stroke_width=0, fill_color="#2a2e37", fill_opacity=1).move_to(
+            [left, 1.0, 0], aligned_edge=LEFT)
+        prefill = Rectangle(width=600 / PX, height=80 / PX, stroke_width=0, fill_color=T.MUTED, fill_opacity=1).move_to(track)
+        once = txt("prefilled once", 26, T.MUTED).next_to(track, DOWN, aligned_edge=LEFT, buff=0.12)
+        self.play(FadeIn(label), FadeIn(track), FadeIn(cap), run_time=0.3)
+        self.play(GrowFromEdge(prefill, LEFT), FadeIn(once), run_time=1.2)
+        cache = box(d["cache_label"], highlight=True, w=240, h=120).move_to([0.5, 1.0, 0])
+        self.play(Create(Arrow(track.get_right(), cache.get_left(), color=T.MUTED, buff=0.05, tip_length=0.15)), FadeIn(cache), run_time=0.5)
+        strips = VGroup(*[
+            RoundedRectangle(corner_radius=0.03, width=460 / PX, height=12 / PX, stroke_width=0, fill_color="#2a2e37", fill_opacity=1)
+            for _ in range(n)]).arrange(DOWN, buff=6 / PX).move_to([4.5, 1.15, 0])
+        blabel = txt(d["branch_label"], 30, weight="BOLD").next_to(strips, UP, aligned_edge=LEFT, buff=0.2)
+        lines = VGroup(*[Line(cache.get_right(), s.get_left(), color=T.MUTED, stroke_width=2, stroke_opacity=0.7) for s in strips])
+        self.play(Create(lines), FadeIn(strips), FadeIn(blabel), run_time=1.0)
+        self.play(strips.animate.set_fill(T.ACCENT), lines.animate.set_color(T.ACCENT), run_time=0.3)
+        unit = txt(f"{d['unit']} · {d['workload']}", 30, T.MUTED).move_to([left, -0.85, 0], aligned_edge=LEFT)
+        self.play(FadeIn(unit), run_time=0.3)
+        vmax = max(r["v"] for r in d["rates"])
+        anims = []
+        for i, r in enumerate(d["rates"]):
+            y = -1.35 - i * 0.55
+            best = r["v"] == vmax
+            lab = txt(r["label"], 30).move_to([left + 360 / PX, y, 0], aligned_edge=RIGHT)
+            bar = Rectangle(width=1000 * r["v"] / vmax / PX, height=38 / PX, stroke_width=0,
+                            fill_color=T.ACCENT if best else T.MUTED, fill_opacity=1).move_to([left + 384 / PX, y, 0], aligned_edge=LEFT)
+            val = txt(f"{r['v']:.2f}", 32, T.ACCENT if best else T.FG, font=T.MONO).next_to(bar, RIGHT, buff=0.18)
+            self.add(lab)
+            anims += [GrowFromEdge(bar, LEFT), FadeIn(val)]
+        self.play(*anims, run_time=1.0)
 
     def scene_metrics(self, d, cap):
         cards = VGroup()
