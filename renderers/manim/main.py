@@ -1,7 +1,7 @@
-"""Render specs/<name>.json as one Manim scene. Usage: uv run manim -qh main.py Explainer
+"""Render videos/<video>/spec.json as one Manim scene. Usage: SPEC=<video> uv run manim -qh main.py Explainer
 
-Env: SPEC=<file in specs/>, THEME=<preset in theme.py>, SCENES=<comma-separated scene ids to render only those>.
-Needs out/<spec>/voice/timing.json from scripts/voice.py (scene lengths + caption cues come from the narration).
+Env: SPEC=<video folder name in videos/> (required), THEME=<preset in theme.py>, SCENES=<comma-separated scene ids to render only those>.
+Needs out/<video>/voice/timing.json from scripts/voice.py (scene lengths + caption cues come from the narration).
 """
 
 import json
@@ -17,11 +17,14 @@ from manim import (
 import theme as T
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "specs" / os.environ.get("SPEC", "semif.json")).read_text())
+VIDEO = os.environ.get("SPEC", "")
+if not VIDEO:
+    raise SystemExit("Set SPEC=<video> (a folder in videos/).")
+SPEC = json.loads((ROOT / "videos" / VIDEO / "spec.json").read_text())
 ONLY = {x for x in os.environ.get("SCENES", "").split(",") if x}
-TIMING_PATH = ROOT / "out" / Path(os.environ.get("SPEC", "semif.json")).stem / "voice" / "timing.json"
+TIMING_PATH = ROOT / "out" / VIDEO / "voice" / "timing.json"
 if not TIMING_PATH.exists():
-    raise SystemExit(f"Missing {TIMING_PATH}: run `uv run scripts/voice.py` first (TTS=none for silent timing).")
+    raise SystemExit(f"Missing {TIMING_PATH}: run `uv run scripts/voice.py {VIDEO}` first (TTS=none for silent timing).")
 TIMING = json.loads(TIMING_PATH.read_text())["scenes"]
 
 config.background_color = T.BG

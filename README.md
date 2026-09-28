@@ -11,24 +11,24 @@ cd renderers/manim && uv sync && cd ../..
 
 ## Render
 ```bash
-./scripts/render.sh           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
-TTS=none ./scripts/render.sh  # silent, timing estimated from word count (fast)
-./scripts/render_all.sh       # reference: both stacks + out/compare.mp4
-uv run scripts/check.py       # hard gates
+./scripts/render.sh semif           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
+TTS=none ./scripts/render.sh semif  # silent, timing estimated from word count (fast)
+./scripts/render_all.sh semif       # reference: both stacks + out/compare.mp4
+uv run scripts/check.py semif       # hard gates
 ```
 
 ## Write a new video
-Add `specs/<name>.json` (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, loop, checklist, fanout, gantt, balance, outro).
+Each video is a folder: `videos/<video>/spec.json` is its script (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, loop, checklist, fanout, gantt, balance, outro).
 Each scene has `narration` (spoken sentences; captions and timing come from it) and `duration_s` (minimum length). Then:
 ```bash
-./scripts/render.sh <name>.json
-uv run scripts/check.py <name>.json
+./scripts/render.sh <video>
+uv run scripts/check.py <video>
 ```
 Both renderers read the same file: Remotion via `--props`, Manim via the `SPEC` env var.
 
 ## Tips
 - Manim themes: `THEME=midnight|neon|brutalist|pop` (presets in `renderers/manim/theme.py`).
-  Preview a few scenes fast: `SCENES=title,readout THEME=pop uv run manim -qh main.py Explainer` in `renderers/manim`.
+  Preview a few scenes fast: `SPEC=semif SCENES=title,readout THEME=pop uv run manim -qh main.py Explainer` in `renderers/manim`.
 - `cd renderers/remotion && npm run studio` for a live, scrubbable preview.
 - Manim text doesn't wrap; use `fit()` in `main.py` for anything that might overflow.
 - Animated text: use `on_change(key, build)` (rebuilds only when `key()` changes), never `always_redraw` — per-frame

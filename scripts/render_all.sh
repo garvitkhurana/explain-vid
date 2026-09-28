@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Usage: ./scripts/render_all.sh [spec.json]   (default semif.json, looked up in specs/)
+# Usage: ./scripts/render_all.sh <video>   (renders videos/<video>/spec.json)
 # Reference only: render with BOTH stacks + side-by-side. Day-to-day, use scripts/render.sh (Manim).
 # Manim uses THEME=midnight here so the comparison matches the Remotion styling.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-SPEC="${1:-semif.json}"
+SPEC="${1:?usage: ./scripts/render_all.sh <video>   (a folder in videos/)}"
 mkdir -p out
 
 echo "== Remotion"
 start=$(date +%s)
-(cd renderers/remotion && npx remotion render src/index.ts Explainer ../../out/remotion.mp4 --props="../../specs/$SPEC" --log=error)
+(cd renderers/remotion && npx remotion render src/index.ts Explainer ../../out/remotion.mp4 --props="../../videos/$SPEC/spec.json" --log=error)
 echo "remotion: $(( $(date +%s) - start ))s"
 
 echo "== Manim"
