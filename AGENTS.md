@@ -2,7 +2,7 @@
 Turn software projects into short explainer videos from a JSON scene spec; automate repo → spec → video later.
 
 ## Run
-- Render: `./scripts/render.sh [spec.json]` → `out/<spec>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `THEME=`, `TTS=say|none`, `JOBS=`)
+- Render: `./scripts/render.sh [spec.json]` → `out/<spec>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `THEME=`, `TTS=say|none`, `JOBS=`, `SCENES=` to re-render only changed scenes)
 - Fast preview: `SPEC=x.json SCENES=id,id uv run manim -qh main.py Explainer` in `renderers/manim` (after voice.py)
 - Reference comparison, both stacks: `./scripts/render_all.sh` → `out/{remotion,manim,compare}.mp4`
 - Gates: `uv run scripts/check.py [spec.json]` (checks `out/<spec>/`)
@@ -24,6 +24,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - 2026-09-27 — Narration replaces captions as the spec's text field; TTS timing drives scene length and caption cues. One source keeps audio, captions and subtitles in sync and is what an LLM script step will fill.
 - 2026-09-27 — Scene steps are paced by narration sentences (`self.beat(step, sentence)`; spec `data.beats` overrides). Front-loaded animations left 9–14 s of static screen per scene.
 - 2026-09-27 — Templates stay generic and data-driven (loop, checklist, fanout, gantt, balance added for agent-unwrapped + Habitat); outputs go to `out/<spec>/` so videos don't collide.
+- 2026-09-27 — Figures are data: `flow` scene + deterministic layered layout (`renderers/manim/layout.py`); nodes carry shape + semantic role, steps drive ghost-then-reveal, `figure` (silent) or `narrated` mode. No per-figure code.
 
 ## Notes
 Hand-spec judgment calls are logged in specs/NOTES.md (future LLM prompt).

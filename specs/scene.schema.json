@@ -18,7 +18,27 @@
           "type": "string"
         },
         "source": {
-          "type": "string"
+          "type": "object",
+          "required": [
+            "kind",
+            "url"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "repo",
+                "blog",
+                "paper"
+              ]
+            },
+            "url": {
+              "type": "string"
+            },
+            "credit": {
+              "type": "string"
+            }
+          },
+          "description": "Where the video comes from; drives the standard `source` end card."
         },
         "fps": {
           "const": 30
@@ -86,27 +106,29 @@
               "checklist",
               "fanout",
               "gantt",
-              "balance"
+              "balance",
+              "flow",
+              "source"
             ]
           },
           "duration_s": {
             "type": "number",
             "minimum": 2,
-            "maximum": 30,
-            "description": "Minimum length; the narration audio can make the scene longer."
+            "maximum": 60,
+            "description": "Minimum length; the narration audio can make the scene longer. Silent figure scenes run up to 60 s."
           },
           "data": {
             "type": "object"
           },
           "narration": {
             "type": "array",
-            "minItems": 1,
+            "minItems": 0,
             "items": {
               "type": "string",
               "minLength": 1,
               "maxLength": 160
             },
-            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles."
+            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. May be empty for silent figure-mode scenes."
           }
         }
       }

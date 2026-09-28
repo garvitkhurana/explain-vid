@@ -38,3 +38,36 @@ NAME = os.environ.get("THEME", "brutalist")
 if NAME not in PRESETS:
     raise SystemExit(f"Unknown THEME={NAME!r}; choose from {', '.join(PRESETS)}")
 globals().update({"MONO_WEIGHT": "NORMAL", **PRESETS[NAME]})
+
+
+# ---- Flow figures: colour = concept ------------------------------------------------------------------------------
+# Figures map their own role names (e.g. "action", "state") to these slots in the spec (`data.roles`), so the same
+# concept keeps the same colour across a figure. Each slot: fill, stroke, text. Light and dark variants are picked
+# from the theme's background; text colours are chosen for >= 4.4:1 contrast on their fill.
+_ROLES_LIGHT = {
+    "neutral": ("#ffffff", "#111111", "#111111"),
+    "c1": ("#fbe7a1", "#8a6500", "#111111"),   # yellow
+    "c2": ("#ece0fb", "#6b3fd6", "#111111"),   # violet
+    "c3": ("#d3ecdf", "#1e7a4f", "#111111"),   # green
+    "c4": ("#d9e6f8", "#1f3fd6", "#111111"),   # blue
+    "c5": ("#fde2d2", "#c93a00", "#111111"),   # orange
+}
+_ROLES_DARK = {
+    "neutral": ("#1a1d24", "#8b93a1", "#e8eaed"),
+    "c1": ("#3a3218", "#f2c94c", "#f5f5f5"),
+    "c2": ("#2c2342", "#b99cf7", "#f5f5f5"),
+    "c3": ("#18342a", "#6ee7b7", "#f5f5f5"),
+    "c4": ("#1b2a44", "#7aa7ff", "#f5f5f5"),
+    "c5": ("#3d2418", "#ff9a62", "#f5f5f5"),
+}
+# Packet kinds moving along rails.
+PACKETS = {"request": "c4", "response": "c3", "change": "c2"}
+GHOST = 0.15  # opacity of not-yet-revealed parts of a figure
+
+
+def _is_dark(hex_color: str) -> bool:
+    r, g, b = (int(hex_color.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5
+
+
+ROLES = _ROLES_DARK if _is_dark(BG) else _ROLES_LIGHT  # noqa: F821 (BG comes from the preset above)
