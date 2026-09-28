@@ -37,7 +37,7 @@
       "data": {
         "title": "mlx-voice-clone",
         "subtitle": "Clone your voice, locally",
-        "kicker": "No cloud service \u00b7 no per-use bill \u00b7 just your Mac"
+        "kicker": "No cloud service · no per-use bill · just your Mac"
       }
     },
     {
@@ -195,152 +195,90 @@
     },
     {
       "id": "generate",
-      "type": "flow",
-      "duration_s": 4,
+      "type": "steps",
+      "duration_s": 8,
       "narration": [
-        "Hit generate: it takes your clip, plus exactly what you said.",
-        "Knowing the words already makes it faster.",
-        "It loads the voice model once.",
-        "It splits the script into pieces, so nothing gets cut off.",
-        "Speaks each piece in your voice.",
-        "And joins them end to end into one file."
+        "Here's what happens when you hit generate.",
+        "First, your clip is converted to a standard format, and cached.",
+        "The voice model loads once, and is reused for every piece.",
+        "Your script is split into pieces, at paragraphs and sentences.",
+        "Each piece is spoken in your voice.",
+        "And the pieces are stitched into one audio file."
       ],
       "data": {
-        "roles": {
-          "input": "neutral",
-          "model": "c2",
-          "step": "c4",
-          "output": "c3"
-        },
-        "nodes": [
+        "title": "What happens when you hit generate",
+        "items": [
           {
-            "id": "clip",
-            "label": "Your clip",
-            "role": "input",
-            "sub": "+ exact transcript"
+            "label": "Prepare your clip",
+            "sub": "converted once, then cached",
+            "code": [
+              "\"\"\"Return path to 24kHz mono WAV,",
+              "    converting with ffmpeg if needed."
+            ]
           },
           {
-            "id": "script",
-            "label": "Your script",
-            "role": "input"
+            "label": "Load the model once",
+            "sub": "reused for every piece",
+            "code": [
+              "# Load once so chunked runs",
+              "loaded_model = load_model(model_id)"
+            ]
           },
           {
-            "id": "model",
-            "label": "Load the model",
-            "role": "model",
-            "sub": "once per run"
-          },
-          {
-            "id": "split",
             "label": "Split the script",
-            "role": "step",
-            "sub": "into pieces"
+            "sub": "at paragraphs and sentences",
+            "code": [
+              "chunks = _split_long_text(",
+              "    text, max_chars=cc)"
+            ]
           },
           {
-            "id": "speak",
             "label": "Speak each piece",
-            "role": "step",
-            "sub": "in your voice",
-            "shape": "stack"
+            "sub": "in your voice, one pass each",
+            "art": "wave",
+            "code": [
+              "for i, chunk in enumerate(chunks, start=1):",
+              "    _run(",
+              "        model=loaded_model,",
+              "        text=chunk,",
+              "        ref_audio=ref_wav,"
+            ]
           },
           {
-            "id": "join",
-            "label": "Join",
-            "role": "output",
-            "sub": "one audio file"
+            "label": "Stitch into one file",
+            "sub": "joined end to end",
+            "code": [
+              "path = _concat_wavs(part_paths, merged)",
+              "\"\"\"Concatenate WAV parts losslessly",
+              "via ffmpeg concat demuxer.\"\"\""
+            ]
           }
+        ]
+      }
+    },
+    {
+      "id": "pieces",
+      "type": "chunks",
+      "duration_s": 6,
+      "narration": [
+        "Why pieces? In one pass, the model would cut a long script short.",
+        "So the script is split into pieces, each under a size limit.",
+        "Each piece gets its own pass through the model.",
+        "Then the pieces are joined end to end, into one file."
+      ],
+      "data": {
+        "title": "Long scripts are made in pieces, then stitched",
+        "doc": "your script",
+        "chunks": [
+          4,
+          3,
+          3
         ],
-        "edges": [
-          {
-            "from": "clip",
-            "to": "model"
-          },
-          {
-            "from": "script",
-            "to": "split"
-          },
-          {
-            "from": "model",
-            "to": "speak"
-          },
-          {
-            "from": "split",
-            "to": "speak"
-          },
-          {
-            "from": "speak",
-            "to": "join"
-          }
-        ],
-        "steps": [
-          {
-            "id": "clip",
-            "do": "reveal",
-            "targets": [
-              "clip"
-            ]
-          },
-          {
-            "id": "words",
-            "do": "highlight",
-            "targets": [
-              "clip"
-            ]
-          },
-          {
-            "id": "load",
-            "do": "flow",
-            "path": [
-              "clip",
-              "model"
-            ],
-            "kind": "request"
-          },
-          {
-            "id": "split",
-            "do": "flow",
-            "path": [
-              "script",
-              "split"
-            ],
-            "kind": "change"
-          },
-          {
-            "id": "speak",
-            "do": "reveal",
-            "targets": [
-              "speak"
-            ]
-          },
-          {
-            "id": "pulse",
-            "do": "highlight",
-            "targets": [
-              "speak"
-            ]
-          },
-          {
-            "id": "join",
-            "do": "flow",
-            "path": [
-              "speak",
-              "join"
-            ],
-            "kind": "response"
-          }
-        ],
-        "beats": {
-          "clip": 0,
-          "words": 1,
-          "load": 2,
-          "split": 3,
-          "speak": 4,
-          "pulse": [
-            4,
-            0.5
-          ],
-          "join": 5
-        }
+        "engine": {
+          "label": "Qwen3 TTS",
+          "sub": "one pass per piece"
+        },
+        "output": "one .m4a file"
       }
     },
     {
@@ -380,7 +318,7 @@
             "fields": [
               {
                 "label": "Script",
-                "value": "Hey! I'm Garvit Khurana\u2026"
+                "value": "Hey! I'm Garvit Khurana…"
               },
               {
                 "label": "Quality",

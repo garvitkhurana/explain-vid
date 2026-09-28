@@ -67,7 +67,7 @@ def strings(x):
         yield x
     elif isinstance(x, dict):
         for k, v in x.items():
-            if k not in ("beats", "cmd"):  # commands are grounded verbatim, below
+            if k not in ("beats", "cmd") and not (k == "code" and isinstance(v, list)):  # quoted verbatim, below
                 yield from strings(v)
     elif isinstance(x, list):
         for v in x:
@@ -96,13 +96,15 @@ if facts_path.exists():
                         not any("illustrative" in t.lower() for t in shown):
                     unlabelled.append(f"{sc['id']}:{n}")
     gate(not ungrounded, f"every number traces to facts.json ({', '.join(sorted(set(ungrounded))) or 'all ok'})")
-    # Shell commands are quoted code: they must appear verbatim in a fact (their digits are paths/versions, not claims).
+    # Shell commands and code lines are quoted: they must appear verbatim in a fact (their digits are paths/versions, not claims).
     fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "source")) for f in facts)
     fact_text = fact_text.replace("\\n", "\n")
     def cmds(x):  # every {"cmd": ...} anywhere in a scene's data (commands lines, alternatives terminal panels)
         if isinstance(x, dict):
             if isinstance(x.get("cmd"), str):
                 yield x["cmd"]
+            if isinstance(x.get("code"), list):  # code lines shown in a steps window: quoted source
+                yield from (line.strip() for line in x["code"] if line.strip())
             for v in x.values():
                 yield from cmds(v)
         elif isinstance(x, list):

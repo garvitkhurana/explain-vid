@@ -19,7 +19,8 @@ report what it would need to show. The main session decides whether `template-bu
    problem → mechanism → proof → what you get. List what you cut in your report, not in the video.
    Open on the project's name (repo or post title) on screen; the viewer must know what this is about (#51).
    Pick the template by what the content *is*, not by habit (#52, #56):
-   things moving through steps → `flow` / `pipeline` / `loop`; two options or before/after → `compare` /
+   things moving through steps → `flow` / `pipeline`; anything that repeats → `cycle` (a ring, never an if/then branch); what happens
+   when you run it → `steps` (numbered list + real code); split / process / join → `chunks`; two options or before/after → `compare` /
    `alternatives` / `balance`; a list of properties or checks → `checklist`; a few headline numbers → `metrics`;
    one number vs another → `race` / `bars`; setup or usage → `commands`; timing → `gantt`; one-to-many → `fanout`.
 2. Write for a first-time viewer (#43). Name each tool once and don't explain it. Explain a mechanism only when the

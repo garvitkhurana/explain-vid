@@ -188,181 +188,182 @@
     },
     {
       "id": "loop",
-      "type": "flow",
+      "type": "cycle",
       "duration_s": 12,
       "narration": [
-        "They work in a loop. The post's example: a coding agent fixing a bug.",
+        "At its core, an agent is a loop.",
+        "The post's example: a coding agent fixing a bug.",
         "Reason: the model proposes a code change.",
         "Act: the harness runs it in an isolated sandbox.",
-        "Observe: it feeds the test results back to the model.",
-        "If the tests fail, the model works out why, and tries again.",
-        "That's the ReAct loop, for reasoning and acting. It repeats until the job is done."
+        "Observe: the test results go back to the model.",
+        "Then round again: the model works out what went wrong, and tries a new fix.",
+        "That's the ReAct loop, for reasoning and acting.",
+        "It repeats until the job is done."
       ],
       "data": {
-        "roles": {
-          "input": "c1",
-          "model": "c2",
-          "harness": "c4",
-          "output": "c3"
-        },
-        "panels": [
-          {
-            "id": "react",
-            "label": "ReAct loop",
-            "sub": "reason, act, observe, repeat",
-            "role": "neutral"
-          }
-        ],
+        "title": "An agent is a loop",
         "nodes": [
           {
-            "id": "task",
-            "shape": "stack",
-            "role": "input",
-            "label": "Fix a bug"
-          },
-          {
             "id": "reason",
-            "panel": "react",
-            "shape": "trapezoid",
-            "role": "model",
             "label": "Reason",
             "sub": "model proposes\na code change"
           },
           {
             "id": "act",
-            "panel": "react",
-            "role": "harness",
             "label": "Act",
             "sub": "harness runs it\nin a sandbox"
           },
           {
             "id": "observe",
-            "panel": "react",
-            "role": "harness",
             "label": "Observe",
-            "sub": "test results\nback to the model"
-          },
-          {
-            "id": "done",
-            "role": "output",
-            "label": "Done"
+            "sub": "test results\nback to the model",
+            "edge": "repeat"
           }
         ],
-        "edges": [
-          {
-            "from": "task",
-            "to": "reason"
-          },
-          {
-            "from": "reason",
-            "to": "act"
-          },
-          {
-            "from": "act",
-            "to": "observe"
-          },
-          {
-            "from": "observe",
-            "to": "reason",
-            "style": "dashed",
-            "label": "tests fail: retry"
-          },
-          {
-            "from": "observe",
-            "to": "done"
-          }
-        ],
+        "enter": {
+          "label": "Fix a bug",
+          "to": "reason"
+        },
+        "exit": {
+          "label": "Done",
+          "from": "observe"
+        },
         "steps": [
           {
+            "id": "ring"
+          },
+          {
             "id": "task",
-            "do": "reveal",
-            "targets": [
-              "task"
-            ]
+            "at": "enter"
           },
           {
             "id": "reason",
-            "do": "flow",
-            "path": [
-              "task",
-              "reason"
-            ],
-            "kind": "request"
+            "at": "reason"
           },
           {
             "id": "act",
-            "do": "flow",
-            "path": [
-              "reason",
-              "act"
-            ],
-            "kind": "request"
+            "at": "act"
           },
           {
             "id": "observe",
-            "do": "flow",
-            "path": [
-              "act",
-              "observe"
-            ],
-            "kind": "response"
+            "at": "observe"
           },
           {
-            "id": "retry",
-            "do": "flow",
-            "path": [
-              "observe",
-              "reason"
-            ],
-            "kind": "change"
+            "id": "again",
+            "at": "observe",
+            "lap": true
+          },
+          {
+            "id": "react",
+            "at": "observe",
+            "lap": true
           },
           {
             "id": "done",
-            "do": "flow",
-            "path": [
-              "observe",
-              "done"
-            ],
-            "kind": "response"
+            "at": "exit"
           }
-        ],
-        "beats": {
-          "done": [
-            5,
-            0.5
-          ]
-        }
+        ]
       }
     },
     {
       "id": "parts",
-      "type": "checklist",
+      "type": "cycle",
       "duration_s": 10,
       "narration": [
-        "The post lists eight building blocks a harness needs. They do four jobs.",
-        "Instructions: a standing prompt with its rules, and the tools it may use.",
+        "A harness is that loop, plus knobs to control it.",
+        "The post lists eight building blocks.",
+        "Instructions: a standing prompt with its rules.",
+        "Tools: the actions it may take.",
         "A safe place to act: an isolated sandbox.",
-        "Memory: files that last between sessions, and old context summarized.",
+        "Memory: files that last between sessions.",
+        "And old context, summarized to fit.",
         "Checks: tests after each action, approval before risky steps, and logs."
       ],
       "data": {
-        "title": "Eight building blocks, four jobs",
-        "rows": [
+        "title": "A harness is the loop, plus knobs",
+        "nodes": [
           {
-            "label": "Tell it what to do",
-            "tag": "system prompt \u00b7 tools"
+            "id": "reason",
+            "label": "Reason",
+            "sub": "model proposes\na code change"
           },
           {
-            "label": "Give it a safe place to act",
-            "tag": "sandbox"
+            "id": "act",
+            "label": "Act",
+            "sub": "harness runs it\nin a sandbox"
           },
           {
-            "label": "Let it remember",
-            "tag": "files \u00b7 context compaction"
+            "id": "observe",
+            "label": "Observe",
+            "sub": "test results\nback to the model"
+          }
+        ],
+        "panel": {
+          "title": "knobs: 8 building blocks",
+          "lines": [
+            {
+              "role": "instructions",
+              "text": "system prompt"
+            },
+            {
+              "role": "tools",
+              "text": "tool execution"
+            },
+            {
+              "role": "a safe place to act",
+              "text": "sandbox"
+            },
+            {
+              "role": "memory",
+              "text": "filesystem"
+            },
+            {
+              "role": "context",
+              "text": "context compaction"
+            },
+            {
+              "role": "checks",
+              "text": "tests · guardrails · observability"
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "setup"
           },
           {
-            "label": "Check its work",
-            "tag": "tests \u00b7 guardrails \u00b7 observability"
+            "id": "blocks",
+            "at": "reason"
+          },
+          {
+            "id": "instructions",
+            "at": "reason",
+            "show": 1
+          },
+          {
+            "id": "tools",
+            "at": "act",
+            "show": 2
+          },
+          {
+            "id": "sandbox",
+            "at": "act",
+            "show": 3
+          },
+          {
+            "id": "memory",
+            "at": "reason",
+            "show": 4
+          },
+          {
+            "id": "context",
+            "at": "reason",
+            "show": 5
+          },
+          {
+            "id": "checks",
+            "at": "observe",
+            "show": 6
           }
         ]
       }

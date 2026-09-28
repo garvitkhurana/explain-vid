@@ -254,5 +254,47 @@
     "unit": "-",
     "source": "scripts/qwen3_clone.py:288-299 \"Stats: playback length (how long it sounds): ... Stats: generation time (wall clock on this Mac, model+synth+export): ... not the same as playback length above\"",
     "kind": "measured"
+  },
+  {
+    "id": "code-ensure-wav",
+    "claim": "Code that prepares the reference clip: convert to 24 kHz mono WAV with ffmpeg, cached",
+    "value": "def _ensure_wav(path: Path, *, cache_dir: Path | None) -> Path:\n\"\"\"Return path to 24kHz mono WAV, converting with ffmpeg if needed.",
+    "source": "scripts/qwen3_clone.py:42-43",
+    "kind": "measured"
+  },
+  {
+    "id": "code-load-once",
+    "claim": "Code that loads the voice model once per run",
+    "value": "# Load once so chunked runs do not repeatedly fetch/initialize.\nloaded_model = load_model(model_id)",
+    "source": "scripts/qwen3_clone.py:571-572",
+    "kind": "measured"
+  },
+  {
+    "id": "code-split",
+    "claim": "Code that splits the script into chunks",
+    "value": "chunks = _split_long_text(text, max_chars=cc)",
+    "source": "scripts/qwen3_clone.py:580-580",
+    "kind": "measured"
+  },
+  {
+    "id": "code-chunk-loop",
+    "claim": "Code that speaks each chunk with the loaded model and the reference clip",
+    "value": "for i, chunk in enumerate(chunks, start=1):\npart_prefix = f\"{file_prefix}_part{i:02d}\"\nif not args.quiet:\nprint(f\"Generating chunk {i}/{len(chunks)}...\")\npart_paths.append(\n_run(\nmodel=loaded_model,\ntext=chunk,\nref_audio=ref_wav,\nref_text=ref_text,\noutput_dir=args.output_dir,",
+    "source": "scripts/qwen3_clone.py:600-610",
+    "kind": "measured"
+  },
+  {
+    "id": "code-concat",
+    "claim": "Code that joins the chunk WAVs end to end",
+    "value": "path = _concat_wavs(part_paths, merged)",
+    "source": "scripts/qwen3_clone.py:621-621",
+    "kind": "measured"
+  },
+  {
+    "id": "code-concat-doc",
+    "claim": "Docstring of the join step",
+    "value": "\"\"\"Concatenate WAV parts losslessly via ffmpeg concat demuxer.\"\"\"",
+    "source": "scripts/qwen3_clone.py:361-361",
+    "kind": "measured"
   }
 ]

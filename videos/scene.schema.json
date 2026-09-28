@@ -102,7 +102,7 @@
               "outro",
               "readout",
               "branch",
-              "loop",
+              "cycle",
               "checklist",
               "fanout",
               "gantt",
@@ -111,7 +111,9 @@
               "commands",
               "alternatives",
               "flow",
-              "source"
+              "source",
+              "steps",
+              "chunks"
             ]
           },
           "duration_s": {
@@ -497,6 +499,298 @@
                     "workload",
                     "rates"
                   ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "cycle"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "nodes",
+                    "steps"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "subtitle": {
+                      "type": "string"
+                    },
+                    "nodes": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 6,
+                      "description": "Ring nodes, clockwise from the top; the last one's arrow returns to the first.",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "sub": {
+                            "type": "string"
+                          },
+                          "edge": {
+                            "type": "string",
+                            "description": "Label on the arrow leaving this node."
+                          }
+                        }
+                      }
+                    },
+                    "enter": {
+                      "type": "object",
+                      "required": [
+                        "label"
+                      ],
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "sub": {
+                          "type": "string"
+                        },
+                        "to": {
+                          "type": "string"
+                        },
+                        "side": {
+                          "enum": [
+                            "left",
+                            "right",
+                            "above",
+                            "below"
+                          ]
+                        }
+                      }
+                    },
+                    "exit": {
+                      "type": "object",
+                      "required": [
+                        "label",
+                        "from"
+                      ],
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "sub": {
+                          "type": "string"
+                        },
+                        "from": {
+                          "type": "string"
+                        },
+                        "edge": {
+                          "type": "string"
+                        },
+                        "side": {
+                          "enum": [
+                            "left",
+                            "right",
+                            "above",
+                            "below"
+                          ]
+                        }
+                      }
+                    },
+                    "panel": {
+                      "type": "object",
+                      "required": [
+                        "title",
+                        "lines"
+                      ],
+                      "description": "Side panel of lines revealed by steps' `show` (e.g. a message list).",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string"
+                        },
+                        "lines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "text"
+                            ],
+                            "properties": {
+                              "role": {
+                                "type": "string"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "code": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "steps": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Step i lands on sentence i unless beats override. `at`: node id, 'enter' or 'exit' (the marker travels there round the ring; `lap` goes once round). `show`: panel lines visible after this step.",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "at": {
+                            "type": "string"
+                          },
+                          "show": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "lap": {
+                            "type": "boolean",
+                            "description": "With `at` on the node the marker is already on: go once round the ring."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "steps"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Headline (step `title`, sentence 0); item i then lands on sentence i + 1."
+                    },
+                    "subtitle": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 7,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "label"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "sub": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Real source lines shown in the code window; each must appear verbatim in facts.json."
+                          },
+                          "art": {
+                            "enum": [
+                              "wave"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "chunks"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "title",
+                    "doc",
+                    "chunks",
+                    "engine",
+                    "output"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "doc": {
+                      "type": "string",
+                      "description": "Label on the document."
+                    },
+                    "chunks": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 5,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 6
+                      },
+                      "description": "Text lines drawn per chunk (geometry only)."
+                    },
+                    "engine": {
+                      "type": "object",
+                      "required": [
+                        "label"
+                      ],
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "sub": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "output": {
+                      "type": "string"
+                    },
+                    "footnote": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
