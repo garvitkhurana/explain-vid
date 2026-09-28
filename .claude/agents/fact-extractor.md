@@ -33,3 +33,5 @@ and pass you the text. Never paraphrase from memory.
 ## Report
 Keep it short: the number of facts; the 3 to 5 strongest facts for a story (problem, mechanism, proof); anything ambiguous
 or contradictory in the source; anything you could not read.
+
+Final report ≤ 15 lines: what changed (files), gate results, blockers. No narration of steps; put details in a scratchpad file and give its path.

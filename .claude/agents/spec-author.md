@@ -47,3 +47,5 @@ uv run scripts/check.py <video>
 ```
 Fix every gate that fails because of the spec. Report: the story spine in one line per scene, what you cut, the gate results,
 and any gate you couldn't fix, with the reason.
+
+Final report ≤ 15 lines: what changed (files), gate results, blockers. No narration of steps; put details in a scratchpad file and give its path.

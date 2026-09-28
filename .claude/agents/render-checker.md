@@ -22,3 +22,5 @@ If the render fails, report the failing scene and the last 20 lines of `out/<vid
   - a number that's correct in the source but missing from facts.json → `fact-extractor`
   - a scene render crash, wrong size or fps, black frames → `template-builder`
 Don't judge how the video looks; gates are the only verdict you give.
+
+Final report ≤ 15 lines: what changed (files), gate results, blockers. No narration of steps; put details in a scratchpad file and give its path.

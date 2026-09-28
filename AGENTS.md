@@ -13,6 +13,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - Hard gates are code (`scripts/check.py`), never model judgment. Every number on screen must trace to `facts.json` (grounding gate).
 - Narration is the single source: audio, on-screen caption cues, subtitles and scene length all derive from `narration`.
 - Scripts explain, not just describe: intuition → mechanism → proof per concept; on-screen jargon needs its plain phrase said first (glossary gate).
+- Subagents only when the user asks, at most 2 at once; prefer inline work for spec edits and single-scene fixes.
 - Non-goals now: production TTS voice (scratch `say` only), Blender, publishing, agents writing templates (template-builder is manual).
 
 ## Key decisions
