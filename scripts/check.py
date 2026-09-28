@@ -2,7 +2,9 @@
 # requires-python = ">=3.12"
 # dependencies = ["jsonschema>=4"]
 # ///
-"""Hard gates for rendered explainers. Exit 1 on any failure. Usage: uv run scripts/check.py <video>"""
+"""Hard gates for one explainer. Exit 1 on any failure. Usage: uv run scripts/check.py <video>
+
+Spec gates (schema, structure, words, grounding) need only video-specs/<video>/; render gates need out/<video>/."""
 
 import json
 import re
@@ -14,12 +16,25 @@ import jsonschema
 
 ROOT = Path(__file__).resolve().parents[1]
 if len(sys.argv) != 2:
-    sys.exit("Usage: uv run scripts/check.py <video>   (a folder in videos/)")
+    sys.exit("Usage: uv run scripts/check.py <video>   (a folder in video-specs/)")
 VIDEO = sys.argv[1]
-spec_path = ROOT / "videos" / VIDEO / "spec.json"
-spec = json.loads(spec_path.read_text())
-schema = json.loads((ROOT / "videos" / "scene.schema.json").read_text())
+SPEC_DIR = ROOT / "video-specs" / VIDEO
+OUT = ROOT / "out" / VIDEO
+spec = json.loads((SPEC_DIR / "spec.json").read_text())
+facts = json.loads((SPEC_DIR / "facts.json").read_text())
+scenes = spec["scenes"]
 failures = []
+
+# The arc is picked by what the content is, not where it came from (a blog can describe a tool, a repo can hold a
+# result). Every scene except the closing card has a role from its arc; all of them must appear.
+ARCS = {
+    "tool": ["hook", "how", "why", "use"],          # something you can run: what it does → how → why → how you use it
+    "concept": ["hook", "how", "why", "takeaway"],  # an idea: what it is → how it works → why it matters → the point
+    "result": ["hook", "problem", "how", "proof"],  # a finding: the problem → the method → the evidence
+}
+MAX_CUE = 64       # caption characters per cue (voice.py splits to this)
+MAX_STILL_S = 4.5  # user flagged a ~5 s screen with only a title and voice as "nothing comes up"
+REPEAT = 0.6       # share of a closing sentence's words already said in the opening that counts as a repeat
 
 
 def gate(ok, msg):
@@ -28,145 +43,147 @@ def gate(ok, msg):
         failures.append(msg)
 
 
+def listed(items, ok="all ok"):
+    return ", ".join(items) or ok
+
+
+# ---- spec ------------------------------------------------------------------------------------------------------
 try:
-    jsonschema.validate(spec, schema)
+    jsonschema.validate(spec, json.loads((ROOT / "video-specs" / "scene.schema.json").read_text()))
     gate(True, "spec validates against schema")
 except jsonschema.ValidationError as e:
     gate(False, f"spec schema: {e.message}")
 
-OUT = ROOT / "out" / VIDEO
-timing_path = OUT / "voice" / "timing.json"
-timing = json.loads(timing_path.read_text()) if timing_path.exists() else None
-gate(timing is not None and timing.get("video") == VIDEO, "timing.json exists and matches this video")
-# Narration drives length; fall back to the spec minimums if timing is missing (that gate already failed).
-expected = timing["total"] if timing else sum(s["duration_s"] for s in spec["scenes"])
+arc = ARCS.get(spec["meta"].get("arc"), [])
+body = [s for s in scenes if s["type"] != "source"]
+roles = [s.get("role") for s in body]
+gate(bool(arc) and all(r in arc for r in roles), f"every scene has a role from its arc {arc} ({listed(s['id'] for s in body if s.get('role') not in arc)})")
+gate(set(arc) <= set(roles), f"arc covers all its parts (missing: {listed(sorted(set(arc) - set(roles)), 'none')})")
+gate(scenes[0]["type"] == "title" and scenes[0].get("role") == "hook", "opens on a title scene (the hook)")
+gate(scenes[-1]["type"] == "source" and len(scenes) - len(body) == 1, "ends on one source card")
+# The card is the only call to action; a scene of its own that says "clone the repo" is a second ending.
+url = spec["meta"]["source"]["url"].rstrip("/")
+cta = [s["id"] for s in body if "clone the repo" in " ".join(s["narration"]).lower() or url in json.dumps(s["data"])]
+gate(not cta, f"only the source card sends viewers to the source ({listed(cta)})")
 
-if timing:
-    long_cues = [c["text"] for sc in timing["scenes"].values() for c in sc["cues"] if len(c["text"]) > 64]
-    gate(not long_cues, f"caption cues <= 64 chars ({len(long_cues)} too long)")
 
-# Jargon rule: an on-screen glossary term needs its plain phrase in narration of the same or an earlier scene.
-said = ""
-unexplained = []
-for sc in spec["scenes"]:
-    said += " " + " ".join(sc["narration"]).lower()
-    shown = json.dumps(sc["data"]).lower()
-    for g in spec["meta"].get("glossary", []):
-        if g["term"].lower() in shown and g["plain"].lower() not in said:
-            unexplained.append(f"{sc['id']}:{g['term']}")
-gate(not unexplained, f"on-screen jargon explained in narration first ({', '.join(unexplained) or 'all ok'})")
-# Grounding: every number shown on screen (strings in data) or written as digits in narration must match a fact in
-# videos/<video>/facts.json. Numeric data fields are chart geometry, not stated claims. Illustrative facts need the
-# word "illustrative" on screen in the scene that uses them. Spelled-out narration numbers are not checked yet.
-# Digits glued to a word or a dot (role colour c1, Qwen3, python3.12) are names, not stated numbers.
+def words(text):
+    return {w for w in re.findall(r"[a-z']+", text.lower()) if len(w) > 3}
+
+
+opening = words(" ".join(scenes[0]["narration"]))
+repeats = [s for s in body[-1]["narration"] if words(s) and len(words(s) & opening) / len(words(s)) >= REPEAT]
+gate(not repeats, f"closing scene doesn't restate the opening ({listed(repeats)})")
+
+# ---- words -----------------------------------------------------------------------------------------------------
+# Jargon: an on-screen glossary term needs its plain phrase said in the same or an earlier scene.
+said, unexplained = "", []
+for s in scenes:
+    said += " " + " ".join(s["narration"]).lower()
+    shown = json.dumps(s["data"]).lower()
+    unexplained += [f"{s['id']}:{g['term']}" for g in spec["meta"].get("glossary", [])
+                    if g["term"].lower() in shown and g["plain"].lower() not in said]
+gate(not unexplained, f"on-screen jargon explained in narration first ({listed(unexplained)})")
+
+# ---- grounding against facts.json ------------------------------------------------------------------------------
+# Every number on screen or written as digits in narration must match a fact's value. Numeric data fields are
+# geometry, not claims. Digits glued to a word or a dot (role colour c1, Qwen3, python3.12) are names.
 NUM = re.compile(r"(?<![\w.])\d+(?:\.\d+)?")
+bad = [f.get("id", "?") for f in facts if not all(f.get(k) for k in ("id", "value", "source", "kind"))
+       or f["kind"] not in ("measured", "illustrative")]
+gate(not bad, f"facts.json entries have id, value, source, kind ({listed(bad)})")
 
 
 def strings(x):
+    """On-screen text: every string in a scene's data except beats and quoted commands/code (checked verbatim)."""
     if isinstance(x, str):
         yield x
     elif isinstance(x, dict):
         for k, v in x.items():
-            if k not in ("beats", "cmd") and not (k == "code" and isinstance(v, list)):  # quoted verbatim, below
+            if k not in ("beats", "cmd", "code"):
                 yield from strings(v)
     elif isinstance(x, list):
         for v in x:
             yield from strings(v)
 
 
-facts_path = spec_path.parent / "facts.json"
-if facts_path.exists():
-    facts = json.loads(facts_path.read_text())
-    bad = [f.get("id", "?") for f in facts if not all(f.get(k) for k in ("id", "value", "source", "kind"))
-           or f["kind"] not in ("measured", "illustrative")]
-    gate(not bad, f"facts.json entries have id, value, source, kind ({', '.join(bad) or 'all ok'})")
-    by_num = {}
-    for f in facts:
-        for n in NUM.findall(str(f.get("value", "")).replace(",", "")):
-            by_num.setdefault(float(n), []).append(f)
-    ungrounded, unlabelled = [], []
-    for sc in spec["scenes"]:
-        shown = list(strings(sc["data"]))
-        for text in shown + [s for s in sc["narration"]]:
-            for n in NUM.findall(text.replace(",", "")):
-                matches = by_num.get(float(n))
-                if not matches:
-                    ungrounded.append(f"{sc['id']}:{n}")
-                elif all(f["kind"] == "illustrative" for f in matches) and \
-                        not any("illustrative" in t.lower() for t in shown):
-                    unlabelled.append(f"{sc['id']}:{n}")
-    gate(not ungrounded, f"every number traces to facts.json ({', '.join(sorted(set(ungrounded))) or 'all ok'})")
-    # Shell commands and code lines are quoted: they must appear verbatim in a fact (their digits are paths/versions, not claims).
-    fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "source")) for f in facts)
-    fact_text = fact_text.replace("\\n", "\n")
-    def cmds(x):  # every {"cmd": ...} anywhere in a scene's data (commands lines, alternatives terminal panels)
-        if isinstance(x, dict):
-            if isinstance(x.get("cmd"), str):
-                yield x["cmd"]
-            if isinstance(x.get("code"), list):  # code lines shown in a steps window: quoted source
-                yield from (line.strip() for line in x["code"] if line.strip())
-            for v in x.values():
-                yield from cmds(v)
-        elif isinstance(x, list):
-            for v in x:
-                yield from cmds(v)
-    unquoted = [f"{sc['id']}:{c}" for sc in spec["scenes"] for c in cmds(sc["data"]) if c not in fact_text]
-    gate(not unquoted, f"commands appear verbatim in facts.json ({', '.join(unquoted) or 'all ok'})")
-    gate(not unlabelled, f"illustrative numbers labelled on screen ({', '.join(sorted(set(unlabelled))) or 'all ok'})")
-else:
-    print(f"SKIP grounding: no {facts_path.relative_to(ROOT)}")
+def quoted(x):
+    """Shell commands and code lines shown on screen: they must appear verbatim in a fact."""
+    if isinstance(x, dict):
+        if isinstance(x.get("cmd"), str):
+            yield x["cmd"]
+        if isinstance(x.get("code"), list):
+            yield from (line.strip() for line in x["code"] if line.strip())
+        for v in x.values():
+            yield from quoted(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from quoted(v)
 
-w, h = spec["meta"]["size"]
-fps = spec["meta"]["fps"]
 
-for name in ["manim", "final"]:
-    f = OUT / f"{name}.mp4"
-    if not f.exists():
-        gate(False, f"{name}: {f.name} missing")
-        continue
-    probe = json.loads(subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-         "stream=width,height,r_frame_rate:format=duration", "-of", "json", str(f)],
-        capture_output=True, text=True, check=True).stdout)
-    st, dur = probe["streams"][0], float(probe["format"]["duration"])
-    gate(abs(dur - expected) <= 0.2, f"{name}: duration {dur:.2f}s vs spec {expected:.2f}s")
-    gate((st["width"], st["height"]) == (w, h), f"{name}: size {st['width']}x{st['height']}")
-    gate(st["r_frame_rate"] == f"{fps}/1", f"{name}: fps {st['r_frame_rate']}")
-    # Background is near-black by design, so only flag fully black stretches (pixel threshold 0.02).
-    bd = subprocess.run(["ffmpeg", "-v", "info", "-i", str(f), "-vf", "blackdetect=d=0.5:pix_th=0.02",
-                         "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
-    runs = re.findall(r"black_start:\S+ black_end:\S+ black_duration:(\S+)", bd)
-    gate(not runs, f"{name}: no black runs >0.5s ({len(runs)} found)")
+by_num = {}
+for f in facts:
+    for n in NUM.findall(str(f.get("value", "")).replace(",", "")):
+        by_num.setdefault(float(n), []).append(f)
+ungrounded, unlabelled = [], []
+for s in scenes:
+    shown = list(strings(s["data"]))
+    for text in shown + s["narration"]:
+        for n in NUM.findall(text.replace(",", "")):
+            matches = by_num.get(float(n))
+            if not matches:
+                ungrounded.append(f"{s['id']}:{n}")
+            elif all(f["kind"] == "illustrative" for f in matches) and not any("illustrative" in t.lower() for t in shown):
+                unlabelled.append(f"{s['id']}:{n}")
+gate(not ungrounded, f"every number traces to facts.json ({listed(sorted(set(ungrounded)))})")
+gate(not unlabelled, f"illustrative numbers labelled on screen ({listed(sorted(set(unlabelled)))})")
+fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "source")) for f in facts).replace("\\n", "\n")
+unquoted = [f"{s['id']}:{c}" for s in scenes for c in quoted(s["data"]) if c not in fact_text]
+gate(not unquoted, f"commands and code appear verbatim in facts.json ({listed(unquoted)})")
 
-# Per-scene frame counts: a scene that overruns its narration shifts every later caption.
-if timing:
-    wrong = []
-    for sid, sc in timing["scenes"].items():
-        f = OUT / "scenes" / sid / "videos" / "main" / "1080p30" / f"{sid}.mp4"
-        if f.exists():
-            n = int(subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries",
-                                    "stream=nb_read_packets", "-of", "csv=p=0", str(f)], capture_output=True, text=True).stdout or 0)
-            if n != sc["frames"]:
-                wrong.append(f"{sid} {n}/{sc['frames']}")
-    gate(not wrong, f"scene frame counts match narration timing ({', '.join(wrong) or 'all exact'})")
+# ---- render ----------------------------------------------------------------------------------------------------
+timing_path, final = OUT / "voice" / "timing.json", OUT / "final.mp4"
+if not (timing_path.exists() and final.exists()):
+    print(f"SKIP render gates: no render in {OUT.relative_to(ROOT)} (run ./scripts/render.sh {VIDEO})")
+    sys.exit(1 if failures else 0)
+timing = json.loads(timing_path.read_text())
+gate(timing.get("video") == VIDEO and list(timing["scenes"]) == [s["id"] for s in scenes],
+     "timing.json matches this spec's scenes (re-run voice.py after editing scenes)")
+long_cues = [c["text"] for sc in timing["scenes"].values() for c in sc["cues"] if len(c["text"]) > MAX_CUE]
+gate(not long_cues, f"caption cues <= {MAX_CUE} chars ({listed(long_cues)})")
 
-# Still screen: the longest stretch with no visual change, caption band cropped out (captions change on their own).
-# Narrated videos only: silent figure-mode specs hold each step for a fixed `hold` on purpose.
-MAX_STILL_S = 4.5  # user flagged a ~5 s screen with only a title and voice as "nothing comes up"
-manim = OUT / "manim.mp4"
-narrated = any(s["narration"] for s in spec["scenes"])
-if not narrated:
-    print("SKIP still screen: no narration (figure mode)")
-elif manim.exists():
-    fd = subprocess.run(["ffmpeg", "-v", "info", "-i", str(manim), "-vf", "crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
-                         "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
-    still = max([float(x) for x in re.findall(r"freeze_duration: (\S+)", fd)] or [0.0])
-    gate(still <= MAX_STILL_S, f"manim: longest still screen {still:.1f}s <= {MAX_STILL_S:.1f}s")
 
-final = OUT / "final.mp4"
-if final.exists() and timing and timing.get("backend") != "none":
-    audio = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "format=duration",
-                            "-of", "csv=p=0", str(final)], capture_output=True, text=True).stdout.strip()
-    gate(bool(audio) and abs(float(audio) - expected) <= 0.3, f"final: narration audio present, {audio or 'none'}s vs {expected:.2f}s")
+def probe(path, entries, stream="v:0"):
+    return subprocess.run(["ffprobe", "-v", "error", "-select_streams", stream, "-show_entries", entries, "-of", "json",
+                           str(path)], capture_output=True, text=True, check=True).stdout
+
+
+expected, (w, h), fps = timing["total"], spec["meta"]["size"], spec["meta"]["fps"]
+info = json.loads(probe(final, "stream=width,height,r_frame_rate:format=duration"))
+v, dur = info["streams"][0], float(info["format"]["duration"])
+gate(abs(dur - expected) <= 0.2, f"duration {dur:.2f}s vs narration timing {expected:.2f}s")
+gate((v["width"], v["height"], v["r_frame_rate"]) == (w, h, f"{fps}/1"), f"format {v['width']}x{v['height']} @ {v['r_frame_rate']}")
+if timing["backend"] != "none":
+    gate(bool(json.loads(probe(final, "stream=index", "a:0"))["streams"]), "narration audio track present")
+
+# A scene that overruns its narration shifts every later caption.
+wrong = []
+for sid, sc in timing["scenes"].items():
+    f = OUT / "scenes" / sid / "videos" / "main" / "1080p30" / f"{sid}.mp4"
+    n = int(subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries",
+                            "stream=nb_read_packets", "-of", "csv=p=0", str(f)], capture_output=True, text=True).stdout or 0)
+    if n != sc["frames"]:
+        wrong.append(f"{sid} {n}/{sc['frames']}")
+gate(not wrong, f"scene frame counts match narration timing ({listed(wrong, 'all exact')})")
+
+# Black stretches (a scene that failed to draw) and still screens (nothing moves while the voice talks). The caption
+# band is cropped out: captions change on their own.
+log = subprocess.run(["ffmpeg", "-v", "info", "-i", str(final), "-vf",
+                      "blackdetect=d=0.5:pix_th=0.02,crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
+                      "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
+black = re.findall(r"black_duration:(\S+)", log)
+still = max([float(x) for x in re.findall(r"freeze_duration: (\S+)", log)] or [0.0])
+gate(not black, f"no black stretches over 0.5s ({len(black)} found)")
+gate(still <= MAX_STILL_S, f"longest still screen {still:.1f}s <= {MAX_STILL_S:.1f}s")
 
 sys.exit(1 if failures else 0)

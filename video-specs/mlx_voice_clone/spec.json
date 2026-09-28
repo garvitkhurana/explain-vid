@@ -5,15 +5,15 @@
       "kind": "repo",
       "url": "https://github.com/garvitkhurana/mlx-voice-clone"
     },
+    "arc": "tool",
     "fps": 30,
     "size": [
       1920,
       1080
     ],
     "voice": {
-      "backend": "say",
-      "voice": "Samantha",
-      "rate_wpm": 175
+      "voice": "af_heart",
+      "speed": 1.0
     },
     "glossary": [
       {
@@ -30,6 +30,7 @@
     {
       "id": "title",
       "type": "title",
+      "role": "hook",
       "duration_s": 3,
       "narration": [
         "MLX voice clone reads any script aloud, in your own voice."
@@ -43,6 +44,7 @@
     {
       "id": "idea",
       "type": "flow",
+      "role": "how",
       "duration_s": 4,
       "narration": [
         "Record a short clip of your voice.",
@@ -160,6 +162,7 @@
     {
       "id": "local",
       "type": "compare",
+      "role": "why",
       "duration_s": 4,
       "narration": [
         "Why run it locally?",
@@ -196,6 +199,7 @@
     {
       "id": "generate",
       "type": "steps",
+      "role": "how",
       "duration_s": 8,
       "narration": [
         "Here's what happens when you hit generate.",
@@ -259,6 +263,7 @@
     {
       "id": "pieces",
       "type": "chunks",
+      "role": "why",
       "duration_s": 6,
       "narration": [
         "Why pieces? In one pass, the model would cut a long script short.",
@@ -284,6 +289,7 @@
     {
       "id": "two_ways",
       "type": "alternatives",
+      "role": "use",
       "duration_s": 4,
       "narration": [
         "Two ways in, one engine.",
@@ -343,6 +349,7 @@
     {
       "id": "quality",
       "type": "metrics",
+      "role": "use",
       "duration_s": 4,
       "narration": [
         "Lite is the faster model, for drafts while you iterate.",
@@ -371,39 +378,12 @@
       }
     },
     {
-      "id": "start",
-      "type": "commands",
-      "duration_s": 4,
-      "narration": [
-        "Three commands to start.",
-        "On an Apple Silicon Mac with ffmpeg, uv sync sets it up.",
-        "Record your clip, reading the lines provided.",
-        "Then start the browser page, on your machine."
-      ],
-      "data": {
-        "title": "Get started",
-        "lines": [
-          {
-            "cmd": "uv sync",
-            "note": "install"
-          },
-          {
-            "cmd": "./scripts/record_sample.sh",
-            "note": "record your clip"
-          },
-          {
-            "cmd": "uv run python scripts/tts_ui_server.py",
-            "note": "open the browser page"
-          }
-        ],
-        "footer": "http://127.0.0.1:8765/"
-      }
-    },
-    {
       "id": "source",
       "type": "source",
       "duration_s": 3.5,
-      "narration": [],
+      "narration": [
+        "Clone the repo to get started."
+      ],
       "data": {}
     }
   ]

@@ -2,50 +2,51 @@
 
 Explainer videos for software projects, generated from a JSON scene spec.
 
+## Pipeline
+```
+source (repo, blog, paper)
+  → video-specs/<video>/facts.json   what the video may claim, each with a source quote   (fact-extractor agent)
+  → video-specs/<video>/spec.json    arc + scenes: narration and template data             (spec-author agent)
+  → scripts/voice.py                 narration → audio, captions, scene timing              (Kokoro, local)
+  → renderers/manim/main.py          one fixed template per scene type, driven by the data
+  → scripts/check.py                 hard gates: structure, grounding, timing, render
+  → out/<video>/final.mp4 + subtitles.srt
+```
+The source's medium only changes how facts are read and what the closing card says. The story follows the content:
+`meta.arc` is `tool` (something you run), `concept` (an idea) or `result` (a finding), and each scene's `role`
+places it in that arc. Each scene's `type` is picked by what it shows (a loop → `cycle`, a pipeline → `flow`,
+two options → `compare`, …). The list is in `video-specs/scene.schema.json`, and each template's data keys are
+in its `scene_<type>` docstring in `main.py`.
+
 ## Setup
 ```bash
 brew install cairo pango pkg-config ffmpeg uv
 cd renderers/manim && uv sync && cd ../..
 ```
+Apple Silicon only (Kokoro runs on MLX). The voice model downloads on the first render.
 
-## Render
+## Use
 ```bash
-./scripts/render.sh semif           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
-TTS=none ./scripts/render.sh semif  # silent, timing estimated from word count (fast)
-uv run scripts/check.py semif       # hard gates
+./scripts/render.sh ai_harness                   # voice → render → gates; out/ai_harness/final.mp4
+TTS=none ./scripts/render.sh ai_harness          # silent, timing estimated from word count (fast)
+SCENES=thesis ./scripts/render.sh ai_harness     # re-render one scene, reuse the rest (narration unchanged)
+uv run scripts/check.py ai_harness               # gates only
 ```
+New video from a source, end to end (in Claude Code): `/make-explainer <repo path or URL> <video>`.
 
-## Write a new video
-Each video is a folder: `videos/<video>/spec.json` is its script (scene types: see `videos/scene.schema.json`).
-Each scene has `narration` (spoken sentences; captions and timing come from it) and `duration_s` (minimum length). Then:
-```bash
-./scripts/render.sh <video>
-uv run scripts/check.py <video>
-```
-Manim reads it via the `SPEC` env var.
+## Writing a spec
+- `narration` is the only text source: audio, captions, subtitles and scene length all come from it.
+  Each sentence reveals one step of the scene (`data.beats` remaps steps to sentences).
+- Every number on screen or written as digits must match a `value` in `facts.json`; commands and code must appear
+  there verbatim.
+- Open on a `title` scene (role `hook`); end on `{"id": "source", "type": "source", ...}`, the only call to action.
+  It reads "Clone the repo to get started" / "Read the full post at" / "Read the full paper at" + `meta.source.url`,
+  and may be narrated.
+- Judgment calls behind these rules: `video-specs/NOTES.md`.
 
-## Ending every video the same way
-Set `meta.source` once — `{"kind": "repo"|"blog"|"paper", "url": "...", "credit": "optional"}` — and end the spec
-with `{"id": "source", "type": "source", "duration_s": 3.5, "narration": [], "data": {}}`. The card reads
-"Check out the repo" / "Read the full post at" / "Read the full paper at" + the link. No custom outros.
-
-## Figures (`flow` scenes)
-Describe a diagram as data and the renderer lays it out and animates it — see the `flow` scenes in `videos/long_running_agents/spec.json`:
-`panels`, `nodes` (`shape`: box/stack/trapezoid/pill/matrix/bars, `role` → colour slot via `roles`), `edges`
-(`style: dashed`, `label`), `steps` (reveal, highlight, flow with packet `kind`/`back`, diagonal, cells, bars).
-`mode: "figure"` = silent, fixed `hold` per step; otherwise steps wait on narration sentences.
-Subscripts: write `S_{N}`, not Unicode subscript characters (fonts lack most of them).
-
-## Tips
-- Manim themes: `THEME=midnight|neon|brutalist|pop` (presets in `renderers/manim/theme.py`).
-  Preview a few scenes fast: `SPEC=semif SCENES=title,readout THEME=pop uv run manim -qh main.py Explainer` in `renderers/manim`.
-- Manim text doesn't wrap; use `fit()` in `main.py` for anything that might overflow.
-- Animated text: use `on_change(key, build)` (rebuilds only when `key()` changes), never `always_redraw` — per-frame
-  text rebuilds made one scene take 2 minutes.
-- Subtitles own the bottom band: narrated scenes must keep content above `CAPTION_TOP`; a render fails
-  if anything reaches into it. Check all specs in seconds with `--dry_run` (see NOTES pass 8).
-- Iterate fast: `SCENES=how ./scripts/render.sh spec.json` re-renders one scene and reuses the rest
-  (same narration only). A long scene still costs its full length.
-- Pace templates with `self.beat(step, sentence_index, frac=0)` so each step lands when its sentence is spoken;
-  override per scene with `"beats": {"step": index}` or `[index, fraction]` (partway through a sentence). Check pacing with ffmpeg `freezedetect`.
-- Scenes render in parallel (`JOBS=` to limit). Scene lengths are frame-exact so the concatenated video stays in sync.
+## Template tips
+- Manim text doesn't wrap: `fit()` anything that might overflow. Animated text: `on_change(key, build)`, never
+  `always_redraw` (per-frame rebuilds made one scene take 2 minutes).
+- Captions own the bottom band: a render fails if content reaches below `CAPTION_TOP`.
+- Pace steps with `self.beat(step, sentence_index)` so each lands when its sentence is spoken.
+- Themes: `THEME=brutalist|midnight|neon|pop` (presets in `renderers/manim/theme.py`).

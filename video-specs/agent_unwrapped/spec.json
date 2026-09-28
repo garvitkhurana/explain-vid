@@ -5,15 +5,15 @@
       "kind": "repo",
       "url": "https://github.com/garvitkhurana/agent-unwrapped"
     },
+    "arc": "tool",
     "fps": 30,
     "size": [
       1920,
       1080
     ],
     "voice": {
-      "backend": "say",
-      "voice": "Samantha",
-      "rate_wpm": 175
+      "voice": "af_heart",
+      "speed": 1.0
     },
     "glossary": [
       {
@@ -38,6 +38,7 @@
     {
       "id": "title",
       "type": "title",
+      "role": "hook",
       "duration_s": 3,
       "narration": [
         "agent-unwrapped shows what an AI agent really is, without a framework."
@@ -51,6 +52,7 @@
     {
       "id": "ask",
       "type": "flow",
+      "role": "how",
       "duration_s": 8,
       "narration": [
         "Start with a simple question: what's twenty-one times two?",
@@ -163,6 +165,7 @@
     {
       "id": "loop",
       "type": "cycle",
+      "role": "how",
       "duration_s": 8,
       "narration": [
         "Under the hood, it's a loop over a growing list of messages.",
@@ -273,6 +276,7 @@
     {
       "id": "why",
       "type": "flow",
+      "role": "why",
       "duration_s": 8,
       "narration": [
         "Every agent library runs this same loop.",
@@ -398,6 +402,7 @@
     {
       "id": "course",
       "type": "flow",
+      "role": "use",
       "duration_s": 8,
       "narration": [
         "Thirteen lessons build this up in four stages.",
@@ -526,6 +531,7 @@
     {
       "id": "evals",
       "type": "checklist",
+      "role": "use",
       "duration_s": 8,
       "narration": [
         "Evals check two things.",
@@ -551,20 +557,17 @@
     {
       "id": "start",
       "type": "commands",
+      "role": "use",
       "duration_s": 6,
       "narration": [
-        "Get started in four steps.",
-        "Clone the repo.",
+        "Running it takes three steps.",
         "Install the requirements.",
         "Copy the env file and add your OpenRouter key.",
         "Run the first lesson."
       ],
       "data": {
-        "title": "Get started",
+        "title": "Run it",
         "lines": [
-          {
-            "cmd": "git clone https://github.com/garvitkhurana/agent-unwrapped"
-          },
           {
             "cmd": "pip install -r requirements.txt"
           },
@@ -581,7 +584,9 @@
       "id": "source",
       "type": "source",
       "duration_s": 3.5,
-      "narration": [],
+      "narration": [
+        "Clone the repo to get started."
+      ],
       "data": {}
     }
   ]

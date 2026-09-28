@@ -1,4 +1,4 @@
-# Decisions made hand-writing videos/semif/spec.json
+# Decisions made hand-writing video-specs/semif/spec.json
 (These are the judgment calls a future LLM step must make; they become its prompt.)
 
 1. **The aha:** "stop generating text you parse back into an if" — lead with the problem in the title kicker.
@@ -88,7 +88,7 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
 
 ## Pass 8 (2026-09-27): user review of the harness video
 38. **Endings are a convention, not content.** "Open questions" outros added little; every video now ends on one
-    generated card from `meta.source` (repo → "Check out the repo", blog/paper → "Read the full … at"). The
+    generated card from `meta.source` (repo → "Clone the repo to get started", blog/paper → "Read the full … at"). The
     harness video now ends right after its last point (checklist 1:40, card to 1:44).
 39. **Subtitles must never cover content.** Templates had put footers inside the caption band. Now a render fails
     if a narrated scene leaves anything below `CAPTION_TOP`; checked across all specs with `manim --dry_run`
@@ -166,3 +166,22 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
     New templates: `steps` (list + code window, optional wave art) and `chunks` (split / pass / join). A second
     flow chart of the same inputs read as repetitive. Code lines are quoted source: `check.py` requires each one
     verbatim in facts.json (shortened to exact fragments so they stay readable), like `cmd`.
+
+## Pass 10 (2026-09-28): user review of mlx-voice-clone and ai_harness endings
+66. **One ending, and it's the card.** voice-clone had a "Get started" commands scene ("Clone the repo") and then
+    the card ("Check out the repo"): two endings saying the same thing. The repo card now reads "Clone the repo to
+    get started", and a spec may narrate the card (one sentence) instead of adding its own call-to-action scene.
+67. **Don't restate the opening at the close.** ai_harness opened on "a model plus a harness" and its thesis
+    repeated it ("So: an agent is a model plus a harness", titled "Agent = Model + Harness"). The close keeps only
+    the new point: strong harness vs weak harness. A closing scene says something the viewer hasn't heard yet.
+
+## Pass 11 (2026-09-28): cleanup, and story by content
+68. **Arc by content, not medium.** A blog can describe a tool (ai_harness is a concept from a blog; mlx-voice-clone a
+    tool from a repo), so the medium only decides how facts are read and what the closing card says. The spec
+    declares `meta.arc` (tool / concept / result) and each scene a `role`; check.py requires every part of the arc,
+    a title hook first and one source card last, no other scene sending viewers to the source, and a closing scene
+    that doesn't restate the opening (≥ 60% of its words). Order isn't enforced: the approved voice-clone cut goes
+    how → why → how → why → use. The new ending gate caught agent_unwrapped's "Clone the repo" scene before the card.
+69. **Cards in a row share one text size.** Each metrics card used to shrink its own text to fit, so "Average model"
+    sat smaller than "Best model" next to it. The longest text in a row now sets the size for the whole row, and
+    values and bottom lines sit on shared baselines.

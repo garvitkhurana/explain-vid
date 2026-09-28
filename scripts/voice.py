@@ -4,8 +4,9 @@
 # ///
 """Narration → audio, caption cues and scene timing. The spec's `narration` is the single source for all three.
 
-Usage: uv run scripts/voice.py <video>   (reads videos/<video>/spec.json)
-Env:   TTS=say|none   (none = estimate timing from word count, no audio; for fast silent previews)
+Usage: uv run scripts/voice.py <video>   (reads video-specs/<video>/spec.json)
+Env:   TTS=kokoro|none   (kokoro, the default = local Kokoro-82M via scripts/tts_kokoro.py, with the spec's
+       meta.voice {voice, speed}; none = no audio, timing estimated from word count, for fast silent previews)
 
 Writes out/<video>/voice/timing.json (read by the Manim renderer), out/<video>/voice/narration.wav, out/<video>/subtitles.srt.
 """
@@ -24,14 +25,20 @@ LEAD_S = 0.4      # silence before a scene's first sentence (lets the visuals la
 GAP_S = 0.3       # silence between sentences
 TAIL_S = 0.6      # silence after the last sentence before the cut
 MAX_CUE = 64      # characters per on-screen caption cue
+WPM = 165         # TTS=none: Kokoro's pace at speed 1.0, for estimated timing
 
 
-def tts_say(text: str, path: Path, voice: dict) -> None:
-    aiff = path.with_suffix(".aiff")
-    subprocess.run(["say", "-v", voice.get("voice", "Samantha"), "-r", str(voice.get("rate_wpm", 175)),
-                    "-o", str(aiff), text], check=True)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(aiff), "-ar", str(RATE), "-ac", "1", str(path)], check=True)
-    aiff.unlink()
+def tts_kokoro(items: list[tuple[str, Path]], voice: dict) -> None:
+    """All sentences in one call so the model loads once; each clip is then resampled to RATE for mixing."""
+    jobs = {"voice": voice.get("voice", "af_heart"), "speed": voice.get("speed", 1.0),
+            "items": [(text, str(path)) for text, path in items]}
+    subprocess.run(["uv", "run", "--quiet", str(ROOT / "scripts" / "tts_kokoro.py")], input=json.dumps(jobs),
+                   text=True, check=True)
+    for _, path in items:
+        tmp = path.with_suffix(".24k.wav")
+        path.rename(tmp)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(tmp), "-ar", str(RATE), "-ac", "1", str(path)], check=True)
+        tmp.unlink()
 
 
 def duration(path: Path) -> float:
@@ -57,20 +64,22 @@ def srt_time(t: float) -> str:
 
 def main() -> None:
     if len(sys.argv) != 2:
-        raise SystemExit("Usage: uv run scripts/voice.py <video>   (a folder in videos/)")
+        raise SystemExit("Usage: uv run scripts/voice.py <video>   (a folder in video-specs/)")
     video = sys.argv[1]
-    spec = json.loads((ROOT / "videos" / video / "spec.json").read_text())
+    spec = json.loads((ROOT / "video-specs" / video / "spec.json").read_text())
     OUT = ROOT / "out" / video / "voice"  # one output dir per spec so videos don't overwrite each other
     voice = spec["meta"].get("voice", {})
-    backend = os.environ.get("TTS", voice.get("backend", "say"))
-    if backend not in ("say", "none"):
-        raise SystemExit(f"Unknown TTS backend {backend!r} (say|none)")
+    backend = os.environ.get("TTS", "kokoro")
+    if backend not in ("kokoro", "none"):
+        raise SystemExit(f"Unknown TTS backend {backend!r} (kokoro|none)")
 
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
-    wpm = voice.get("rate_wpm", 175)
     fps = spec["meta"]["fps"]
+    if backend == "kokoro":
+        tts_kokoro([(sentence, OUT / f"{s['id']}_{i:02}.wav")
+                    for s in spec["scenes"] for i, sentence in enumerate(s["narration"])], voice)
 
     scenes, clips, t0 = {}, [], 0.0  # clips: (absolute start, wav path)
     for s in spec["scenes"]:
@@ -78,13 +87,12 @@ def main() -> None:
         cues, sentences = [], []
         for i, sentence in enumerate(s["narration"]):
             sentences.append(round(t, 3))  # scene-relative start; scene templates pace their steps on these
-            if backend == "say":
+            if backend == "kokoro":
                 wav = OUT / f"{s['id']}_{i:02}.wav"
-                tts_say(sentence, wav, voice)
                 d = duration(wav)
                 clips.append((t0 + t, wav))
             else:
-                d = len(sentence.split()) / wpm * 60
+                d = len(sentence.split()) / WPM * 60
             # Split the sentence's time across its cues by character count.
             parts = split_cues(sentence)
             total = sum(len(p) for p in parts)
@@ -94,7 +102,7 @@ def main() -> None:
                 cues.append({"text": p, "start": round(ct, 3), "end": round(ct + cd, 3)})
                 ct += cd
             t += d + GAP_S
-        spoken = (t - GAP_S + TAIL_S) if s["narration"] else 0.0  # silent scenes: length = duration_s
+        spoken = (t - GAP_S + TAIL_S) if s["narration"] else 0.0  # a silent card: length = duration_s
         # Snap scene boundaries to whole frames so scenes rendered separately concatenate without drift.
         start_f = round(t0 * fps)
         frames = round((t0 + max(s["duration_s"], spoken)) * fps) - start_f
@@ -113,7 +121,7 @@ def main() -> None:
             lines += [str(n), f"{srt_time(sc['start'] + c['start'])} --> {srt_time(sc['start'] + c['end'])}", c["text"], ""]
     (OUT.parent / "subtitles.srt").write_text("\n".join(lines))
 
-    if backend == "say" and clips:  # silent specs (e.g. figure mode) have no clips and get no narration.wav
+    if clips:
         # One track: every clip delayed to its absolute start, mixed over silence of the full length.
         inputs, filters = [], []
         for k, (start, wav) in enumerate(clips):
@@ -125,12 +133,7 @@ def main() -> None:
         subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(filters),
                         "-map", "[out]", "-ar", str(RATE), "-ac", "1", str(OUT / "narration.wav")], check=True)
 
-    over = [sid for sid, sc in scenes.items() if sc["spoken"] > spec_min(spec, sid)]
-    print(f"{backend}: {n} cues, {t0:.1f}s total; audio extended: {', '.join(over) or 'none'}")
-
-
-def spec_min(spec: dict, sid: str) -> float:
-    return next(s["duration_s"] for s in spec["scenes"] if s["id"] == sid)
+    print(f"{backend}: {n} cues, {t0:.1f}s total")
 
 
 if __name__ == "__main__":

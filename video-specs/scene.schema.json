@@ -11,7 +11,8 @@
       "required": [
         "title",
         "fps",
-        "size"
+        "size",
+        "arc"
       ],
       "properties": {
         "title": {
@@ -71,6 +72,14 @@
               }
             }
           }
+        },
+        "arc": {
+          "enum": [
+            "tool",
+            "concept",
+            "result"
+          ],
+          "description": "Story shape, picked by what the content is (not where it came from). tool: hook → how → why → use. concept: hook → how → why → takeaway. result: hook → problem → how → proof. Every part must appear (check.py)."
         }
       }
     },
@@ -94,19 +103,9 @@
           "type": {
             "enum": [
               "title",
-              "problem",
-              "pipeline",
-              "race",
-              "bars",
               "metrics",
-              "outro",
-              "readout",
-              "branch",
               "cycle",
               "checklist",
-              "fanout",
-              "gantt",
-              "balance",
               "compare",
               "commands",
               "alternatives",
@@ -116,11 +115,23 @@
               "chunks"
             ]
           },
+          "role": {
+            "enum": [
+              "hook",
+              "how",
+              "why",
+              "use",
+              "takeaway",
+              "problem",
+              "proof"
+            ],
+            "description": "Which part of meta.arc this scene is. Every scene but the closing source card has one."
+          },
           "duration_s": {
             "type": "number",
             "minimum": 2,
             "maximum": 60,
-            "description": "Minimum length; the narration audio can make the scene longer. Silent figure scenes run up to 60 s."
+            "description": "Minimum length; the narration audio can make the scene longer."
           },
           "data": {
             "type": "object"
@@ -133,7 +144,7 @@
               "minLength": 1,
               "maxLength": 160
             },
-            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. May be empty for silent figure-mode scenes."
+            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. Empty only for the closing `source` card."
           }
         },
         "allOf": [
@@ -358,147 +369,6 @@
                       }
                     }
                   }
-                }
-              }
-            }
-          },
-          {
-            "if": {
-              "properties": {
-                "type": {
-                  "const": "race"
-                }
-              }
-            },
-            "then": {
-              "properties": {
-                "data": {
-                  "required": [
-                    "left",
-                    "right",
-                    "answers",
-                    "note",
-                    "speedup"
-                  ],
-                  "properties": {
-                    "note": {
-                      "type": "string",
-                      "description": "Top line; format string over right's numbers, e.g. \"{decisions} decisions, median of 3 runs\"."
-                    },
-                    "answers": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "One answer per right.decisions: streamed as JSON on the left, shown in the grid on the right."
-                    },
-                    "highlight": {
-                      "type": "string",
-                      "description": "Answer drawn in the accent colour (default: the first)."
-                    },
-                    "speedup": {
-                      "type": "string",
-                      "description": "Closing line, e.g. \"5.21x faster\"."
-                    },
-                    "left": {
-                      "type": "object",
-                      "required": [
-                        "label",
-                        "seconds",
-                        "tokens",
-                        "counter"
-                      ],
-                      "properties": {
-                        "counter": {
-                          "type": "string",
-                          "description": "Format string; {done} = tokens so far, plus left's fields."
-                        }
-                      }
-                    },
-                    "right": {
-                      "type": "object",
-                      "required": [
-                        "label",
-                        "seconds",
-                        "decisions",
-                        "footer"
-                      ],
-                      "properties": {
-                        "footer": {
-                          "type": "string",
-                          "description": "Format string over right's fields."
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          {
-            "if": {
-              "properties": {
-                "type": {
-                  "const": "readout"
-                }
-              }
-            },
-            "then": {
-              "properties": {
-                "data": {
-                  "required": [
-                    "question",
-                    "scores_label",
-                    "rest_label",
-                    "vocab",
-                    "softmax_label",
-                    "slots",
-                    "note",
-                    "ignored_label"
-                  ],
-                  "properties": {
-                    "vocab": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "tok",
-                          "logit"
-                        ],
-                        "properties": {
-                          "ignored": {
-                            "type": "boolean",
-                            "description": "The one dimmed row that gets ignored_label."
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          {
-            "if": {
-              "properties": {
-                "type": {
-                  "const": "branch"
-                }
-              }
-            },
-            "then": {
-              "properties": {
-                "data": {
-                  "required": [
-                    "prefix_label",
-                    "prefix_note",
-                    "cache_label",
-                    "branches",
-                    "branch_label",
-                    "unit",
-                    "workload",
-                    "rates"
-                  ]
                 }
               }
             }

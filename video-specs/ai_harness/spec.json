@@ -6,15 +6,15 @@
       "url": "https://www.databricks.com/blog/ai-harness",
       "credit": "Source: Databricks blog"
     },
+    "arc": "concept",
     "fps": 30,
     "size": [
       1920,
       1080
     ],
     "voice": {
-      "backend": "say",
-      "voice": "Samantha",
-      "rate_wpm": 175
+      "voice": "af_heart",
+      "speed": 1.0
     },
     "glossary": [
       {
@@ -51,6 +51,7 @@
     {
       "id": "title",
       "type": "title",
+      "role": "hook",
       "duration_s": 3,
       "narration": [
         "An AI agent isn't just a model. It's a model plus a harness."
@@ -64,6 +65,7 @@
     {
       "id": "roles",
       "type": "flow",
+      "role": "how",
       "duration_s": 8,
       "narration": [
         "The model is the brain: it reasons, and decides what to do.",
@@ -189,6 +191,7 @@
     {
       "id": "loop",
       "type": "cycle",
+      "role": "how",
       "duration_s": 12,
       "narration": [
         "At its core, an agent is a loop.",
@@ -268,6 +271,7 @@
     {
       "id": "parts",
       "type": "cycle",
+      "role": "how",
       "duration_s": 10,
       "narration": [
         "A harness is that loop, plus knobs to control it.",
@@ -371,10 +375,11 @@
     {
       "id": "failures",
       "type": "metrics",
+      "role": "why",
       "duration_s": 8,
       "narration": [
         "Most operational failures come from the harness, not the model.",
-        "As history grows, the model's reasoning gets worse. That's context rot.",
+        "As history grows, reasoning gets worse: context rot.",
         "Hand it too many tools, and it gets confused before it starts.",
         "Chain many tool calls, and a reply can take ten seconds or longer."
       ],
@@ -402,9 +407,9 @@
     {
       "id": "thesis",
       "type": "metrics",
+      "role": "takeaway",
       "duration_s": 6,
       "narration": [
-        "So: an agent is a model plus a harness.",
         "A strong harness makes an average model useful.",
         "A weak one wastes the best model there is."
       ],
@@ -420,8 +425,7 @@
             "value": "Best model",
             "compare": "wasted"
           }
-        ],
-        "title": "Agent = Model + Harness"
+        ]
       }
     },
     {
