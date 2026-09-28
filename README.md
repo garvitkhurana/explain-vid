@@ -30,7 +30,7 @@ with `{"id": "source", "type": "source", "duration_s": 3.5, "narration": [], "da
 "Check out the repo" / "Read the full post at" / "Read the full paper at" + the link. No custom outros.
 
 ## Figures (`flow` scenes)
-Describe a diagram as data and the renderer lays it out and animates it — see `videos/figures/spec.json`:
+Describe a diagram as data and the renderer lays it out and animates it — see the `flow` scenes in `videos/long_running_agents/spec.json`:
 `panels`, `nodes` (`shape`: box/stack/trapezoid/pill/matrix/bars, `role` → colour slot via `roles`), `edges`
 (`style: dashed`, `label`), `steps` (reveal, highlight, flow with packet `kind`/`back`, diagonal, cells, bars).
 `mode: "figure"` = silent, fixed `hold` per step; otherwise steps wait on narration sentences.
