@@ -123,10 +123,26 @@ for name in ["remotion", "manim", "final"]:
     runs = re.findall(r"black_start:\S+ black_end:\S+ black_duration:(\S+)", bd)
     gate(not runs, f"{name}: no black runs >0.5s ({len(runs)} found)")
 
+# Per-scene frame counts: a scene that overruns its narration shifts every later caption.
+if timing:
+    wrong = []
+    for sid, sc in timing["scenes"].items():
+        f = OUT / "scenes" / sid / "videos" / "main" / "1080p30" / f"{sid}.mp4"
+        if f.exists():
+            n = int(subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries",
+                                    "stream=nb_read_packets", "-of", "csv=p=0", str(f)], capture_output=True, text=True).stdout or 0)
+            if n != sc["frames"]:
+                wrong.append(f"{sid} {n}/{sc['frames']}")
+    gate(not wrong, f"scene frame counts match narration timing ({', '.join(wrong) or 'all exact'})")
+
 # Still screen: the longest stretch with no visual change, caption band cropped out (captions change on their own).
+# Narrated videos only: silent figure-mode specs hold each step for a fixed `hold` on purpose.
 MAX_STILL_S = 6.0
 manim = OUT / "manim.mp4"
-if manim.exists():
+narrated = any(s["narration"] for s in spec["scenes"])
+if not narrated:
+    print("SKIP still screen: no narration (figure mode)")
+elif manim.exists():
     fd = subprocess.run(["ffmpeg", "-v", "info", "-i", str(manim), "-vf", "crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
                          "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
     still = max([float(x) for x in re.findall(r"freeze_duration: (\S+)", fd)] or [0.0])

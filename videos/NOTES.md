@@ -60,3 +60,39 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
     series), so an LLM fills data, never code. metrics now adapts to 4 cards and has a footnote; pipeline has a head.
 26. **Glyph fallback bites:** Helvetica has no ✓ — draw marks as paths. Check any symbol that isn't ASCII.
 27. **Blog pages may block fetchers (403):** read them in a real browser; keep the text as the fact source.
+
+## Pass 6 (2026-09-27): figures from data (`flow`)
+28. **Ghost-then-reveal on one canvas** (from the user's reference video): everything drawn faint up front, steps
+    light parts up, so the viewer always sees where things go. Colour follows concept via `roles`, never per node.
+29. **Loop-back edges:** in a cycle, the edge pointing to a node listed *earlier* in the spec is the loop-back
+    (people list nodes in reading order). DFS alone picked the wrong edge and flattened a panel into one row.
+30. **Manim traps:** `set_opacity` on a polyline also turns on its fill (filled wedges behind rails) — ghost via
+    stroke only; `.animate` snapshots the mobject when called, so set any non-animated changes *before* it; an
+    animated shape is drawn last, so re-raise labels on filled cells.
+31. **Subscripts are markup, not glyphs:** Helvetica has ₁₂₃ but not ₙ. Write `S_{N}`; the renderer draws it.
+32. For the LLM step: a figure is nodes (shape, role), edges, and ordered steps — no coordinates, ever.
+
+## Pass 7 (2026-09-27): does it generalise? mlx-voice-clone (repo) + Anthropic long-running-agents post (blog)
+33. **Yes, from data:** both videos (11 scenes) were expressed as specs only — no source-specific code. The harness
+    figure (two panels, artifacts, "next session" loop-back) laid itself out correctly first time.
+34. **What broke was generic, found by gates/measurement, fixed generically:** small figures stayed small (layout now
+    scales up to 1.5x); edge labels got cut off (layout reserves gap width for labels); a final flow step overran its
+    scene and shifted captions (steps now fit the time left; new gate: per-scene frame count == timing); the outro
+    assumed one sentence and didn't fit long URLs.
+35. **Spec-writing rules learned:** keep a figure to ~4 columns or text becomes unreadable; a sentence longer than
+    ~5 s needs a second visible change (`beats: [sentence, fraction]`); tiny packets alone read as a still screen,
+    so flows now pulse the node they reach.
+36. **The jargon gate earned its keep:** it flagged "mlx-audio" on the title card before "Apple Silicon" was said.
+37. **Speed:** iterate with `SCENES=` on the scene you changed; full re-renders of every video after each fix
+    cost ~3 min per round for nothing.
+
+## Pass 8 (2026-09-27): user review of the harness video
+38. **Endings are a convention, not content.** "Open questions" outros added little; every video now ends on one
+    generated card from `meta.source` (repo → "Check out the repo", blog/paper → "Read the full … at"). The
+    harness video now ends right after its last point (checklist 1:40, card to 1:44).
+39. **Subtitles must never cover content.** Templates had put footers inside the caption band. Now a render fails
+    if a narrated scene leaves anything below `CAPTION_TOP`; checked across all specs with `manim --dry_run`
+    (runs every scene's logic, writes no video — seconds, not minutes). It caught the gantt footer.
+40. **Titles, headlines and URLs are fitted to the frame** — never assume a title is short.
+41. **Silent scenes drifted by a frame:** Manim writes static waits as floor(duration·fps) frames but animated ones
+    as ceil. Every wait now takes the animated path; the per-scene frame gate caught it.

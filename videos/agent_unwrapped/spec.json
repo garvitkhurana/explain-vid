@@ -1,7 +1,10 @@
 {
   "meta": {
     "title": "agent-unwrapped: see the wire",
-    "source": "https://github.com/garvitkhurana/agent-unwrapped",
+    "source": {
+      "kind": "repo",
+      "url": "https://github.com/garvitkhurana/agent-unwrapped"
+    },
     "fps": 30,
     "size": [
       1920,
@@ -175,16 +178,11 @@
       }
     },
     {
-      "id": "outro",
-      "type": "outro",
-      "duration_s": 4,
-      "narration": [
-        "No framework required. Every lesson is a script you can run."
-      ],
-      "data": {
-        "headline": "Read the wire yourself",
-        "url": "github.com/garvitkhurana/agent-unwrapped"
-      }
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
     }
   ]
 }

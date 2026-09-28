@@ -1,7 +1,11 @@
 {
   "meta": {
     "title": "Habitat: storage for 1B+ ChatGPT users",
-    "source": "https://openai.com/index/scaling-storage-one-billion-users-part-one/",
+    "source": {
+      "kind": "blog",
+      "url": "https://openai.com/index/scaling-storage-one-billion-users-part-one/",
+      "credit": "Source: OpenAI engineering blog"
+    },
     "fps": 30,
     "size": [
       1920,
@@ -375,16 +379,11 @@
       }
     },
     {
-      "id": "outro",
-      "type": "outro",
-      "duration_s": 4,
-      "narration": [
-        "Source: OpenAI's engineering blog. Part two covers the storage layer itself."
-      ],
-      "data": {
-        "headline": "Next: the storage layer",
-        "url": "openai.com/index/scaling-storage-one-billion-users-part-one"
-      }
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
     }
   ]
 }

@@ -1,0 +1,608 @@
+{
+  "meta": {
+    "title": "Flow figures (acceptance)",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "backend": "none"
+    }
+  },
+  "scenes": [
+    {
+      "id": "contrastive",
+      "type": "flow",
+      "duration_s": 34,
+      "narration": [],
+      "data": {
+        "mode": "figure",
+        "roles": {
+          "action": "c1",
+          "state": "c2",
+          "match": "c3",
+          "result": "c4"
+        },
+        "panels": [
+          {
+            "id": "train",
+            "label": "Contrastive training",
+            "sub": "Match each state to its action",
+            "role": "match"
+          },
+          {
+            "id": "infer",
+            "label": "Pick an action",
+            "sub": "Runs at every agent step",
+            "role": "result"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "t_act",
+            "panel": "train",
+            "shape": "stack",
+            "role": "action",
+            "label": "jump",
+            "sub": "action taken"
+          },
+          {
+            "id": "t_aenc",
+            "panel": "train",
+            "shape": "trapezoid",
+            "role": "action",
+            "label": "Action\nEncoder"
+          },
+          {
+            "id": "t_state",
+            "panel": "train",
+            "shape": "stack",
+            "role": "state",
+            "label": "A cactus is\n80 px ahead",
+            "sub": "Best move for the dino?"
+          },
+          {
+            "id": "t_senc",
+            "panel": "train",
+            "shape": "trapezoid",
+            "role": "state",
+            "label": "State\nEncoder"
+          },
+          {
+            "id": "t_sim",
+            "panel": "train",
+            "shape": "matrix",
+            "role": "match",
+            "row_role": "state",
+            "col_role": "action",
+            "rows": [
+              "S_{1}",
+              "S_{2}",
+              "⋮",
+              "S_{N}"
+            ],
+            "cols": [
+              "A_{1}",
+              "A_{2}",
+              "…",
+              "A_{N}"
+            ],
+            "diagonal": true
+          },
+          {
+            "id": "i_cands",
+            "panel": "infer",
+            "shape": "stack",
+            "role": "action",
+            "label": "jump · duck · run",
+            "sub": "candidate actions"
+          },
+          {
+            "id": "i_aenc",
+            "panel": "infer",
+            "shape": "trapezoid",
+            "role": "action",
+            "label": "Action\nEncoder"
+          },
+          {
+            "id": "i_cache",
+            "panel": "infer",
+            "shape": "box",
+            "role": "action",
+            "label": "A_{1}   A_{2}   A_{3}",
+            "sub": "encoded once, then cached"
+          },
+          {
+            "id": "i_state",
+            "panel": "infer",
+            "shape": "stack",
+            "role": "state",
+            "label": "2 large cacti\n96 px ahead",
+            "sub": "Pick the best dino move."
+          },
+          {
+            "id": "i_senc",
+            "panel": "infer",
+            "shape": "trapezoid",
+            "role": "state",
+            "label": "State\nEncoder"
+          },
+          {
+            "id": "i_s1",
+            "panel": "infer",
+            "shape": "pill",
+            "role": "state",
+            "label": "S_{1}"
+          },
+          {
+            "id": "i_scores",
+            "panel": "infer",
+            "shape": "matrix",
+            "role": "result",
+            "row_role": "state",
+            "col_role": "action",
+            "rows": [
+              "S_{1}"
+            ],
+            "cols": [
+              "A_{1}",
+              "A_{2}",
+              "A_{3}"
+            ]
+          },
+          {
+            "id": "i_probs",
+            "panel": "infer",
+            "shape": "bars",
+            "role": "result",
+            "bars": [
+              [
+                "jump",
+                0.82
+              ],
+              [
+                "duck",
+                0.1
+              ],
+              [
+                "run",
+                0.08
+              ]
+            ]
+          },
+          {
+            "id": "i_decide",
+            "panel": "infer",
+            "shape": "box",
+            "role": "result",
+            "label": "Dino should jump"
+          }
+        ],
+        "edges": [
+          {
+            "from": "t_act",
+            "to": "t_aenc"
+          },
+          {
+            "from": "t_aenc",
+            "to": "t_sim",
+            "style": "dashed"
+          },
+          {
+            "from": "t_state",
+            "to": "t_senc"
+          },
+          {
+            "from": "t_senc",
+            "to": "t_sim"
+          },
+          {
+            "from": "i_cands",
+            "to": "i_aenc"
+          },
+          {
+            "from": "i_aenc",
+            "to": "i_cache",
+            "style": "dashed"
+          },
+          {
+            "from": "i_cache",
+            "to": "i_scores"
+          },
+          {
+            "from": "i_state",
+            "to": "i_senc"
+          },
+          {
+            "from": "i_senc",
+            "to": "i_s1"
+          },
+          {
+            "from": "i_s1",
+            "to": "i_scores"
+          },
+          {
+            "from": "i_scores",
+            "to": "i_probs"
+          },
+          {
+            "from": "i_probs",
+            "to": "i_decide"
+          },
+          {
+            "from": "i_decide",
+            "to": "i_state",
+            "style": "dashed",
+            "label": "act in the game"
+          }
+        ],
+        "steps": [
+          {
+            "do": "reveal",
+            "targets": [
+              "t_act",
+              "t_aenc"
+            ],
+            "hold": 0.4
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "t_state",
+              "t_senc"
+            ],
+            "hold": 0.4
+          },
+          {
+            "do": "flow",
+            "path": [
+              "t_act",
+              "t_aenc",
+              "t_sim"
+            ],
+            "kind": "request",
+            "hold": 0.2
+          },
+          {
+            "do": "flow",
+            "path": [
+              "t_state",
+              "t_senc",
+              "t_sim"
+            ],
+            "kind": "request",
+            "hold": 0.2
+          },
+          {
+            "do": "diagonal",
+            "target": "t_sim",
+            "hold": 1.0
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "i_cands",
+              "i_aenc"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "i_cands",
+              "i_aenc",
+              "i_cache"
+            ],
+            "kind": "request",
+            "hold": 0.3
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "i_state",
+              "i_senc"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "i_state",
+              "i_senc",
+              "i_s1",
+              "i_scores"
+            ],
+            "kind": "request",
+            "hold": 0.2
+          },
+          {
+            "do": "flow",
+            "path": [
+              "i_cache",
+              "i_scores"
+            ],
+            "kind": "request",
+            "hold": 0.2
+          },
+          {
+            "do": "cells",
+            "target": "i_scores",
+            "at": [
+              [
+                0,
+                0
+              ]
+            ],
+            "role": "result",
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "i_scores",
+              "i_probs"
+            ],
+            "kind": "response",
+            "hold": 0.1
+          },
+          {
+            "do": "bars",
+            "target": "i_probs",
+            "hold": 0.5
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "i_decide"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "i_decide",
+              "i_state"
+            ],
+            "kind": "change",
+            "hold": 1.5
+          }
+        ]
+      }
+    },
+    {
+      "id": "habitat",
+      "type": "flow",
+      "duration_s": 26,
+      "narration": [],
+      "data": {
+        "mode": "figure",
+        "roles": {
+          "client": "neutral",
+          "platform": "c4",
+          "storage": "c1",
+          "stream": "c2"
+        },
+        "nodes": [
+          {
+            "id": "chatgpt",
+            "role": "client",
+            "label": "ChatGPT"
+          },
+          {
+            "id": "api",
+            "role": "client",
+            "label": "API"
+          },
+          {
+            "id": "codex",
+            "role": "client",
+            "label": "Codex"
+          },
+          {
+            "id": "internal",
+            "role": "client",
+            "label": "Internal services"
+          },
+          {
+            "id": "habitat",
+            "role": "platform",
+            "label": "Habitat",
+            "items": [
+              "Caching",
+              "ACL policies",
+              "Placement & data residency",
+              "Encryption",
+              "Isolation",
+              "Rate limiting",
+              "Routing"
+            ]
+          },
+          {
+            "id": "cosmos",
+            "role": "storage",
+            "label": "Azure Cosmos DB",
+            "sub": "online storage"
+          },
+          {
+            "id": "nanobase",
+            "role": "storage",
+            "label": "Nanobase",
+            "sub": "online storage"
+          },
+          {
+            "id": "valkey",
+            "role": "storage",
+            "label": "Valkey",
+            "sub": "caches"
+          },
+          {
+            "id": "blob",
+            "role": "storage",
+            "label": "Blob storage",
+            "sub": "storage resources"
+          },
+          {
+            "id": "cdc",
+            "role": "stream",
+            "label": "CDC services",
+            "sub": "change data capture"
+          },
+          {
+            "id": "databricks",
+            "role": "stream",
+            "label": "Databricks"
+          },
+          {
+            "id": "rockset",
+            "role": "stream",
+            "label": "Rockset"
+          },
+          {
+            "id": "kafka",
+            "role": "stream",
+            "label": "Kafka"
+          }
+        ],
+        "edges": [
+          {
+            "from": "chatgpt",
+            "to": "habitat"
+          },
+          {
+            "from": "api",
+            "to": "habitat"
+          },
+          {
+            "from": "codex",
+            "to": "habitat"
+          },
+          {
+            "from": "internal",
+            "to": "habitat"
+          },
+          {
+            "from": "habitat",
+            "to": "cosmos"
+          },
+          {
+            "from": "habitat",
+            "to": "nanobase"
+          },
+          {
+            "from": "habitat",
+            "to": "valkey"
+          },
+          {
+            "from": "habitat",
+            "to": "blob"
+          },
+          {
+            "from": "habitat",
+            "to": "cdc"
+          },
+          {
+            "from": "cdc",
+            "to": "databricks"
+          },
+          {
+            "from": "cdc",
+            "to": "rockset"
+          },
+          {
+            "from": "cdc",
+            "to": "kafka"
+          }
+        ],
+        "steps": [
+          {
+            "do": "reveal",
+            "targets": [
+              "chatgpt",
+              "api",
+              "codex",
+              "internal"
+            ],
+            "hold": 0.4
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "habitat"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "highlight",
+            "targets": [
+              "habitat"
+            ],
+            "hold": 0.4
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "cosmos",
+              "nanobase",
+              "valkey",
+              "blob"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "chatgpt",
+              "habitat",
+              "cosmos"
+            ],
+            "kind": "request",
+            "back": "response",
+            "hold": 0.2
+          },
+          {
+            "do": "flow",
+            "path": [
+              "codex",
+              "habitat",
+              "valkey"
+            ],
+            "kind": "request",
+            "back": "response",
+            "hold": 0.3
+          },
+          {
+            "do": "reveal",
+            "targets": [
+              "cdc",
+              "databricks",
+              "rockset",
+              "kafka"
+            ],
+            "hold": 0.3
+          },
+          {
+            "do": "flow",
+            "path": [
+              "habitat",
+              "cdc",
+              "kafka"
+            ],
+            "kind": "change",
+            "hold": 0.2
+          },
+          {
+            "do": "flow",
+            "path": [
+              "habitat",
+              "cdc",
+              "rockset"
+            ],
+            "kind": "change",
+            "hold": 1.5
+          }
+        ]
+      }
+    }
+  ]
+}
