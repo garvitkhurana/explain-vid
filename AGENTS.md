@@ -13,20 +13,16 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - Hard gates are code (`scripts/check.py`), never model judgment. Every number on screen must trace to `facts.json` (grounding gate).
 - Narration is the single source: audio, on-screen caption cues, subtitles and scene length all derive from `narration`.
 - Scripts explain, not just describe: intuition → mechanism → proof per concept; on-screen jargon needs its plain phrase said first (glossary gate).
+- Subagents only when the user asks, at most 2 at once; prefer inline work for spec edits and single-scene fixes.
 - Non-goals now: production TTS voice (scratch `say` only), Blender, publishing, agents writing templates (template-builder is manual).
 
 ## Key decisions
-- 2026-09-27 — Scene spec JSON + fixed template set (title, pipeline, race, bars, metrics, outro). Keeps renders deterministic and LLM output checkable.
-- 2026-09-27 — Bake-off Remotion vs Manim on the same spec before picking one stack. Compare look, authoring effort, render time.
-- 2026-09-27 — Added readout + branch templates for architecture (mechanism) scenes. Explainers must show why, not just inputs/outputs.
-- 2026-09-27 — Manim is the renderer, brutalist the default theme. User preferred Manim's look; Remotion kept only as a comparison reference.
-- 2026-09-27 — Narration replaces captions as the spec's text field; TTS timing drives scene length and caption cues. One source keeps audio, captions and subtitles in sync and is what an LLM script step will fill.
-- 2026-09-27 — Scene steps are paced by narration sentences (`self.beat(step, sentence)`; spec `data.beats` overrides). Front-loaded animations left 9–14 s of static screen per scene.
-- 2026-09-27 — Templates stay generic and data-driven (loop, checklist, fanout, gantt, balance added for agent-unwrapped + Habitat); outputs go to `out/<video>/` so videos don't collide.
-- 2026-09-27 — Spec generation via Claude Code subagents (facts → spec → render/gates loop); gates stay code. Reuses dev-agent prompts; no API infra yet. Videos live in `videos/<video>/{spec,facts}.json`.
-- 2026-09-27 — Figures are data: `flow` scene + deterministic layered layout (`renderers/manim/layout.py`); nodes carry shape + semantic role, steps drive ghost-then-reveal, `figure` (silent) or `narrated` mode. No per-figure code.
-- 2026-09-27 — Tool videos follow a tool arc (hook formula → flow → why → how you use it → commands), written for a first-time viewer; no disclaimers. User preferred a plainer reference cut over mechanism detail.
-- 2026-09-27 — Remotion removed; Manim only. Per-scene retest showed parity, not enough to maintain a second renderer.
+- 2026-09-27 — Scene spec JSON + fixed, generic, data-driven templates (list in the schema); explainers show why (mechanism templates), not just inputs/outputs. Keeps renders deterministic and LLM output checkable.
+- 2026-09-27 — Manim only, brutalist default theme. A Remotion bake-off on the same spec showed parity; not worth a second renderer.
+- 2026-09-27 — Narration is the spec's only text; TTS timing drives scene length and caption cues, and steps are paced per sentence (`self.beat`, `data.beats` overrides). Keeps audio, captions and subtitles in sync; front-loaded animations left long static screens.
+- 2026-09-27 — Figures are data: `flow` + deterministic layout (`renderers/manim/layout.py`), loops as a `cycle` ring. No per-figure code.
+- 2026-09-27 — Spec generation via Claude Code subagents (facts → spec → render/gates loop); gates stay code; outputs in `out/<video>/`. No API infra yet.
+- 2026-09-27 — Tool videos follow a tool arc (hook formula → flow → why → how you use it → commands) for a first-time viewer; no disclaimers. User preferred a plainer cut over mechanism detail.
 
 ## Notes
 Judgment calls are logged in videos/NOTES.md; the agent prompts in `.claude/agents/` cite them by number.

@@ -15,6 +15,7 @@ HEADER_H = 0.75    # panel pill header + subtitle
 PANEL_GAP = 0.35   # between panels
 SWEEPS = 4         # barycenter crossing-reduction passes (fixed → deterministic)
 MAX_SCALE = 1.5    # small figures grow to use the frame (never shrink-only)
+ROW_GAP = 0.9      # between wrapped rows (the connector to the next row runs in this gap)
 
 
 def _back_edges(g: nx.DiGraph, order: list[str]) -> set[tuple[str, str]]:
@@ -46,8 +47,9 @@ def _back_edges(g: nx.DiGraph, order: list[str]) -> set[tuple[str, str]]:
     return back
 
 
-def _layout_panel(ids, edges, sizes, order, label_w):
-    """Layered left→right layout of one panel's nodes. Returns node rects (unscaled) and layer column bounds."""
+def _layout_panel(ids, edges, sizes, order, label_w, wrap_area=None):
+    """Layered left→right layout of one panel's nodes. Returns node rects (unscaled), layer column bounds, layers,
+    back edges and each layer's row. With wrap_area, a long chain wraps into rows when that makes it larger."""
     g = nx.DiGraph()
     g.add_nodes_from(ids)
     g.add_edges_from((a, b) for a, b in edges if a in g and b in g)
@@ -73,20 +75,58 @@ def _layout_panel(ids, edges, sizes, order, label_w):
 
             layers[k] = sorted(layers[k], key=key)
 
-    rects, cols, x = {}, [], 0.0
-    for k, col in enumerate(layers):
-        w = max(sizes[n][0] for n in col)
-        total_h = sum(sizes[n][1] for n in col) + GAP_Y * (len(col) - 1)
-        y = total_h / 2
-        for n in col:
-            nw, nh = sizes[n]
-            rects[n] = [x + w / 2, y - nh / 2, nw, nh]  # cx, cy, w, h
-            y -= nh + GAP_Y
-        cols.append((x, x + w))
-        # Widen the gap after this layer when an edge leaving it carries a label, so the label isn't cut off.
-        widest = max([label_w.get((a, b), 0) for a, b in edges if a in col and layer.get(b, -1) > k] + [0])
-        x += w + max(GAP_X, widest + 0.5)
-    return rects, cols, layer, back
+    def place(per_row):
+        """Layers left→right, `per_row` layers to a row; rows stack downwards."""
+        rects, cols, rows, y_top = {}, [], [], 0.0
+        for r0 in range(0, len(layers), per_row):
+            band = layers[r0:r0 + per_row]
+            row_h = max(sum(sizes[n][1] for n in col) + GAP_Y * (len(col) - 1) for col in band)
+            x = 0.0
+            for k, col in enumerate(band, start=r0):
+                w = max(sizes[n][0] for n in col)
+                total_h = sum(sizes[n][1] for n in col) + GAP_Y * (len(col) - 1)
+                y = y_top - (row_h - total_h) / 2
+                for n in col:
+                    nw, nh = sizes[n]
+                    rects[n] = [x + w / 2, y - nh / 2, nw, nh]  # cx, cy, w, h
+                    y -= nh + GAP_Y
+                cols.append((x, x + w))
+                rows.append(r0 // per_row)
+                # Widen the gap after this layer when an edge leaving it carries a label, so the label isn't cut off.
+                widest = max([label_w.get((a, b), 0) for a, b in edges if a in col and layer.get(b, -1) > k] + [0])
+                x += w + max(GAP_X, widest + 0.5)
+            y_top -= row_h + ROW_GAP
+        # Centre each row on the widest one, so a short last row doesn't hug the left edge.
+        width = {r: max(cols[k][1] for k in range(len(cols)) if rows[k] == r) for r in set(rows)}
+        for k, col in enumerate(layers):
+            dx = (max(width.values()) - width[rows[k]]) / 2
+            cols[k] = (cols[k][0] + dx, cols[k][1] + dx)
+            for nid in col:
+                rects[nid][0] += dx
+        return rects, cols, rows
+
+    def size(rects):
+        xs = [r[0] + sgn * r[2] / 2 for r in rects.values() for sgn in (-1, 1)]
+        ys = [r[1] + sgn * r[3] / 2 for r in rects.values() for sgn in (-1, 1)]
+        return max(xs) - min(xs), max(ys) - min(ys)
+
+    best = place(len(layers))
+    # Wrap only a plain chain: no loop-backs, every edge between neighbouring layers (so only row ends connect rows).
+    if wrap_area and not back and all(layer[b] == layer[a] + 1 for a, b in dag.edges):
+        def fit(pl):
+            w, h = size(pl[0])
+            return min(wrap_area[0] / (w + 2 * PANEL_PAD), wrap_area[1] / (h + 2 * PANEL_PAD), MAX_SCALE)
+        for per_row in range(len(layers) - 1, 1, -1):
+            breaks = range(per_row, len(layers), per_row)
+            if any(len(layers[k - 1]) > 1 or len(layers[k]) > 1 for k in breaks):
+                continue  # rows join through single nodes only, so the connector never crosses a node
+            if len(layers) % per_row == 1:
+                continue  # no row of one lone step: an orphan last row looks worse than a smaller figure
+            pl = place(per_row)
+            if fit(pl) > fit(best) * 1.15:  # wrapping costs reading flow; only when clearly larger
+                best = pl
+    rects, cols, rows = best
+    return rects, cols, layer, back, rows
 
 
 def layout(graph: dict, sizes: dict[str, tuple[float, float]], area=(13.6, 6.9), center=(0.0, 0.25),
@@ -108,13 +148,14 @@ def layout(graph: dict, sizes: dict[str, tuple[float, float]], area=(13.6, 6.9),
 
     panels = {}
     for p, ids in members.items():
-        rects, cols, layer, back = _layout_panel(ids, edges, sizes, order, label_w or {})
+        wrap = area if not graph.get("panels") else None  # a lone figure may wrap; panels keep one row each
+        rects, cols, layer, back, rows = _layout_panel(ids, edges, sizes, order, label_w or {}, wrap)
         ys = [r[1] + r[3] / 2 for r in rects.values()] + [r[1] - r[3] / 2 for r in rects.values()]
         has_back = bool(back)
-        w = cols[-1][1] + 2 * PANEL_PAD
+        w = max(c[1] for c in cols) + 2 * PANEL_PAD
         header = HEADER_H if graph.get("panels") else 0.0  # no panels → no header band to reserve
         h = max(ys) - min(ys) + 2 * PANEL_PAD + header + (0.45 if has_back else 0)
-        panels[p] = dict(rects=rects, cols=cols, layer=layer, back=back, w=w, h=h, top=max(ys), header=header)
+        panels[p] = dict(rects=rects, cols=cols, layer=layer, back=back, rows=rows, w=w, h=h, top=max(ys), header=header)
 
     def arrange(horizontal):
         W = (sum(p["w"] for p in panels.values()) + PANEL_GAP * (len(panels) - 1)) if horizontal else max(p["w"] for p in panels.values())
@@ -150,6 +191,12 @@ def layout(graph: dict, sizes: dict[str, tuple[float, float]], area=(13.6, 6.9),
         cx, cy, w, h = out_nodes[n]
         return {"right": (cx + w / 2, cy), "left": (cx - w / 2, cy), "bottom": (cx, cy - h / 2)}[which]
 
+    def row_floor(pid, n):
+        """Bottom of the row node n sits in (the lowest node in its row)."""
+        P = panels[pid]
+        r = P["rows"][P["layer"][n]]
+        return min(out_nodes[m][1] - out_nodes[m][3] / 2 for m in P["rects"] if P["rows"][P["layer"][m]] == r)
+
     node_panel = {n: p for p, ids in members.items() for n in ids}
     rails = []
     for e in graph.get("edges", []):
@@ -161,6 +208,12 @@ def layout(graph: dict, sizes: dict[str, tuple[float, float]], area=(13.6, 6.9),
             floor = out_panels[pa][1] + 0.3
             (ax, ay), (bx, by) = side(a, "bottom"), side(b, "bottom")
             pts = [(ax, ay), (ax, floor), (bx, floor), (bx, by)]
+        elif pa == pb and P["rows"][P["layer"][a]] != P["rows"][P["layer"][b]]:
+            # Wrapped chain: down from a into the gap under its row, across, then down into the top of b.
+            (ax, ay) = side(a, "bottom")
+            bx, by = out_nodes[b][0], out_nodes[b][1] + out_nodes[b][3] / 2
+            gap_y = row_floor(pa, a) - ROW_GAP / 2
+            pts = [(ax, ay), (ax, gap_y), (bx, gap_y), (bx, by)]
         else:
             (ax, ay), (bx, by) = side(a, "right"), side(b, "left")
             if pa == pb:

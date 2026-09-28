@@ -25,4 +25,5 @@ already exists, unless the user asked to redo it.
 6. **Final:** run `./scripts/render.sh <video>` with the voice, then `uv run scripts/check.py <video>`. Show the user
    the story spine, what was cut, the gate results, `out/<video>/final.mp4`, and any gate left failing, with the reason.
 
-Don't commit. Suggest adding the judgment calls that were new for this source to `videos/NOTES.md`.
+Run at most 2 agents at once. Each agent's final report is ≤ 15 lines (files changed, gate results, blockers);
+ask for details in a scratchpad file, not in the report. Don't commit. Suggest adding the judgment calls that were new for this source to `videos/NOTES.md`.

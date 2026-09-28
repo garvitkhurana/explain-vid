@@ -26,3 +26,5 @@ Never edit other specs, facts, scripts or AGENTS.md; propose AGENTS.md changes i
 Preview only your scene: `SPEC=<video> SCENES=<id> uv run manim -ql main.py Explainer` in `renderers/manim`
 (after `TTS=none uv run scripts/voice.py <video>`). Then run a full `TTS=none ./scripts/render.sh <video>` and
 `uv run scripts/check.py <video>`. Report the step names, the data shape, the render time, and gate results.
+
+Final report ≤ 15 lines: what changed (files), gate results, blockers. No narration of steps; put details in a scratchpad file and give its path.

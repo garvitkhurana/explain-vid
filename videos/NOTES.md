@@ -143,3 +143,26 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
     order is add order (use z_index); animations record their end state when *built*, so build them after layout;
     never use `hash()` for deterministic art (salted per process) — use crc32.
 59. **Gate hole closed:** the verbatim-command check now walks every `cmd` in a scene (alternatives panels too).
+60. **A loop is a ring, not an if/then.** The user: "an agent is a loop, and a harness is basically an agent loop,
+    plus knobs to control it" and "not if, then loop". The generic `cycle` template (3–6 nodes on a ring, a marker
+    that goes round, optional enter/exit and a growing side panel) replaced the hardcoded `loop` template and its
+    `tool_calls?` decision box. The loop exit is an edge label, not a branch; a retry is a lap (`lap: true`).
+61. **ai_harness spine:** agent = model + harness (title, roles) → an agent is a loop (cycle) → a harness is that
+    loop plus knobs (the same ring, knobs lighting the step they control) → failures → thesis.
+62. **Figures fill the frame:** a long single-row flow chain wraps into rows (only at single-node layers, so the
+    connector never crosses a node); rows are centred and the connector drops into the next row's top — the
+    first cut (left-aligned row, connector along the frame edge) looked off to the user. Never wrap to a lone last
+    step (voice-clone `generate` left "Join" alone on row 2): a smaller one-row figure reads better. Metrics cards stay centred on the cards shown so far.
+63. **Open on the question, not the bookkeeping.** "Take a task from the repo's evals: twenty-one times two" sounded
+    odd as an opening line; "Start with a simple question: what's twenty-one times two?" Where it came from belongs
+    on screen (the illustrative note), not in the first sentence.
+64. **Don't re-introduce inputs, and name the scene.** voice-clone `generate` re-listed clip + script (already the
+    `idea` scene) and added "+ exact transcript" next to "script", which read as a mistake: true (the clip's
+    transcript is an optional speed-up) but a detail a first-time viewer doesn't need. A scene that zooms into one
+    moment gets a heading saying which ("When you hit generate"), and starts from inputs the viewer already knows.
+65. **"What happens when you hit generate" = a numbered walkthrough, not another flow chart.** The user's reference
+    video (0:40–1:30) lists the steps on the left, building up one per sentence, with the real code for the current
+    step in a window on the right, then zooms into the one mechanism worth a picture (chunks → one pass each → joined).
+    New templates: `steps` (list + code window, optional wave art) and `chunks` (split / pass / join). A second
+    flow chart of the same inputs read as repetitive. Code lines are quoted source: `check.py` requires each one
+    verbatim in facts.json (shortened to exact fragments so they stay readable), like `cmd`.

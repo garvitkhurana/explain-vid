@@ -53,7 +53,7 @@
       "type": "flow",
       "duration_s": 8,
       "narration": [
-        "Take a task from the repo's evals: twenty-one times two.",
+        "Start with a simple question: what's twenty-one times two?",
         "Your code sends it to the model, with a list of tools.",
         "The model never runs anything. It only asks.",
         "Your code runs the calculator function.",
@@ -162,48 +162,112 @@
     },
     {
       "id": "loop",
-      "type": "loop",
+      "type": "cycle",
       "duration_s": 8,
       "narration": [
         "Under the hood, it's a loop over a growing list of messages.",
         "Each round, the whole list goes to the model.",
-        "If the reply asks for a tool, that request is added.",
+        "When the reply asks for a tool, that request is added.",
         "Your code runs it, and appends the result as data.",
         "It repeats until a reply asks for nothing."
       ],
       "data": {
-        "nodes": {
-          "chat": "call the model",
-          "decide": "tool_calls?",
-          "run": "run each tool",
-          "append": "append result",
-          "final": "final answer"
-        },
-        "messages": [
+        "nodes": [
           {
-            "role": "system",
-            "text": "Solve the task. Use tools when helpful. Be brief."
+            "id": "model",
+            "label": "call the model",
+            "sub": "whole list in"
           },
           {
-            "role": "user",
-            "text": "Use the calculator tool for 21 * 2. Reply with only the numeric value."
+            "id": "run",
+            "label": "run the tool",
+            "sub": "your code"
           },
           {
-            "role": "assistant",
-            "text": "tool_call: calculator(\"21*2\")",
-            "code": true
-          },
-          {
-            "role": "tool",
-            "text": "{\"ok\": true, \"expression\": \"21*2\", \"value\": 42.0}",
-            "code": true
-          },
-          {
-            "role": "assistant",
-            "text": "42"
+            "id": "append",
+            "label": "append result",
+            "sub": "as data"
           }
         ],
-        "footnote": "illustrative run of eval case calc-basic"
+        "exit": {
+          "label": "final answer",
+          "from": "model",
+          "edge": "no tool call"
+        },
+        "panel": {
+          "title": "messages",
+          "lines": [
+            {
+              "role": "system",
+              "text": "Solve the task. Use tools when helpful. Be brief."
+            },
+            {
+              "role": "user",
+              "text": "Use the calculator tool for 21 * 2. Reply with only the numeric value."
+            },
+            {
+              "role": "assistant",
+              "text": "tool_call: calculator(\"21*2\")",
+              "code": true
+            },
+            {
+              "role": "tool",
+              "text": "{\"ok\": true, \"expression\": \"21*2\", \"value\": 42.0}",
+              "code": true
+            },
+            {
+              "role": "assistant",
+              "text": "42"
+            }
+          ],
+          "note": "illustrative run of the calc-basic task"
+        },
+        "steps": [
+          {
+            "id": "setup",
+            "show": 2
+          },
+          {
+            "id": "chat",
+            "at": "model"
+          },
+          {
+            "id": "call",
+            "at": "model",
+            "show": 3
+          },
+          {
+            "id": "run",
+            "at": "run"
+          },
+          {
+            "id": "append",
+            "at": "append",
+            "show": 4
+          },
+          {
+            "id": "loop",
+            "at": "model"
+          },
+          {
+            "id": "final",
+            "at": "exit",
+            "show": 5
+          }
+        ],
+        "beats": {
+          "call": 2,
+          "run": 3,
+          "append": [
+            3,
+            0.5
+          ],
+          "loop": 4,
+          "final": [
+            4,
+            0.55
+          ]
+        }
       }
     },
     {
