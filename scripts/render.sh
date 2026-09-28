@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Usage: ./scripts/render.sh [spec.json]   (default semif.json, looked up in specs/)
+# Usage: ./scripts/render.sh <video>   (renders videos/<video>/spec.json)
 # narration → voice + timing → Manim, one process per scene in parallel → concat → mux audio.
-# Outputs in out/<spec>/: final.mp4 (video + narration), manim.mp4 (silent), subtitles.srt.
+# Outputs in out/<video>/: final.mp4 (video + narration), manim.mp4 (silent), subtitles.srt.
 # Env: THEME (default brutalist), TTS=say|none (none = silent, timing estimated from word count),
 #      JOBS (parallel scene renders, default = CPU cores),
 #      SCENES=id,id (re-render only these; reuse the other scenes' existing renders — narration must be unchanged).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-SPEC="${1:-semif.json}"
-OUT="out/$(basename "$SPEC" .json)"
+SPEC="${1:?usage: ./scripts/render.sh <video>   (a folder in videos/)}"
+OUT="out/$SPEC"
 JOBS="${JOBS:-$(sysctl -n hw.ncpu)}"
 mkdir -p "$OUT"
 start=$(date +%s)
 
 uv run scripts/voice.py "$SPEC"
-ids=$(uv run --no-project python -c "import json; print(' '.join(s['id'] for s in json.load(open('specs/$SPEC'))['scenes']))")
+ids=$(uv run --no-project python -c "import json; print(' '.join(s['id'] for s in json.load(open('videos/$SPEC/spec.json'))['scenes']))")
 
 # Each scene gets its own media dir: parallel Manim runs would otherwise overwrite each other's partial files.
 # Text SVG caches live inside it and are cleared (they're keyed on text+size, not layout width).

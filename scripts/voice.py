@@ -4,10 +4,10 @@
 # ///
 """Narration → audio, caption cues and scene timing. The spec's `narration` is the single source for all three.
 
-Usage: uv run scripts/voice.py [spec.json]
+Usage: uv run scripts/voice.py <video>   (reads videos/<video>/spec.json)
 Env:   TTS=say|none   (none = estimate timing from word count, no audio; for fast silent previews)
 
-Writes out/<spec>/voice/timing.json (read by the Manim renderer), out/<spec>/voice/narration.wav, out/<spec>/subtitles.srt.
+Writes out/<video>/voice/timing.json (read by the Manim renderer), out/<video>/voice/narration.wav, out/<video>/subtitles.srt.
 """
 
 import json
@@ -56,9 +56,11 @@ def srt_time(t: float) -> str:
 
 
 def main() -> None:
-    spec_name = sys.argv[1] if len(sys.argv) > 1 else "semif.json"
-    spec = json.loads((ROOT / "specs" / spec_name).read_text())
-    OUT = ROOT / "out" / Path(spec_name).stem / "voice"  # one output dir per spec so videos don't overwrite each other
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: uv run scripts/voice.py <video>   (a folder in videos/)")
+    video = sys.argv[1]
+    spec = json.loads((ROOT / "videos" / video / "spec.json").read_text())
+    OUT = ROOT / "out" / video / "voice"  # one output dir per spec so videos don't overwrite each other
     voice = spec["meta"].get("voice", {})
     backend = os.environ.get("TTS", voice.get("backend", "say"))
     if backend not in ("say", "none"):
@@ -100,7 +102,7 @@ def main() -> None:
                            "spoken": round(spoken, 3), "sentences": sentences, "cues": cues}
         t0 = (start_f + frames) / fps
 
-    timing = {"spec": spec_name, "backend": backend, "fps": fps, "total": t0, "scenes": scenes}
+    timing = {"video": video, "backend": backend, "fps": fps, "total": t0, "scenes": scenes}
     (OUT / "timing.json").write_text(json.dumps(timing, indent=2) + "\n")
 
     # Subtitles use the same cues, shifted to absolute time.

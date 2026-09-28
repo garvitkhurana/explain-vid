@@ -1,4 +1,4 @@
-# Decisions made hand-writing specs/semif.json
+# Decisions made hand-writing videos/semif/spec.json
 (These are the judgment calls a future LLM step must make; they become its prompt.)
 
 1. **The aha:** "stop generating text you parse back into an if" — lead with the problem in the title kicker.

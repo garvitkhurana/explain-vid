@@ -11,18 +11,18 @@ cd renderers/manim && uv sync && cd ../..
 
 ## Render
 ```bash
-./scripts/render.sh           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
-TTS=none ./scripts/render.sh  # silent, timing estimated from word count (fast)
-./scripts/render_all.sh       # reference: both stacks + out/compare.mp4
-uv run scripts/check.py       # hard gates
+./scripts/render.sh semif           # out/semif/final.mp4 with narration + subtitles.srt (Manim, brutalist)
+TTS=none ./scripts/render.sh semif  # silent, timing estimated from word count (fast)
+./scripts/render_all.sh semif       # reference: both stacks + out/compare.mp4
+uv run scripts/check.py semif       # hard gates
 ```
 
 ## Write a new video
-Add `specs/<name>.json` (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, loop, checklist, fanout, gantt, balance, flow, outro).
+Each video is a folder: `videos/<video>/spec.json` is its script (scene types: title, problem, pipeline, readout, race, branch, bars, metrics, loop, checklist, fanout, gantt, balance, flow, outro).
 Each scene has `narration` (spoken sentences; captions and timing come from it) and `duration_s` (minimum length). Then:
 ```bash
-./scripts/render.sh <name>.json
-uv run scripts/check.py <name>.json
+./scripts/render.sh <video>
+uv run scripts/check.py <video>
 ```
 Both renderers read the same file: Remotion via `--props`, Manim via the `SPEC` env var.
 
@@ -32,7 +32,7 @@ with `{"id": "source", "type": "source", "duration_s": 3.5, "narration": [], "da
 "Check out the repo" / "Read the full post at" / "Read the full paper at" + the link. No custom outros.
 
 ## Figures (`flow` scenes)
-Describe a diagram as data and the renderer lays it out and animates it — see `specs/figures.json`:
+Describe a diagram as data and the renderer lays it out and animates it — see `videos/figures/spec.json`:
 `panels`, `nodes` (`shape`: box/stack/trapezoid/pill/matrix/bars, `role` → colour slot via `roles`), `edges`
 (`style: dashed`, `label`), `steps` (reveal, highlight, flow with packet `kind`/`back`, diagonal, cells, bars).
 `mode: "figure"` = silent, fixed `hold` per step; otherwise steps wait on narration sentences.
@@ -40,7 +40,7 @@ Subscripts: write `S_{N}`, not Unicode subscript characters (fonts lack most of 
 
 ## Tips
 - Manim themes: `THEME=midnight|neon|brutalist|pop` (presets in `renderers/manim/theme.py`).
-  Preview a few scenes fast: `SCENES=title,readout THEME=pop uv run manim -qh main.py Explainer` in `renderers/manim`.
+  Preview a few scenes fast: `SPEC=semif SCENES=title,readout THEME=pop uv run manim -qh main.py Explainer` in `renderers/manim`.
 - `cd renderers/remotion && npm run studio` for a live, scrubbable preview.
 - Manim text doesn't wrap; use `fit()` in `main.py` for anything that might overflow.
 - Animated text: use `on_change(key, build)` (rebuilds only when `key()` changes), never `always_redraw` — per-frame

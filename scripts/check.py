@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = ["jsonschema>=4"]
 # ///
-"""Hard gates for rendered explainers. Exit 1 on any failure. Usage: uv run scripts/check.py [spec.json]"""
+"""Hard gates for rendered explainers. Exit 1 on any failure. Usage: uv run scripts/check.py <video>"""
 
 import json
 import re
@@ -13,9 +13,12 @@ from pathlib import Path
 import jsonschema
 
 ROOT = Path(__file__).resolve().parents[1]
-spec_path = ROOT / "specs" / (sys.argv[1] if len(sys.argv) > 1 else "semif.json")
+if len(sys.argv) != 2:
+    sys.exit("Usage: uv run scripts/check.py <video>   (a folder in videos/)")
+VIDEO = sys.argv[1]
+spec_path = ROOT / "videos" / VIDEO / "spec.json"
 spec = json.loads(spec_path.read_text())
-schema = json.loads((ROOT / "specs" / "scene.schema.json").read_text())
+schema = json.loads((ROOT / "videos" / "scene.schema.json").read_text())
 failures = []
 
 
@@ -31,10 +34,10 @@ try:
 except jsonschema.ValidationError as e:
     gate(False, f"spec schema: {e.message}")
 
-OUT = ROOT / "out" / spec_path.stem
+OUT = ROOT / "out" / VIDEO
 timing_path = OUT / "voice" / "timing.json"
 timing = json.loads(timing_path.read_text()) if timing_path.exists() else None
-gate(timing is not None and timing.get("spec") == spec_path.name, "timing.json exists and matches this spec")
+gate(timing is not None and timing.get("video") == VIDEO, "timing.json exists and matches this video")
 # Narration drives length; fall back to the spec minimums if timing is missing (that gate already failed).
 expected = timing["total"] if timing else sum(s["duration_s"] for s in spec["scenes"])
 
@@ -52,6 +55,50 @@ for sc in spec["scenes"]:
         if g["term"].lower() in shown and g["plain"].lower() not in said:
             unexplained.append(f"{sc['id']}:{g['term']}")
 gate(not unexplained, f"on-screen jargon explained in narration first ({', '.join(unexplained) or 'all ok'})")
+# Grounding: every number shown on screen (strings in data) or written as digits in narration must match a fact in
+# videos/<video>/facts.json. Numeric data fields are chart geometry, not stated claims. Illustrative facts need the
+# word "illustrative" on screen in the scene that uses them. Spelled-out narration numbers are not checked yet.
+NUM = re.compile(r"\d+(?:\.\d+)?")
+
+
+def strings(x):
+    if isinstance(x, str):
+        yield x
+    elif isinstance(x, dict):
+        for k, v in x.items():
+            if k != "beats":
+                yield from strings(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from strings(v)
+
+
+facts_path = spec_path.parent / "facts.json"
+if facts_path.exists():
+    facts = json.loads(facts_path.read_text())
+    bad = [f.get("id", "?") for f in facts if not all(f.get(k) for k in ("id", "value", "source", "kind"))
+           or f["kind"] not in ("measured", "illustrative")]
+    gate(not bad, f"facts.json entries have id, value, source, kind ({', '.join(bad) or 'all ok'})")
+    by_num = {}
+    for f in facts:
+        for n in NUM.findall(str(f.get("value", "")).replace(",", "")):
+            by_num.setdefault(float(n), []).append(f)
+    ungrounded, unlabelled = [], []
+    for sc in spec["scenes"]:
+        shown = list(strings(sc["data"]))
+        for text in shown + [s for s in sc["narration"]]:
+            for n in NUM.findall(text.replace(",", "")):
+                matches = by_num.get(float(n))
+                if not matches:
+                    ungrounded.append(f"{sc['id']}:{n}")
+                elif all(f["kind"] == "illustrative" for f in matches) and \
+                        not any("illustrative" in t.lower() for t in shown):
+                    unlabelled.append(f"{sc['id']}:{n}")
+    gate(not ungrounded, f"every number traces to facts.json ({', '.join(sorted(set(ungrounded))) or 'all ok'})")
+    gate(not unlabelled, f"illustrative numbers labelled on screen ({', '.join(sorted(set(unlabelled))) or 'all ok'})")
+else:
+    print(f"SKIP grounding: no {facts_path.relative_to(ROOT)}")
+
 w, h = spec["meta"]["size"]
 fps = spec["meta"]["fps"]
 
@@ -87,6 +134,19 @@ if timing:
             if n != sc["frames"]:
                 wrong.append(f"{sid} {n}/{sc['frames']}")
     gate(not wrong, f"scene frame counts match narration timing ({', '.join(wrong) or 'all exact'})")
+
+# Still screen: the longest stretch with no visual change, caption band cropped out (captions change on their own).
+# Narrated videos only: silent figure-mode specs hold each step for a fixed `hold` on purpose.
+MAX_STILL_S = 6.0
+manim = OUT / "manim.mp4"
+narrated = any(s["narration"] for s in spec["scenes"])
+if not narrated:
+    print("SKIP still screen: no narration (figure mode)")
+elif manim.exists():
+    fd = subprocess.run(["ffmpeg", "-v", "info", "-i", str(manim), "-vf", "crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
+                         "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
+    still = max([float(x) for x in re.findall(r"freeze_duration: (\S+)", fd)] or [0.0])
+    gate(still <= MAX_STILL_S, f"manim: longest still screen {still:.1f}s <= {MAX_STILL_S:.0f}s")
 
 final = OUT / "final.mp4"
 if final.exists() and timing and timing.get("backend") != "none":

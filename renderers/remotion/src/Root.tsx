@@ -1,9 +1,9 @@
 import {Composition, Series} from 'remotion';
-import defaultSpec from '../../../specs/semif.json';
+import defaultSpec from '../../../videos/semif/spec.json';
 import {SceneView, Scene} from './scenes';
 
-// The spec arrives as input props: `remotion render ... --props=../../specs/<name>.json`.
-// Studio falls back to semif.json.
+// The spec arrives as input props: `remotion render ... --props=../../videos/<video>/spec.json`.
+// Studio falls back to videos/semif/spec.json.
 type Spec = {meta: {fps: number; size: number[]}; scenes: Scene[]};
 
 const frames = (s: Scene, fps: number) => Math.round(s.duration_s * fps);
