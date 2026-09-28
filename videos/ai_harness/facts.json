@@ -1,0 +1,218 @@
+[
+  {
+    "id": "agent-equation",
+    "claim": "The post's core equation: an AI agent is a model plus a harness, not the model alone",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Agent = Model + Harness\"",
+    "kind": "measured"
+  },
+  {
+    "id": "model-vs-harness-roles",
+    "claim": "The model reasons and decides; the harness executes actions, manages memory, runs tools and enforces rules - 'brain' vs 'body and workspace around the brain'",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Model: Reasons, predicts and generates text or other outputs ... Harness: Executes actions, manages memory, runs tools and enforces rules\"",
+    "kind": "measured"
+  },
+  {
+    "id": "harness-without-definition",
+    "claim": "Without a harness a model can only answer, not act: it can't reliably run code, call APIs, access files, remember prior work, or complete multi-step workflows",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Without a harness, a model can answer questions, but it can’t reliably run code, call APIs, access files, remember prior work or complete multi-step workflows on its own.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "react-loop-mechanism",
+    "claim": "The core mechanism: a repeating Reason -> Act -> Observe -> Repeat cycle. The model reasons over context and decides the next action; the harness carries it out (tool, sandboxed code, API, storage write) and feeds the result back as new context; the loop continues until the task is done",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Reason. The model reads everything in its context... Act. The harness carries out that action by running a tool, executing code in a sandbox, calling an API or writing to storage. Observe. The harness captures the result and feeds it back to the model as new context. Repeat.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "react-loop-name-origin",
+    "claim": "This pattern is called the ReAct loop (reasoning and acting); it was introduced in the ReAct paper by Shunyu Yao et al. in 2022, and it underlies many production agent systems",
+    "value": "2022",
+    "unit": "year",
+    "source": "https://www.databricks.com/blog/ai-harness + \"The ReAct loop was introduced in the paper ReAct: Synergizing Reasoning and Acting in Language Models by Shunyu Yao et al. in 2022.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "running-example-coding-agent",
+    "claim": "Running example the post itself uses to show the loop: a coding agent fixing a bug. The model proposes a code change; the harness runs it in an isolated sandbox, captures the test results, returns them to the model; if tests fail the model reasons about what went wrong and tries again",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Consider a coding agent tasked with fixing a bug. The model proposes a code change. The harness runs the code in an isolated sandbox, captures the test results and returns them to the model. If the tests fail, the model reasons about what went wrong and tries again.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "eight-building-blocks-count",
+    "claim": "The post names eight building blocks every production harness needs",
+    "value": "8",
+    "unit": "components",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Eight building blocks every production harness needs\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-system-prompts",
+    "claim": "Component 1, system prompts: the standing instructions given every run telling the model who it is, its goal and its rules; poorly written prompts are one of the most common causes of unpredictable behavior",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"A system prompt is the standing set of instructions given to the model every time it runs... Poorly written prompts are one of the most common causes of inconsistent or unpredictable behavior.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-tools-execution",
+    "claim": "Component 2, tools and tool execution: the model decides which tool to call, the harness actually runs it and returns the result. Developers are shifting from many narrow tools toward a general 'write and execute code' capability so the model can build workflows dynamically",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Developers are moving away from large collections of narrowly defined tools. Instead, they are giving agents a more general-purpose capability: the ability to write and execute code.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-sandboxes",
+    "claim": "Component 3, sandboxes: isolated workspaces so agent-run code can't affect anything outside the environment; this lets teams monitor, reset or shut agents down safely and run many agents in parallel",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"A sandbox is an isolated workspace where an agent can run code or take actions without affecting anything outside the environment... They also make it possible to run many agents in parallel at scale.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-filesystem",
+    "claim": "Component 4, filesystem and durable storage: a place to read/write files (code, notes, plans) that persists between sessions, letting agents accumulate progress on long tasks and share a workspace with humans or other agents",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Persistent storage allows agents to accumulate progress across long-running tasks and collaborate with humans or other agents through a shared workspace of files, not just chat messages.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-memory-context",
+    "claim": "Component 5, memory and context management: base models don't retain memory beyond their context window, so the harness decides what stays active and what gets summarized as conversations grow ('context compaction'), and stores/retrieves history across sessions",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"As conversations grow longer, the harness decides what stays active and what gets summarized, a process known as context compaction.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-feedback-loops",
+    "claim": "Component 6, feedback loops and self-verification: after each action the harness can run tests, inspect results, or prompt the model to review its own output, letting agents handle long tasks by repeatedly attempting, checking, catching errors and correcting course",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Good harnesses do not just let the model act — they check the work... repeatedly attempting work, checking results, catching errors and correcting course automatically.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-guardrails",
+    "claim": "Component 7, guardrails and human-in-the-loop controls: rules that block unsafe or unapproved actions, e.g. requiring human approval before an agent deletes a file, sends a customer message, or makes a purchase",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Examples include requiring human approval before an agent deletes a file, sends a customer message or makes a purchase.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "component-observability",
+    "claim": "Component 8, observability and logging: seeing what the agent did, why, and where it went wrong via logs/traces/dashboards; feeds evaluation systems that measure agent correctness across thousands of runs, not just demos",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"At scale, observability also feeds evaluation infrastructure — systems that continuously measure whether agents are performing correctly across thousands of runs, not just demos.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "proof-officeqa-harness-score",
+    "claim": "Proof that harness design rivals model upgrades: pairing GPT-5.5 with the OfficeQA Pro Agent Harness scored 52.63% on complex, multi-part enterprise document tasks, up from 36.10% with GPT-5.4 (a weaker model), cutting errors nearly in half",
+    "value": "52.63%",
+    "unit": "% score, OfficeQA Pro Agent Harness with GPT-5.5",
+    "source": "https://www.databricks.com/blog/ai-harness + \"When Databricks paired GPT-5.5 with the OfficeQA Pro Agent Harness — designed for complex, multi-part enterprise document tasks — it scored 52.63%, up from 36.10% with GPT-5.4, cutting errors nearly in half.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "proof-officeqa-baseline-score",
+    "claim": "Baseline for the same comparison: GPT-5.4 (the earlier/weaker model in the pairing) scored 36.10% on the same OfficeQA Pro Agent Harness benchmark before the harness/model pairing improved it to 52.63%",
+    "value": "36.10%",
+    "unit": "% score, OfficeQA Pro Agent Harness with GPT-5.4",
+    "source": "https://www.databricks.com/blog/ai-harness + \"it scored 52.63%, up from 36.10% with GPT-5.4\"",
+    "kind": "measured"
+  },
+  {
+    "id": "failure-mode-latency",
+    "claim": "Common production failure: multi-step agents with many tool calls may take 10 seconds or longer to respond, creating a frustrating user experience",
+    "value": "10",
+    "unit": "seconds or longer (latency failure mode)",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Multi-step agents with many tool calls may take 10 seconds or longer to respond, creating a frustrating user experience.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "failure-mode-context-rot",
+    "claim": "Common production failure: 'context rot' - as conversation history grows, the model's reasoning quality degrades without a strategy to trim or summarize older context",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Context rot. As conversation history grows, the model’s reasoning quality degrades. Without a strategy to trim or summarize older context, performance often breaks down on long-running tasks.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "failure-mode-tool-overload",
+    "claim": "Common production failure: giving the model too many tools at once increases confusion and slows decision-making before any work begins",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Tool overload. Giving the model too many tools at once increases confusion and slows decision-making before any work begins.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "failure-mode-source",
+    "claim": "Most operational agent failures come from the harness, not the model itself",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Most operational agent failures come from the harness, not the model itself.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "three-engineering-stages",
+    "claim": "The focus of AI development has moved outward through three stages: prompt engineering (wording the input), context engineering (curating what the model sees), and harness engineering (designing the full system: tools, sandboxes, loops, guardrails)",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"It has shifted from writing better prompts, to controlling what information the model sees, to designing the entire system around the model.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "harness-contains-prompt-context",
+    "claim": "Prompt engineering and context engineering both live inside harness engineering: the harness is the system around the model, prompts and context are pieces of it",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Prompt and context engineering both live inside harness engineering. The harness is the system around the model; prompts and context are pieces of that system.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "agent-sprawl-problem",
+    "claim": "Enterprise problem the post frames harnesses as solving: companies build dozens of agents across teams without a consistent harness approach, creating 'agent sprawl' - disconnected agents no single group can govern, evaluate or improve",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Without a consistent approach to harness design, that quickly creates agent sprawl: disconnected agents that no single group can reliably govern, evaluate or improve.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "future-disposable-harnesses",
+    "claim": "Emerging idea: disposable harnesses - lightweight, task-specific harnesses created for a single workflow and discarded afterward, becoming more practical as execution environments get faster and cheaper to provision",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Disposable harnesses. Lightweight, task-specific harnesses are created for a single workflow and discarded afterward instead of operating as long-running infrastructure.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "future-nlah",
+    "claim": "Emerging idea: natural-language agent harnesses (NLAHs) - engineers describe agent behavior in plain language instead of code, and a shared runtime interprets and executes those instructions",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Natural-language agent harnesses (NLAHs). Instead of configuring harnesses through code, engineers describe how an agent should behave using plain-language instructions.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "closing-thesis",
+    "claim": "Closing thesis: the model contains the intelligence, the harness turns that intelligence into reliable work; strong harnesses make average models useful, weak harnesses waste the best models",
+    "value": "-",
+    "unit": "",
+    "source": "https://www.databricks.com/blog/ai-harness + \"Strong harnesses make average models useful. Weak harnesses waste the best models.\"",
+    "kind": "measured"
+  }
+]

@@ -1,0 +1,258 @@
+[
+  {
+    "id": "repo-url",
+    "claim": "Repo URL for the source project",
+    "value": "https://github.com/garvitkhurana/mlx-voice-clone",
+    "unit": "-",
+    "source": "https://github.com/garvitkhurana/mlx-voice-clone (repo root)",
+    "kind": "measured"
+  },
+  {
+    "id": "what-it-is",
+    "claim": "Local voice-cloned text-to-speech on macOS, built on mlx-audio + Qwen3",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:3 \"Local **voice-cloned TTS** on macOS (Apple Silicon) via [mlx-audio](https://github.com/Blaizzy/mlx-audio) + Qwen3.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "runs-locally-apple-silicon",
+    "claim": "Runs locally on an Apple Silicon Mac using MLX (Apple's on-device ML framework), not a cloud API",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:9 \"macOS + Apple Silicon\" and scripts/qwen3_clone.py:3-4 \"Minimal Qwen3-TTS voice clone on Apple Silicon (MLX). Requires: macOS + Apple Silicon\"",
+    "kind": "measured"
+  },
+  {
+    "id": "network-only-first-run",
+    "claim": "Network is needed only on first run to download the Hugging Face model; after that generation is local (no cloud API call, no per-use bill)",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:12 \"Network on first run (Hugging Face model download)\"",
+    "kind": "measured"
+  },
+  {
+    "id": "models-cached-locally",
+    "claim": "Model weights are identified by fixed Hugging Face repo IDs and loaded once per run via load_model, so after the first download they are cached and reused from local disk rather than re-fetched",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:32-33 \"MODEL_LITE = \\\"mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit\\\"\" / \"MODEL_PRO = \\\"mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit\\\"\"; qwen3_clone.py:571-572 \"Load once so chunked runs do not repeatedly fetch/initialize. loaded_model = load_model(model_id)\"",
+    "kind": "measured"
+  },
+  {
+    "id": "inputs-three",
+    "claim": "Three inputs drive a clone: a reference voice clip, the exact transcript of what was said in that clip, and the script to narrate",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:24-27 \"--ref-audio ./sample_clip.m4a --ref-text-file documents/ref_voice_transcript.txt --text-file documents/01_intro.txt\"",
+    "kind": "measured"
+  },
+  {
+    "id": "ref-text-file-purpose",
+    "claim": "Supplying the reference clip's exact transcript (--ref-text-file) skips Whisper transcription of the clip, which is faster and repeatable",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:70 \"**`--ref-text-file`** skips Whisper on the reference clip (faster, repeatable).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "ref-text-optional-whisper-fallback",
+    "claim": "If no reference transcript is given, the tool transcribes the reference clip itself with Whisper (an extra model download and slower)",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:405-407 \"If omitted, mlx-audio transcribes with Whisper (extra model download + slower).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "running-example-ref-clip",
+    "claim": "Running example: the repo's own reference clip and transcript (candidate for the video's running example) — a ~15-20s clip where the speaker introduces themself and their work",
+    "value": "-",
+    "unit": "-",
+    "source": "documents/ref_voice_transcript.txt (full text) \"Hi, I'm Garvit Khurana. This is a short reference clip for local voice cloning on my Mac. I work on AI products for capital markets, and I use this tool to narrate scripts in my own voice.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "running-example-script",
+    "claim": "Running example: the demo narration script the repo ships to be spoken in the cloned voice",
+    "value": "-",
+    "unit": "-",
+    "source": "documents/01_intro.txt \"Hey!\\nI'm Garvit Khurana — nice to meet you.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "chunking-mechanism",
+    "claim": "Long scripts are split into pieces at paragraph/sentence boundaries under a character limit (default 700, README example uses 450), each piece is synthesized separately, then the pieces are joined into one output file",
+    "value": "700",
+    "unit": "chars (default --chunk-chars)",
+    "source": "scripts/qwen3_clone.py:478-481 \"--chunk-chars ... default=700 ... Chunk long text into this many chars per pass\"; qwen3_clone.py:146-186 _split_long_text() splits on paragraph/sentence boundaries",
+    "kind": "measured"
+  },
+  {
+    "id": "join-no-overlap",
+    "claim": "Chunks are joined end to end with no overlap and no crossfade: ffmpeg's concat demuxer with stream copy (-c copy) does a hard splice, not a blended merge",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:360-390 _concat_wavs(): \"Concatenate WAV parts losslessly via ffmpeg concat demuxer\" using -f concat -safe 0 ... -c copy (no filter/crossfade applied)",
+    "kind": "measured"
+  },
+  {
+    "id": "chunking-why",
+    "claim": "Chunking exists because the underlying generator truncates long text: the default token cap in mlx-audio (1200) would cut off a long script if run in a single pass, so this tool raises the cap and also splits into pieces",
+    "value": "1200",
+    "unit": "tokens (mlx-audio default max_tokens, before this tool's override)",
+    "source": "scripts/qwen3_clone.py:472-475 \"--max-tokens ... default=4096 ... Token cap for generation (mlx-audio default 1200 truncates long scripts).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "cli-command",
+    "claim": "Exact CLI command from the README to clone a voice and narrate a script",
+    "value": "uv run python scripts/qwen3_clone.py --ref-audio ./sample_clip.m4a --ref-text-file documents/ref_voice_transcript.txt --text-file documents/01_intro.txt --quality lite --chunk-chars 450 --temperature 0.45 --speed 1.08",
+    "unit": "-",
+    "source": "README.md:24-31",
+    "kind": "measured"
+  },
+  {
+    "id": "web-ui-command",
+    "claim": "Exact command from the README to start the browser UI",
+    "value": "uv run python scripts/tts_ui_server.py",
+    "unit": "-",
+    "source": "README.md:34 (and README.md:79)",
+    "kind": "measured"
+  },
+  {
+    "id": "web-ui-url",
+    "claim": "Browser UI serves at this local address",
+    "value": "http://127.0.0.1:8765/",
+    "unit": "-",
+    "source": "README.md:33 \"# Web UI → http://127.0.0.1:8765/\"; scripts/tts_ui_server.py:386-388 host=\"127.0.0.1\", port=8765",
+    "kind": "measured"
+  },
+  {
+    "id": "record-sample-command",
+    "claim": "Exact command from the README to record a fresh reference clip from the mic",
+    "value": "./scripts/record_sample.sh",
+    "unit": "-",
+    "source": "README.md:20-21 \"# Record a fresh reference clip (~15s) — speak the lines in documents/ref_voice_transcript.txt ./scripts/record_sample.sh\"",
+    "kind": "measured"
+  },
+  {
+    "id": "uv-sync-command",
+    "claim": "Exact setup command from the README to install dependencies",
+    "value": "uv sync",
+    "unit": "-",
+    "source": "README.md:17-18 \"cd mlx-voice-clone uv sync\"",
+    "kind": "measured"
+  },
+  {
+    "id": "cli-vs-browser-same-engine",
+    "claim": "The browser UI is a thin wrapper that runs the same CLI script as a subprocess and streams its logs to the page; it does not reimplement synthesis",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:57 \"`scripts/tts_ui_server.py` | Thin wrapper: runs the CLI as a subprocess, streams logs\"; scripts/tts_ui_server.py:276-329 _build_qwen_cmd() builds the same `qwen3_clone.py` CLI invocation, _stream_generate() runs it via subprocess.Popen and yields each stdout line as an SSE event",
+    "kind": "measured"
+  },
+  {
+    "id": "browser-progress-streaming",
+    "claim": "The browser UI shows live progress by streaming the CLI's stdout/stderr lines to the page over Server-Sent Events (SSE) as generation runs, chunk by chunk",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/tts_ui_server.py:308-329 _stream_generate(): \"for line in proc.stdout: ... yield f\\\"data: {json.dumps({'log': line})}\\\\n\\\\n\\\"\"; qwen3_clone.py:602-603 prints \"Generating chunk {i}/{len(chunks)}...\" per chunk",
+    "kind": "measured"
+  },
+  {
+    "id": "quality-modes",
+    "claim": "Two quality modes trade size for speed vs fidelity: lite uses a 0.6B-parameter model for faster iteration, pro uses a 1.7B-parameter model when quality matters more",
+    "value": "0.6B / 1.7B",
+    "unit": "model parameters (lite / pro)",
+    "source": "README.md:73 \"**Quality:** `lite` (0.6B) for iteration, `pro` (1.7B) when you care about quality.\"; qwen3_clone.py:32-33 model IDs \"Qwen3-TTS-12Hz-0.6B-Base-8bit\" / \"Qwen3-TTS-12Hz-1.7B-Base-8bit\"",
+    "kind": "measured"
+  },
+  {
+    "id": "quality-default",
+    "claim": "Default quality mode is lite unless --quality pro is passed",
+    "value": "lite",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:426-431 \"--quality choices=('lite','pro') default='lite'\"",
+    "kind": "measured"
+  },
+  {
+    "id": "speed-control",
+    "claim": "A --speed flag controls speaking rate directly during synthesis (1.0 = model default, greater than 1 is faster); default is 1.08, about 8% quicker than the model's natural pace",
+    "value": "1.08",
+    "unit": "x (default --speed, 1.0 = model default)",
+    "source": "scripts/qwen3_clone.py:449-454 \"--speed ... default=1.08 ... Speaking rate (1.0 = model default, >1 faster). Default: 1.08 (~8%% quicker).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "speed-vs-pitch",
+    "claim": "Speaking speed is separate from pitch: pitch is not adjustable in this tool and must be changed afterward by editing the exported audio file externally",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:102 \"**Pitch** (separate from speaking speed): edit the exported file externally without re-synthesizing.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "output-format-default",
+    "claim": "Default output file format is AAC-encoded .m4a (produced via ffmpeg from an intermediate WAV); raw WAV can be requested instead",
+    "value": "m4a",
+    "unit": "-",
+    "source": "README.md:74 \"**Export:** default AAC `.m4a` via ffmpeg. Raw WAV: `--output-format wav`.\"; qwen3_clone.py:513-518 \"--output-format choices=('m4a','wav') default='m4a'\"",
+    "kind": "measured"
+  },
+  {
+    "id": "output-sample-rate",
+    "claim": "Reference audio is converted to 24 kHz mono before synthesis, and generated speech is produced at 24 kHz",
+    "value": "24000",
+    "unit": "Hz",
+    "source": "scripts/qwen3_clone.py:30 \"SAMPLE_RATE = 24_000\"; README.md:71 \"Ref audio is converted to **24 kHz mono WAV**\"",
+    "kind": "measured"
+  },
+  {
+    "id": "output-naming",
+    "claim": "Generated files are named with the time of generation plus the script's filename stem",
+    "value": "HHMMSS_<script_stem>.m4a",
+    "unit": "-",
+    "source": "README.md:60 \"**Output naming:** `HHMMSS_<script_stem>.m4a`\"",
+    "kind": "measured"
+  },
+  {
+    "id": "ffmpeg-required",
+    "claim": "ffmpeg must be installed and on PATH (used to convert reference audio, export final audio, and concatenate chunked output); the tool errors with an install hint if it is missing",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:11 \"`ffmpeg` on `PATH` (`brew install ffmpeg`)\"; scripts/qwen3_clone.py:85-88 \"raise RuntimeError('ffmpeg not found. Install with: brew install ffmpeg')\"",
+    "kind": "measured"
+  },
+  {
+    "id": "uv-required",
+    "claim": "uv (or Python 3.12+) is required to install dependencies and run the scripts",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:10 \"[uv](https://github.com/astral-sh/uv) (or Python 3.12+)\"",
+    "kind": "measured"
+  },
+  {
+    "id": "mechanism-ref-caching",
+    "claim": "The converted 24 kHz mono reference WAV is cached on disk keyed by the source file's path, size and modified time, so repeated runs with the same clip skip re-conversion",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:36-65 _ref_cache_key() and _ensure_wav(): cache_dir keyed by \"src.resolve().as_posix()|size|mtime\", reused if \"out.is_file()\"",
+    "kind": "measured"
+  },
+  {
+    "id": "mechanism-speed-levers",
+    "claim": "Levers that change generation speed: lite vs pro model, chunk size, --fast (fewer, larger chunks, each needing one reference re-encode), reference-text file (skips Whisper), and the reference-audio cache; the UI itself does not make the model faster",
+    "value": "-",
+    "unit": "-",
+    "source": "README.md:84 \"Speed levers: `lite` vs `pro`, chunk size, `--fast`, ref text file, and cache. The UI does not make the model faster.\"; qwen3_clone.py:489-493 \"--fast ... Fewer ICL passes: enforce a higher chunk floor (~900 chars) for voice-clone mode (each chunk runs a full reference encode; fewer chunks = faster).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "stats-reported",
+    "claim": "After generation, stderr reports playback length (how long the output sounds) separately from generation wall-clock time (how long the Mac took to produce it) so the two are not confused",
+    "value": "-",
+    "unit": "-",
+    "source": "scripts/qwen3_clone.py:288-299 \"Stats: playback length (how long it sounds): ... Stats: generation time (wall clock on this Mac, model+synth+export): ... not the same as playback length above\"",
+    "kind": "measured"
+  }
+]

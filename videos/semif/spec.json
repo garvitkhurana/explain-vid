@@ -112,7 +112,9 @@
         "Account scores high, but it isn't an option, so it's ignored."
       ],
       "data": {
-        "question": "Which queue should handle this request?",
+        "question": "Q: Which queue should handle this request?",
+        "scores_label": "Next-token scores (whole vocabulary)",
+        "rest_label": "… every other token in the vocabulary",
         "note": "last position only · no token sampled",
         "vocab": [
           {
@@ -135,7 +137,8 @@
           },
           {
             "tok": "Account",
-            "logit": 22.4
+            "logit": 22.4,
+            "ignored": true
           },
           {
             "tok": "C",
@@ -147,6 +150,7 @@
             "logit": 17.8
           }
         ],
+        "softmax_label": "softmax over A, B, C",
         "slots": [
           {
             "letter": "A",
@@ -163,7 +167,8 @@
             "option": "sales",
             "p": 0.02
           }
-        ]
+        ],
+        "ignored_label": "ignored"
       }
     },
     {
@@ -182,18 +187,44 @@
           "label": "Generate JSON array",
           "seconds": 5.332,
           "tokens": 111,
-          "passes": 111
+          "passes": 111,
+          "counter": "{done} / {tokens} tokens · {done} passes"
         },
         "right": {
           "label": "Direct typed logits",
           "seconds": 1.023,
           "tokens": 0,
           "decisions": 21,
-          "passes": 1
+          "passes": 1,
+          "footer": "{tokens} output tokens · {passes} pass · {decisions} answers"
         },
-        "speedup": "5.21x",
-        "note": "median of 3 runs",
-        "time_scale": 1.1
+        "speedup": "5.21x faster",
+        "note": "{decisions} decisions, median of 3 runs",
+        "time_scale": 1.1,
+        "answers": [
+          "yes",
+          "yes",
+          "no",
+          "yes",
+          "no",
+          "yes",
+          "yes",
+          "no",
+          "yes",
+          "no",
+          "yes",
+          "yes",
+          "no",
+          "yes",
+          "no",
+          "yes",
+          "yes",
+          "no",
+          "yes",
+          "no",
+          "yes"
+        ],
+        "highlight": "yes"
       }
     },
     {
@@ -208,6 +239,7 @@
       ],
       "data": {
         "prefix_label": "Shared state, ~8,000 chars",
+        "prefix_note": "prefilled once",
         "cache_label": "KV cache",
         "branches": 21,
         "branch_label": "21 questions, one batch",

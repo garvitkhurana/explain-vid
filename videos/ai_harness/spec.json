@@ -1,0 +1,434 @@
+{
+  "meta": {
+    "title": "What is an AI harness?",
+    "source": {
+      "kind": "blog",
+      "url": "https://www.databricks.com/blog/ai-harness",
+      "credit": "Source: Databricks blog"
+    },
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "backend": "say",
+      "voice": "Samantha",
+      "rate_wpm": 175
+    },
+    "glossary": [
+      {
+        "term": "ReAct",
+        "plain": "reasoning and acting"
+      },
+      {
+        "term": "sandbox",
+        "plain": "isolated"
+      },
+      {
+        "term": "system prompt",
+        "plain": "standing"
+      },
+      {
+        "term": "context compaction",
+        "plain": "summarized"
+      },
+      {
+        "term": "guardrails",
+        "plain": "approval"
+      },
+      {
+        "term": "observability",
+        "plain": "logs"
+      },
+      {
+        "term": "context rot",
+        "plain": "reasoning gets worse"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "duration_s": 3,
+      "narration": [
+        "An AI agent isn't just a model. It's a model plus a harness."
+      ],
+      "data": {
+        "title": "Agent = Model + Harness",
+        "subtitle": "The model thinks. The harness lets it act.",
+        "kicker": "From the Databricks blog"
+      }
+    },
+    {
+      "id": "roles",
+      "type": "flow",
+      "duration_s": 8,
+      "narration": [
+        "The model is the brain: it reasons, and decides what to do.",
+        "Alone, it can only answer. It can't run code, call tools, or remember earlier work.",
+        "The harness is the body around it: it acts, keeps memory, and enforces rules."
+      ],
+      "data": {
+        "roles": {
+          "input": "c1",
+          "model": "c2",
+          "output": "neutral",
+          "harness": "c4"
+        },
+        "nodes": [
+          {
+            "id": "task",
+            "shape": "stack",
+            "role": "input",
+            "label": "Task",
+            "sub": "\"fix this bug\""
+          },
+          {
+            "id": "model",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Model",
+            "sub": "reasons, decides"
+          },
+          {
+            "id": "answer",
+            "role": "output",
+            "label": "Text answer",
+            "sub": "can't act on it"
+          },
+          {
+            "id": "harness",
+            "role": "harness",
+            "label": "Harness",
+            "sub": "acts, remembers, enforces rules",
+            "items": [
+              "run code",
+              "call tools",
+              "files",
+              "memory"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "from": "task",
+            "to": "model"
+          },
+          {
+            "from": "model",
+            "to": "answer",
+            "style": "dashed",
+            "label": "alone"
+          },
+          {
+            "from": "model",
+            "to": "harness",
+            "label": "with a harness"
+          }
+        ],
+        "steps": [
+          {
+            "id": "brain",
+            "do": "flow",
+            "path": [
+              "task",
+              "model"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "answer",
+            "do": "flow",
+            "path": [
+              "model",
+              "answer"
+            ],
+            "kind": "response"
+          },
+          {
+            "id": "cant",
+            "do": "highlight",
+            "targets": [
+              "answer"
+            ]
+          },
+          {
+            "id": "harness",
+            "do": "flow",
+            "path": [
+              "model",
+              "harness"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "acts",
+            "do": "highlight",
+            "targets": [
+              "harness"
+            ]
+          }
+        ],
+        "beats": {
+          "brain": 0,
+          "answer": 1,
+          "cant": [
+            1,
+            0.45
+          ],
+          "harness": 2,
+          "acts": [
+            2,
+            0.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "loop",
+      "type": "flow",
+      "duration_s": 12,
+      "narration": [
+        "They work in a loop. The post's example: a coding agent fixing a bug.",
+        "Reason: the model proposes a code change.",
+        "Act: the harness runs it in an isolated sandbox.",
+        "Observe: it feeds the test results back to the model.",
+        "If the tests fail, the model works out why, and tries again.",
+        "That's the ReAct loop, for reasoning and acting. It repeats until the job is done."
+      ],
+      "data": {
+        "roles": {
+          "input": "c1",
+          "model": "c2",
+          "harness": "c4",
+          "output": "c3"
+        },
+        "panels": [
+          {
+            "id": "react",
+            "label": "ReAct loop",
+            "sub": "reason, act, observe, repeat",
+            "role": "neutral"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "task",
+            "shape": "stack",
+            "role": "input",
+            "label": "Fix a bug"
+          },
+          {
+            "id": "reason",
+            "panel": "react",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Reason",
+            "sub": "model proposes\na code change"
+          },
+          {
+            "id": "act",
+            "panel": "react",
+            "role": "harness",
+            "label": "Act",
+            "sub": "harness runs it\nin a sandbox"
+          },
+          {
+            "id": "observe",
+            "panel": "react",
+            "role": "harness",
+            "label": "Observe",
+            "sub": "test results\nback to the model"
+          },
+          {
+            "id": "done",
+            "role": "output",
+            "label": "Done"
+          }
+        ],
+        "edges": [
+          {
+            "from": "task",
+            "to": "reason"
+          },
+          {
+            "from": "reason",
+            "to": "act"
+          },
+          {
+            "from": "act",
+            "to": "observe"
+          },
+          {
+            "from": "observe",
+            "to": "reason",
+            "style": "dashed",
+            "label": "tests fail: retry"
+          },
+          {
+            "from": "observe",
+            "to": "done"
+          }
+        ],
+        "steps": [
+          {
+            "id": "task",
+            "do": "reveal",
+            "targets": [
+              "task"
+            ]
+          },
+          {
+            "id": "reason",
+            "do": "flow",
+            "path": [
+              "task",
+              "reason"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "act",
+            "do": "flow",
+            "path": [
+              "reason",
+              "act"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "observe",
+            "do": "flow",
+            "path": [
+              "act",
+              "observe"
+            ],
+            "kind": "response"
+          },
+          {
+            "id": "retry",
+            "do": "flow",
+            "path": [
+              "observe",
+              "reason"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "done",
+            "do": "flow",
+            "path": [
+              "observe",
+              "done"
+            ],
+            "kind": "response"
+          }
+        ],
+        "beats": {
+          "done": [
+            5,
+            0.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "parts",
+      "type": "checklist",
+      "duration_s": 10,
+      "narration": [
+        "The post lists eight building blocks a harness needs. They do four jobs.",
+        "Instructions: a standing prompt with its rules, and the tools it may use.",
+        "A safe place to act: an isolated sandbox.",
+        "Memory: files that last between sessions, and old context summarized.",
+        "Checks: tests after each action, approval before risky steps, and logs."
+      ],
+      "data": {
+        "title": "Eight building blocks, four jobs",
+        "rows": [
+          {
+            "label": "Tell it what to do",
+            "tag": "system prompt \u00b7 tools"
+          },
+          {
+            "label": "Give it a safe place to act",
+            "tag": "sandbox"
+          },
+          {
+            "label": "Let it remember",
+            "tag": "files \u00b7 context compaction"
+          },
+          {
+            "label": "Check its work",
+            "tag": "tests \u00b7 guardrails \u00b7 observability"
+          }
+        ]
+      }
+    },
+    {
+      "id": "failures",
+      "type": "metrics",
+      "duration_s": 8,
+      "narration": [
+        "Most operational failures come from the harness, not the model.",
+        "As history grows, the model's reasoning gets worse. That's context rot.",
+        "Hand it too many tools, and it gets confused before it starts.",
+        "Chain many tool calls, and a reply can take ten seconds or longer."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Long history",
+            "value": "Context rot",
+            "compare": "reasoning degrades"
+          },
+          {
+            "label": "Too many tools",
+            "value": "Confusion",
+            "compare": "slow to decide"
+          },
+          {
+            "label": "Many tool calls",
+            "value": "10 s+",
+            "compare": "to respond"
+          }
+        ],
+        "title": "Most operational failures come from the harness, not the model"
+      }
+    },
+    {
+      "id": "thesis",
+      "type": "metrics",
+      "duration_s": 6,
+      "narration": [
+        "So: an agent is a model plus a harness.",
+        "A strong harness makes an average model useful.",
+        "A weak one wastes the best model there is."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Strong harness",
+            "value": "Average model",
+            "compare": "made useful"
+          },
+          {
+            "label": "Weak harness",
+            "value": "Best model",
+            "compare": "wasted"
+          }
+        ],
+        "title": "Agent = Model + Harness"
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

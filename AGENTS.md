@@ -3,10 +3,10 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 
 ## Run
 - Render: `./scripts/render.sh <video>` (renders `videos/<video>/spec.json`) → `out/<video>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `THEME=`, `TTS=say|none`, `JOBS=`, `SCENES=` to re-render only changed scenes)
-- Fast preview: `SPEC=<video> SCENES=id,id uv run manim -qh main.py Explainer` in `renderers/manim` (after voice.py); both stacks for reference: `./scripts/render_all.sh <video>`
+- Fast preview: `SPEC=<video> SCENES=id,id uv run manim -qh main.py Explainer` in `renderers/manim` (after voice.py)
 - Gates: `uv run scripts/check.py <video>` (checks `out/<video>/`; grounding against `videos/<video>/facts.json`)
 - New video end to end: `/make-explainer <source> <video>` (agents in `.claude/agents/`: fact-extractor, spec-author, template-builder, render-checker)
-- Needs: node, ffmpeg, uv (Python via uv only, 3.12 pinned in renderers/manim), brew `cairo pango pkg-config` (for Manim)
+- Needs: ffmpeg, uv (Python via uv only, 3.12 pinned in renderers/manim), brew `cairo pango pkg-config` (for Manim)
 
 ## Constraints
 - Goal: one shared spec format (`videos/<video>/spec.json`, schema in `videos/scene.schema.json`) rendered by fixed scene templates; LLMs fill specs, never write animation code.
@@ -25,6 +25,8 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - 2026-09-27 — Templates stay generic and data-driven (loop, checklist, fanout, gantt, balance added for agent-unwrapped + Habitat); outputs go to `out/<video>/` so videos don't collide.
 - 2026-09-27 — Spec generation via Claude Code subagents (facts → spec → render/gates loop); gates stay code. Reuses dev-agent prompts; no API infra yet. Videos live in `videos/<video>/{spec,facts}.json`.
 - 2026-09-27 — Figures are data: `flow` scene + deterministic layered layout (`renderers/manim/layout.py`); nodes carry shape + semantic role, steps drive ghost-then-reveal, `figure` (silent) or `narrated` mode. No per-figure code.
+- 2026-09-27 — Tool videos follow a tool arc (hook formula → flow → why → how you use it → commands), written for a first-time viewer; no disclaimers. User preferred a plainer reference cut over mechanism detail.
+- 2026-09-27 — Remotion removed; Manim only. Per-scene retest showed parity, not enough to maintain a second renderer.
 
 ## Notes
 Judgment calls are logged in videos/NOTES.md; the agent prompts in `.claude/agents/` cite them by number.

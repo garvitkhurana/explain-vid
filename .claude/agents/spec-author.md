@@ -14,19 +14,31 @@ Never edit templates, scripts, facts.json or AGENTS.md. If a scene needs a templ
 report what it would need to show. The main session decides whether `template-builder` makes it.
 
 ## Checklist (reasons in NOTES.md)
-1. Pick one aha and one story spine: problem → mechanism → proof → what you get → call to action (#1, #2, #23).
-   List what you cut in your report, not in the video.
-2. Pick the most visual evidence for each claim, and put each mechanism scene next to the number it explains (#3, #9).
-3. Use one running example from the source itself, carried through the scenes (#22).
-4. Narration explains, not describes: intuition → mechanism → proof for each concept (#14).
-5. Use plain words in the voice and precise terms on screen. Add every on-screen term to `meta.glossary`, with its plain phrase
+1. Pick one aha and one story spine that fits the source (#1, #2, #23, #42). For a tool: hook (what it does, as a
+   formula) → how it flows → why it's built that way → how you use it → getting started. For a result or argument:
+   problem → mechanism → proof → what you get. List what you cut in your report, not in the video.
+   Open on the project's name (repo or post title) on screen; the viewer must know what this is about (#51).
+   Pick the template by what the content *is*, not by habit (#52, #56):
+   things moving through steps → `flow` / `pipeline` / `loop`; two options or before/after → `compare` /
+   `alternatives` / `balance`; a list of properties or checks → `checklist`; a few headline numbers → `metrics`;
+   one number vs another → `race` / `bars`; setup or usage → `commands`; timing → `gantt`; one-to-many → `fanout`.
+2. Write for a first-time viewer (#43). Name each tool once and don't explain it. Explain a mechanism only when the
+   viewer needs it to use or trust the thing; leave out implementation detail such as delimiters, sample rates,
+   chunk sizes, framework names and internal file names. Never state anything the source doesn't do, even if a
+   reference video said it.
+3. No disclaimers, warnings or usage-policy lines anywhere, least of all at the end. The generated source card is
+   the ending (#38, #44).
+4. Pick the most visual evidence for each claim, and put each mechanism scene next to the number it explains (#3, #9).
+5. Use one running example from the source itself, carried through the scenes (#22).
+6. Narration explains, not describes: intuition → mechanism → proof for each concept you choose to explain (#14).
+7. Use plain words in the voice and precise terms on screen. Add every on-screen term to `meta.glossary`, with its plain phrase
    spoken in the same or an earlier scene (#15).
-6. Map one sentence to one visible step; a sentence with no step is a still screen (#19). Add `data.beats` only when the
+8. Map one sentence to one visible step; a sentence with no step is a still screen (#19). Add `data.beats` only when the
    sentences don't follow the template's default order (#21).
-7. Every number on screen, and every number written as digits in narration, must be a fact `value`. Spell numbers in narration
+9. Every number on screen, and every number written as digits in narration, must be a fact `value`. Spell numbers in narration
    the way a narrator says them. Label illustrative values "illustrative" on screen (#5, #12, #24).
-8. Compare like with like and don't mix workloads (#4, #10).
-9. Aim for about 60–110 s. Keep each caption cue ≤ 64 chars; voice.py splits at commas.
+10. Compare like with like and don't mix workloads (#4, #10).
+11. Aim for about 60–110 s. Keep each caption cue ≤ 64 chars; voice.py splits at commas.
 
 ## Verify before reporting
 ```
