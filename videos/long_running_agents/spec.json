@@ -146,12 +146,7 @@
             "compare": "sees progress, stops"
           }
         ],
-        "footnote": "Prompt: \"build a clone of claude.ai\"",
-        "beats": {
-          "footnote": 0,
-          "card0": 1,
-          "card1": 2
-        }
+        "title": "Prompt: \"build a clone of claude.ai\""
       }
     },
     {
@@ -433,11 +428,11 @@
         "rows": [
           {
             "label": "Declares victory too early",
-            "tag": "feature list · one at a time"
+            "tag": "feature list \u00b7 one at a time"
           },
           {
             "label": "Leaves bugs or no notes",
-            "tag": "git · progress log · smoke test"
+            "tag": "git \u00b7 progress log \u00b7 smoke test"
           },
           {
             "label": "Marks done without testing",

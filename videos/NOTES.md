@@ -96,3 +96,50 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
 40. **Titles, headlines and URLs are fitted to the frame** — never assume a title is short.
 41. **Silent scenes drifted by a frame:** Manim writes static waits as floor(duration·fps) frames but animated ones
     as ceil. Every wait now takes the animated path; the per-scene frame gate caught it.
+
+## Pass 9 (2026-09-27): user review of mlx-voice-clone — structure over detail
+42. **A tool video needs a tool's arc, not a result's arc.** The user preferred a reference cut (~95 s) that goes
+    hook formula ("voice clip + script = narration") → simple pipeline → why local → plain steps → two ways in
+    (CLI / browser) → speed vs quality → three commands. Longer, but every scene answers the next obvious question.
+43. **Too technical = implementation detail the viewer can't use.** 24 kHz, ~450-char chunks, paragraph/sentence
+    delimiters, FastAPI/subprocess were accurate but unhelpful. "Split into pieces, joined into one file" is enough.
+    The reference also claimed chunks "overlap a little"; the code does a hard splice. Never copy a reference's claims,
+    only its structure — facts come from the source.
+44. **No disclaimers.** An earlier cut ended "only clone voices you have permission to use"; the user didn't want it.
+45. **Text-heavy slots got real templates:** `compare` (two columns, per-row winner left/right/both/none, drawn
+    ticks/crosses) and `commands` (terminal panel, commands type in). Cloud-side cells in a compare are generic
+    wording, never a claim about a named service.
+46. **Manim trap:** two `.animate` calls on one mobject in the same play overwrite each other's target (it's stored
+    on the mobject) — the flow `highlight` of a ghosted node stayed ghosted. Build the second after the first plays.
+47. **A step must fit its own sentence** (`step_time`): otherwise short sentences push later steps late and the
+    scene overruns its narration (frame gate catches it).
+48. **Grounding gate read role colours (`c1`) as numbers.** Digits glued to a word are names, not claims.
+49. **Remotion vs Manim, per scene (checklist, metrics, compare, commands; same timing.json + theme):** parity in
+    look and frame-exact timing. Remotion fades cleaner, lays out text with no coordinate maths and is faster on long
+    scenes (~2–3 s fixed start-up); Manim ticks are crisper and it keeps the caption-band check. Flow stays Manim-only.
+    No case where switching stacks is worth a second renderer to maintain.
+50. **Open:** the last `commands` line can still be mid-typing at the fade when its sentence is very short (both stacks).
+    Flow figures laid out as one long row (agent_unwrapped `course`) render too small, and short figures sit at
+    the top of the frame (ai_harness `loop`).
+
+## Pass 10 (2026-09-27): user review of the new voice-clone cut
+51. **Say the name.** The cut opened on a formula card and never showed "mlx-voice-clone". Open on the name.
+52. **Alternatives aren't a flow.** CLI vs browser drawn as two boxes feeding "same engine" read as a pipeline;
+    it's two ways to do one thing → side-by-side windows (terminal vs browser page). Flow = things moving.
+53. **A simple idea chart beats a formula of cards:** clip (waveform) + script (text lines) → model → narration
+    (waveform). Small drawn art on nodes says "audio" / "text" without words.
+54. **A headline said first goes at the top.** ai_harness used the metrics `footnote` as its opening line: it showed
+    alone mid-screen, then cards appeared above it. Metrics now has `title`; a footnote narrated before its cards
+    fails the render.
+55. **Don't over-plain a term the audience already uses.** agent-unwrapped said "tests" for evals; the user found
+    it odd. If the source's own word is the common one in its field (evals), say it.
+56. **Template by content kind.** Each kind of thing has its own template (moving parts → flow; options → compare /
+    alternatives; checks → checklist; setup → commands; numbers → metrics/race). spec-author maps content to kind first.
+57. **No hardcoded copy in templates.** Audit: the semif-era `race` ("21 decisions"), `readout` ("Next-token
+    scores…", "softmax over A, B, C", the "Account" row) and `branch` ("prefilled once") carry source text in code;
+    moved to data. Rule: every on-screen string comes from the spec.
+58. **Manim traps (alternatives/flow art):** a `Succession` adds its mobjects to the scene incl. ValueTrackers — fading
+    one at scene end changes its value and rebuilds `on_change` rows mid-fade (remove trackers once played); draw
+    order is add order (use z_index); animations record their end state when *built*, so build them after layout;
+    never use `hash()` for deterministic art (salted per process) — use crc32.
+59. **Gate hole closed:** the verbatim-command check now walks every `cmd` in a scene (alternatives panels too).

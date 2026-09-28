@@ -1,5 +1,4 @@
 # Visual presets. Pick with THEME=<name> (default: brutalist, chosen 2026-09-27).
-# midnight mirrors renderers/remotion/src/theme.ts; render_all.sh uses it for the stack comparison.
 import os
 
 PRESETS = {

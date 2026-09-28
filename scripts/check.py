@@ -58,7 +58,8 @@ gate(not unexplained, f"on-screen jargon explained in narration first ({', '.joi
 # Grounding: every number shown on screen (strings in data) or written as digits in narration must match a fact in
 # videos/<video>/facts.json. Numeric data fields are chart geometry, not stated claims. Illustrative facts need the
 # word "illustrative" on screen in the scene that uses them. Spelled-out narration numbers are not checked yet.
-NUM = re.compile(r"\d+(?:\.\d+)?")
+# Digits glued to a word or a dot (role colour c1, Qwen3, python3.12) are names, not stated numbers.
+NUM = re.compile(r"(?<![\w.])\d+(?:\.\d+)?")
 
 
 def strings(x):
@@ -66,7 +67,7 @@ def strings(x):
         yield x
     elif isinstance(x, dict):
         for k, v in x.items():
-            if k != "beats":
+            if k not in ("beats", "cmd"):  # commands are grounded verbatim, below
                 yield from strings(v)
     elif isinstance(x, list):
         for v in x:
@@ -95,6 +96,20 @@ if facts_path.exists():
                         not any("illustrative" in t.lower() for t in shown):
                     unlabelled.append(f"{sc['id']}:{n}")
     gate(not ungrounded, f"every number traces to facts.json ({', '.join(sorted(set(ungrounded))) or 'all ok'})")
+    # Shell commands are quoted code: they must appear verbatim in a fact (their digits are paths/versions, not claims).
+    fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "source")) for f in facts)
+    fact_text = fact_text.replace("\\n", "\n")
+    def cmds(x):  # every {"cmd": ...} anywhere in a scene's data (commands lines, alternatives terminal panels)
+        if isinstance(x, dict):
+            if isinstance(x.get("cmd"), str):
+                yield x["cmd"]
+            for v in x.values():
+                yield from cmds(v)
+        elif isinstance(x, list):
+            for v in x:
+                yield from cmds(v)
+    unquoted = [f"{sc['id']}:{c}" for sc in spec["scenes"] for c in cmds(sc["data"]) if c not in fact_text]
+    gate(not unquoted, f"commands appear verbatim in facts.json ({', '.join(unquoted) or 'all ok'})")
     gate(not unlabelled, f"illustrative numbers labelled on screen ({', '.join(sorted(set(unlabelled))) or 'all ok'})")
 else:
     print(f"SKIP grounding: no {facts_path.relative_to(ROOT)}")
@@ -102,12 +117,10 @@ else:
 w, h = spec["meta"]["size"]
 fps = spec["meta"]["fps"]
 
-# final.mp4 and manim.mp4 are required; remotion.mp4 is checked only if a comparison render produced it.
-for name in ["remotion", "manim", "final"]:
+for name in ["manim", "final"]:
     f = OUT / f"{name}.mp4"
     if not f.exists():
-        if name in ("manim", "final"):
-            gate(False, f"{name}: {f.name} missing")
+        gate(False, f"{name}: {f.name} missing")
         continue
     probe = json.loads(subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -137,7 +150,7 @@ if timing:
 
 # Still screen: the longest stretch with no visual change, caption band cropped out (captions change on their own).
 # Narrated videos only: silent figure-mode specs hold each step for a fixed `hold` on purpose.
-MAX_STILL_S = 6.0
+MAX_STILL_S = 4.5  # user flagged a ~5 s screen with only a title and voice as "nothing comes up"
 manim = OUT / "manim.mp4"
 narrated = any(s["narration"] for s in spec["scenes"])
 if not narrated:
@@ -146,7 +159,7 @@ elif manim.exists():
     fd = subprocess.run(["ffmpeg", "-v", "info", "-i", str(manim), "-vf", "crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
                          "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
     still = max([float(x) for x in re.findall(r"freeze_duration: (\S+)", fd)] or [0.0])
-    gate(still <= MAX_STILL_S, f"manim: longest still screen {still:.1f}s <= {MAX_STILL_S:.0f}s")
+    gate(still <= MAX_STILL_S, f"manim: longest still screen {still:.1f}s <= {MAX_STILL_S:.1f}s")
 
 final = OUT / "final.mp4"
 if final.exists() and timing and timing.get("backend") != "none":

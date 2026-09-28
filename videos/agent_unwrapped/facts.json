@@ -1,0 +1,186 @@
+[
+  {
+    "id": "what-is-it",
+    "claim": "agent-unwrapped is a progressive, framework-free curriculum showing the raw agent loop underneath any agent library: message to tool to loop to eval",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:3 \"raw agent loop \u2014 messages \u2192 tools \u2192 agents \u2192 evals. No framework required.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "hook-no-parsing",
+    "claim": "The plain-language hook: the model never runs code itself, it only asks; your code runs the tool and hands the result back",
+    "value": "-",
+    "unit": "",
+    "source": "lessons/NOTES.md:119 \"Who runs tools? Never the model. It only *asks*. You run Python (`run_tool`) or MCP (`call_tool`).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "curriculum-steps",
+    "claim": "The curriculum has 13 numbered lessons (00-12) grouped into four stages: Foundation, Capability, Agency, Measure, plus optional Frameworks",
+    "value": "13",
+    "unit": "lessons",
+    "source": "README.md:21-43 lesson table and stage diagram (\"Foundation 00 \u2192 01 \u2192 02 \u2192 03\" ... \"Optional 12 frameworks\")",
+    "kind": "measured"
+  },
+  {
+    "id": "loop-mechanism",
+    "claim": "The agent loop is: call the model with the message history and tool specs; if it returns tool_calls, run each tool locally and append a role=tool message with the result, then call the model again; if it returns no tool_calls, that text is the final answer",
+    "value": "-",
+    "unit": "",
+    "source": "agent/loop.py:37-78 (for step_i in range(max_steps): data = chat(...); tool_calls = msg.get(\"tool_calls\") or []; if not tool_calls: return final; else run_tool per call, append role=tool, loop)",
+    "kind": "measured"
+  },
+  {
+    "id": "one-round-many-tools",
+    "claim": "One model reply can request multiple tool calls, and the loop runs all of them locally before calling the model again \u2014 that whole batch still counts as one LLM round",
+    "value": "-",
+    "unit": "",
+    "source": "agent/loop.py:80 \"One LLM reply can request MANY tools; each is a local run_tool, not a new LLM call.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "step-count-definition",
+    "claim": "step_count in the loop's result counts LLM chat() calls, not the number of tools run",
+    "value": "-",
+    "unit": "",
+    "source": "agent/loop.py:38,74 \"One loop iteration = one LLM call (not one tool).\" / \"step_count\": llm_round,  # number of LLM chat() calls",
+    "kind": "measured"
+  },
+  {
+    "id": "tools-registry",
+    "claim": "Three plain Python tools ship in the repo: word_stats, calculator, reverse_string, each just a normal function plus an entry in TOOL_SPECS (what the model sees) and DISPATCH (name to function)",
+    "value": "3",
+    "unit": "tools",
+    "source": "agent/tools.py:9-101 (word_stats, calculator, reverse_string defs; TOOL_SPECS list; DISPATCH dict)",
+    "kind": "measured"
+  },
+  {
+    "id": "running-example-task",
+    "claim": "Running example: the eval case asks the agent to use the calculator tool for 21 * 2 and reply with only the numeric value",
+    "value": "21 * 2",
+    "unit": "",
+    "source": "evals/agent_cases.jsonl:1 {\"id\": \"calc-basic\", \"task\": \"Use the calculator tool for 21 * 2. Reply with only the numeric value.\", ...}",
+    "kind": "measured"
+  },
+  {
+    "id": "running-example-tool-result",
+    "claim": "Running example mechanism: the calculator tool returns a structured JSON result, not prose \u2014 {\"ok\": true, \"expression\": \"21*2\", \"value\": 42.0} \u2014 which the loop appends as a role=tool message",
+    "value": "42.0",
+    "unit": "",
+    "source": "agent/tools.py:18-27 calculator(): value = float(eval(expression, ...)); return {\"ok\": True, \"expression\": expression, \"value\": value} \u2014 applied to expression \"21*2\"",
+    "kind": "illustrative"
+  },
+  {
+    "id": "running-example-expected",
+    "claim": "Running example proof: the eval harness checks the tool used was \"calculator\", the loop finished within 4 LLM rounds, and the final answer contains \"42\"",
+    "value": "4",
+    "unit": "max_steps",
+    "source": "evals/agent_cases.jsonl:1 \"max_steps\": 4, \"expect\": {\"tools_used_subset\": [\"calculator\"], \"success_substring\": \"42\", \"max_steps\": 4}",
+    "kind": "measured"
+  },
+  {
+    "id": "calculator-safety",
+    "claim": "The calculator tool only allows digits and + - * / ( ) . % characters before evaluating, and evaluates with builtins stripped, so a model can't use it to run arbitrary code",
+    "value": "-",
+    "unit": "",
+    "source": "agent/tools.py:18-27 allowed = set(\"0123456789+-*/().% \"); ... value = float(eval(expression, {\"__builtins__\": {}}, {}))",
+    "kind": "measured"
+  },
+  {
+    "id": "two-ways-to-expose-tools",
+    "claim": "Tools can be exposed two ways to the same loop: in-process Python (agent/tools.py + run_tool) or a stdio MCP server (mcp/server.py) that a client calls as call_tool over a subprocess, not a URL",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:50-56 layout comment agent/ \"core loop + shared libs\" vs mcp/ \"stdio MCP server\"; lessons/NOTES.md:125 \"MCP | Stdio JSON-RPC plugin process, not a FastAPI URL.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "mcp-name-collision-gotcha",
+    "claim": "The repo's own mcp/ package shares its name with the PyPI mcp SDK, so the server must be run as a script (python mcp/server.py), never as python -m mcp.server, or the wrong module gets imported",
+    "value": "-",
+    "unit": "",
+    "source": "mcp/server.py:6-8 \"Always launch as a script (`python mcp/server.py`), not `python -m mcp.server` (this directory shares the name of the PyPI `mcp` SDK).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "frameworks-optional",
+    "claim": "Frameworks like LangChain are optional and don't replace the loop, they just own the while: same message-in, tool-call-out cycle, a library runs it instead of your own for-loop",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:42 \"Optional 12 frameworks (same loop; LangChain owns the while)\"",
+    "kind": "measured"
+  },
+  {
+    "id": "who-picks-next-step",
+    "claim": "Two different design axes get conflated: who writes the while-loop (DIY vs LangChain vs Strands) versus who picks the next step (the model itself each round, model-driven, vs a fixed flowchart you write, LangGraph)",
+    "value": "-",
+    "unit": "",
+    "source": "lessons/NOTES.md:90-93 \"1. Who writes the `while`? ... 2. Who picks the next step? \u2014 model-driven ... vs you-driven (LangGraph flowchart; model fills nodes).\"",
+    "kind": "measured"
+  },
+  {
+    "id": "two-kinds-of-evals",
+    "claim": "Evals split into two kinds: output/prompt evals score only the reply text with no tools (evals/gen_cases.jsonl, 3 cases), agent/behavior evals score the full loop's tool trajectory and step budget (evals/agent_cases.jsonl, 3 cases)",
+    "value": "3",
+    "unit": "cases each",
+    "source": "lessons/NOTES.md:99-107 table (\"10 \u2014 output/prompt evals\" runs \"chat() once \u2014 no tools\"; \"11 \u2014 agent/behavior evals\" runs \"run_agent() \u2014 full loop\"); evals/gen_cases.jsonl and evals/agent_cases.jsonl each have 3 lines",
+    "kind": "measured"
+  },
+  {
+    "id": "why-both-evals-matter",
+    "claim": "Why measure both: a good answer reached via the wrong tools or a bloated path is still a bad agent, and a correct tool path with garbage text still fails the user",
+    "value": "-",
+    "unit": "",
+    "source": "lessons/NOTES.md:107 \"Why both: a good answer with the wrong tools (or a bloated path) is still a bad agent; a correct tool path with garbage text still fails the user.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "reliability-retries",
+    "claim": "Shared chat() helper retries flaky free API calls up to 3 attempts with backoff (~1s, 2s, 4s), then falls back to alternate models from env vars before giving up",
+    "value": "3",
+    "unit": "attempts",
+    "source": "agent/common.py:60-63 MAX_ATTEMPTS = 3; _backoff_sleep: delay = (2**attempt) + random.uniform(0, 0.25) \u2192 ~1s, 2s, 4s; README.md:82 \"retries 3\u00d7 with backoff, then tries OPENROUTER_MODEL_*_FALLBACKS\"",
+    "kind": "measured"
+  },
+  {
+    "id": "getting-started",
+    "claim": "Getting started: create a Python 3.12 venv, pip install requirements, copy .env.example to .env with an OPENROUTER_API_KEY, then run the first lesson",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:11-17 ```bash\\npython3.12 -m venv .venv\\nsource .venv/bin/activate\\npip install -r requirements.txt\\ncp .env.example .env   # add OPENROUTER_API_KEY\\npython lessons/00_mental_model.py```",
+    "kind": "measured"
+  },
+  {
+    "id": "provider-swap",
+    "claim": "If the free OpenRouter daily quota is exhausted, the same loop runs unchanged against Anthropic by setting LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY \u2014 common.py normalizes Anthropic's response back into the same message shape",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:75 \"Quota exhausted? LLM_PROVIDER=anthropic + ANTHROPIC_API_KEY.\"; agent/common.py:197-247 _anthropic_to_openai_shape() normalizes Anthropic Messages response to OpenAI chat.completion shape",
+    "kind": "measured"
+  },
+  {
+    "id": "rule-of-thumb",
+    "claim": "The repo's own one-line rule of thumb for the whole progression",
+    "value": "-",
+    "unit": "",
+    "source": "README.md:45 \"Rule of thumb: call the tool yourself \u2192 let the model call it \u2192 MCP standardizes access \u2192 measure answers, then trajectories \u2192 (optional) let a framework write the while.\"",
+    "kind": "measured"
+  },
+  {
+    "id": "eval-expected-answer",
+    "claim": "Eval case calc-basic expects the final answer to contain \"42\" and the tools used to include calculator",
+    "value": "42",
+    "unit": "",
+    "source": "evals/agent_cases.jsonl:1 {\"id\": \"calc-basic\", ... \"expect\": {\"tools_used_subset\": [\"calculator\"], \"success_substring\": \"42\", \"max_steps\": 4}}",
+    "kind": "measured"
+  },
+  {
+    "id": "clone-repo",
+    "claim": "Get the code by cloning the GitHub repo",
+    "value": "-",
+    "unit": "",
+    "source": "https://github.com/garvitkhurana/agent-unwrapped (meta.source) \u2192 git clone https://github.com/garvitkhurana/agent-unwrapped",
+    "kind": "measured"
+  }
+]

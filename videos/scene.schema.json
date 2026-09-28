@@ -107,6 +107,9 @@
               "fanout",
               "gantt",
               "balance",
+              "compare",
+              "commands",
+              "alternatives",
               "flow",
               "source"
             ]
@@ -130,7 +133,375 @@
             },
             "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. May be empty for silent figure-mode scenes."
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "metrics"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "cards"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Optional headline at the top (step `title`, sentence 0); cards then start at sentence 1."
+                    },
+                    "subtitle": {
+                      "type": "string"
+                    },
+                    "cards": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "label",
+                          "value",
+                          "compare"
+                        ]
+                      }
+                    },
+                    "footnote": {
+                      "type": "string",
+                      "description": "Closing line under the cards. Narrating it before every card is a render error: use `title`."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "flow"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "nodes",
+                    "steps"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Optional headline; the figure is laid out and centred in the space below it."
+                    },
+                    "subtitle": {
+                      "type": "string"
+                    },
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id"
+                        ],
+                        "properties": {
+                          "art": {
+                            "enum": [
+                              "wave",
+                              "lines"
+                            ],
+                            "description": "Drawn under the label: wave = audio bars in the role colour (rise in when a flow lands on the node first); lines = grey text lines (a document)."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "alternatives"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "title",
+                    "panels"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "subtitle": {
+                      "type": "string"
+                    },
+                    "footer": {
+                      "type": "string"
+                    },
+                    "panels": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "label",
+                          "kind"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "description": "Window title-bar text."
+                          },
+                          "kind": {
+                            "enum": [
+                              "terminal",
+                              "browser"
+                            ]
+                          },
+                          "role": {
+                            "enum": [
+                              "neutral",
+                              "c1",
+                              "c2",
+                              "c3",
+                              "c4",
+                              "c5"
+                            ]
+                          },
+                          "caption": {
+                            "type": "string",
+                            "description": "One plain line under the window."
+                          },
+                          "lines": {
+                            "type": "array",
+                            "maxItems": 7,
+                            "items": {
+                              "type": "object",
+                              "minProperties": 1,
+                              "maxProperties": 1,
+                              "properties": {
+                                "cmd": {
+                                  "type": "string"
+                                },
+                                "out": {
+                                  "type": "string"
+                                },
+                                "comment": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "label",
+                                "value"
+                              ],
+                              "properties": {
+                                "label": {
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "slider": {
+                            "type": "object",
+                            "required": [
+                              "label",
+                              "value"
+                            ],
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              }
+                            }
+                          },
+                          "button": {
+                            "type": "string"
+                          },
+                          "log": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "race"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "left",
+                    "right",
+                    "answers",
+                    "note",
+                    "speedup"
+                  ],
+                  "properties": {
+                    "note": {
+                      "type": "string",
+                      "description": "Top line; format string over right's numbers, e.g. \"{decisions} decisions, median of 3 runs\"."
+                    },
+                    "answers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "One answer per right.decisions: streamed as JSON on the left, shown in the grid on the right."
+                    },
+                    "highlight": {
+                      "type": "string",
+                      "description": "Answer drawn in the accent colour (default: the first)."
+                    },
+                    "speedup": {
+                      "type": "string",
+                      "description": "Closing line, e.g. \"5.21x faster\"."
+                    },
+                    "left": {
+                      "type": "object",
+                      "required": [
+                        "label",
+                        "seconds",
+                        "tokens",
+                        "counter"
+                      ],
+                      "properties": {
+                        "counter": {
+                          "type": "string",
+                          "description": "Format string; {done} = tokens so far, plus left's fields."
+                        }
+                      }
+                    },
+                    "right": {
+                      "type": "object",
+                      "required": [
+                        "label",
+                        "seconds",
+                        "decisions",
+                        "footer"
+                      ],
+                      "properties": {
+                        "footer": {
+                          "type": "string",
+                          "description": "Format string over right's fields."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "readout"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "question",
+                    "scores_label",
+                    "rest_label",
+                    "vocab",
+                    "softmax_label",
+                    "slots",
+                    "note",
+                    "ignored_label"
+                  ],
+                  "properties": {
+                    "vocab": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "tok",
+                          "logit"
+                        ],
+                        "properties": {
+                          "ignored": {
+                            "type": "boolean",
+                            "description": "The one dimmed row that gets ignored_label."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "branch"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "prefix_label",
+                    "prefix_note",
+                    "cache_label",
+                    "branches",
+                    "branch_label",
+                    "unit",
+                    "workload",
+                    "rates"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }

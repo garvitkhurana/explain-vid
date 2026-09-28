@@ -5,16 +5,21 @@ Needs out/<video>/voice/timing.json from scripts/voice.py (scene lengths + capti
 """
 
 import json
+import math
 import os
 import re
+import zlib
 from functools import lru_cache
 from pathlib import Path
 
 from manim import (
     DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Line, Rectangle, Transform,
     LaggedStart, RoundedRectangle, Scene, Square, Text, ValueTracker, VGroup, VMobject, config, linear, rate_functions,
-    DashedVMobject, Dot, MoveAlongPath, Polygon,
+    DashedVMobject, Dot, MoveAlongPath, Polygon, Succession, AnimationGroup, Intersection, ManimColor,
+    interpolate_color,
 )
+
+from manim.animation.animation import prepare_animation
 
 import theme as T
 from layout import layout as layout_graph
@@ -40,7 +45,7 @@ CAPTION_TOP = -2.72  # captions live below this line; narrated content must stay
 
 
 def txt(s, size=36, color=T.FG, font=T.FONT, weight=None):
-    # font_size is in pt-ish units; ×0.75 keeps sizes close to the Remotion px values.
+    # font_size is in pt-ish units, scaled ×0.75.
     # Cached: animated text (race clocks, JSON stream) asks for the same strings many times, and each fresh
     # Text is a full Pango layout + SVG parse. Callers get a copy so they can move/recolor it freely.
     return _text(s, size, color, font, weight or (T.MONO_WEIGHT if font == T.MONO else T.WEIGHT)).copy()
@@ -77,6 +82,13 @@ def on_change(key, build):
 def fit(m, max_w):
     # Manim has no text layout engine: shrink anything wider than its container.
     return m.scale_to_fit_width(max_w) if m.width > max_w else m
+
+
+def on_baseline(t, y):
+    """Move a one-line Text so its baseline sits at y. Centring by bounding box makes "y" sit lower than "b";
+    the median glyph bottom is the baseline (only a few glyphs have descenders)."""
+    bottoms = sorted(g.get_bottom()[1] for g in t.family_members_with_points())
+    return t.shift(UP * (y - bottoms[len(bottoms) // 2])) if bottoms else t
 
 
 def panel(w, h, radius, stroke=None, stroke_w=None, fill=None):
@@ -257,9 +269,19 @@ class Explainer(Scene):
         self.play(Create(Arrow(logits.get_bottom(), probs.get_top(), color=T.MUTED, buff=0.1)), FadeIn(probs), run_time=0.5)
 
     def scene_race(self, d, cap):
+        """Two lanes racing a clock: left streams generated JSON token by token, right fills a grid of answers at once.
+        data: {left: {label, seconds, tokens, counter}, right: {label, seconds, decisions, tokens, passes, footer},
+               answers: [str] (one per decision; streamed as a JSON array and shown in the grid), highlight? (the answer
+               drawn in the accent colour; default the first), note, speedup, time_scale?}
+        note/counter/footer are format strings over the lane's numbers: note and right.footer get right's fields
+        ({decisions}, {tokens}, {passes}); left.counter gets {done} (tokens so far) and left's fields.
+        steps: lanes (0), start (1), one_pass (3), speedup (4)."""
         L, R = d["left"], d["right"]
         n = R["decisions"]
-        answers = ["yes" if (i * 7) % 5 < 3 else "no" for i in range(n)]
+        answers = d["answers"]
+        if len(answers) != n:
+            raise ValueError(f"race: {len(answers)} answers for {n} decisions")
+        hot = d.get("highlight", answers[0])
         js = "[" + ",".join(f'"{a}"' for a in answers) + "]"
         clock = ValueTracker(0)  # measured seconds
         scale = d.get("time_scale", 1)  # video seconds per measured second
@@ -268,7 +290,7 @@ class Explainer(Scene):
             return panel(820 / PX, 560 / PX, 0.15).move_to([x, 0.6, 0])
 
         ll, rl = lane(-3.3), lane(3.3)
-        top = txt(f"21 decisions, {d['note']}", 40, T.MUTED).to_edge(UP, buff=0.4)
+        top = fit(txt(d["note"].format(**R), 40, T.MUTED), 13).to_edge(UP, buff=0.4)
         lt = txt(L["label"], 38, T.WARN, weight="BOLD").move_to(ll.get_corner(UP + LEFT), aligned_edge=UP + LEFT).shift(RIGHT * 0.27 + DOWN * 0.27)
         rt = txt(R["label"], 38, T.ACCENT, weight="BOLD").move_to(rl.get_corner(UP + LEFT), aligned_edge=UP + LEFT).shift(RIGHT * 0.27 + DOWN * 0.27)
 
@@ -292,19 +314,19 @@ class Explainer(Scene):
             return txt("\n".join(lines), 30, font=T.MONO).next_to(lt, DOWN, aligned_edge=LEFT, buff=1.2)
 
         def tokens(done):
-            return txt(f"{done} / {L['tokens']} tokens · {done} passes", 30, T.MUTED).move_to(
+            return txt(L["counter"].format(**L, done=done), 30, T.MUTED).move_to(
                 ll.get_corner(DOWN + LEFT), aligned_edge=DOWN + LEFT).shift(RIGHT * 0.27 + UP * 0.22)
 
         def grid(done):
             cells = VGroup()
             for a in answers:
-                fill = (T.ACCENT if a == "yes" else T.MUTED) if done else T.EMPTY
+                fill = (T.ACCENT if a == hot else T.MUTED) if done else T.EMPTY
                 r = RoundedRectangle(corner_radius=0.07 * max(T.RADIUS, 0.01), width=0.68, height=0.44, fill_color=fill, fill_opacity=1,
                                      stroke_color=T.BORDER or fill, stroke_width=3 if T.BORDER else 0)
                 cells.add(VGroup(r, txt(a if done else "", 26, T.ON_ACCENT, weight="BOLD").move_to(r)) if done else r)
             return cells.arrange_in_grid(rows=3, cols=7, buff=0.1).next_to(rt, DOWN, aligned_edge=LEFT, buff=1.2)
 
-        rfoot = fit(txt(f"{R['tokens']} output tokens · {R.get('passes', 1)} pass · {n} answers", 30, T.MUTED), 820 / PX - 0.6).move_to(
+        rfoot = fit(txt(R["footer"].format(**R), 30, T.MUTED), 820 / PX - 0.6).move_to(
             rl.get_corner(DOWN + LEFT), aligned_edge=DOWN + LEFT).shift(RIGHT * 0.27 + UP * 0.22)
 
         self.beat("lanes", 0)
@@ -319,7 +341,7 @@ class Explainer(Scene):
         self.beat("one_pass", 3)
         self.play(rl.animate.scale(1.04), rate_func=rate_functions.there_and_back, run_time=0.6)
         self.beat("speedup", 4)
-        big = txt(f"{d['speedup']} faster", 90, T.ACCENT, weight="BOLD").move_to(DOWN * 2.2)
+        big = fit(txt(d["speedup"], 90, T.ACCENT, weight="BOLD"), 13).move_to(DOWN * 2.2)
         self.play(FadeIn(big, scale=0.8), run_time=0.4)
 
     def scene_bars(self, d, cap):
@@ -341,8 +363,13 @@ class Explainer(Scene):
         self.play(*anims, run_time=0.9)
 
     def scene_readout(self, d, cap):
-        q = txt(f"Q: {d['question']}", 36, T.MUTED).to_edge(UP, buff=0.45)
-        head = txt("Next-token scores (whole vocabulary)", 30, weight="BOLD").move_to([-7.1 + 160 / PX, 2.55, 0], aligned_edge=LEFT)
+        """Left: the model's raw scores for a few tokens; the slot tokens are kept, the rest dimmed; right: softmax
+        over the slots as probability bars.
+        data: {question, scores_label, rest_label, vocab: [{tok, logit, slot?, ignored?}], softmax_label,
+               slots: [{letter, option, p}], note, ignored_label} — the vocab row marked `ignored` gets the label.
+        steps: question (0), scores (1), answer (2), keep (3), ignored (4)."""
+        q = fit(txt(d["question"], 36, T.MUTED), 13).to_edge(UP, buff=0.45)
+        head = txt(d["scores_label"], 30, weight="BOLD").move_to([-7.1 + 160 / PX, 2.55, 0], aligned_edge=LEFT)
         rows = []
         for i, v in enumerate(d["vocab"]):
             y = 1.95 - i * 70 / PX
@@ -350,7 +377,7 @@ class Explainer(Scene):
             b = bar((v["logit"] - 15) * 50 / PX, 40 / PX, T.MUTED).move_to([-7.1 + 335 / PX, y, 0], aligned_edge=LEFT)
             val = txt(f"{v['logit']:.1f}", 28, T.MUTED, font=T.MONO).next_to(b, RIGHT, buff=0.15)
             rows.append((v, VGroup(tok, b, val)))
-        rest = txt("… every other token in the vocabulary", 28, T.MUTED).move_to(
+        rest = txt(d["rest_label"], 28, T.MUTED).move_to(
             [-7.1 + 160 / PX, 1.95 - len(rows) * 70 / PX, 0], aligned_edge=LEFT)
         self.beat("question", 0)
         self.play(FadeIn(q), FadeIn(head), FadeIn(cap), run_time=0.3)
@@ -362,13 +389,13 @@ class Explainer(Scene):
         # Ignored tokens stay readable: recolor to MUTED text + EMPTY bars (no opacity, which turns muddy on light BGs).
         dims = [a for v, r in rows if not v.get("slot") for a in (
             r[0].animate.set_color(T.MUTED), r[1].animate.set_fill(T.EMPTY), r[2].animate.set_color(T.MUTED))]
-        ignored = txt("ignored", 26, T.MUTED, weight="BOLD").next_to(
-            next(r for v, r in rows if v["tok"] == "Account"), RIGHT, buff=0.25)
+        marked = next(r for v, r in rows if v.get("ignored"))  # the dimmed row the narration points at
+        ignored = txt(d["ignored_label"], 26, T.MUTED, weight="BOLD").next_to(marked, RIGHT, buff=0.25)
         hl = [r[0].animate.set_color(T.ACCENT) for v, r in rows if v.get("slot")] + \
              [r[1].animate.set_fill(T.ACCENT) for v, r in rows if v.get("slot")]
         self.play(*dims, *hl, run_time=0.6)
         arrow = txt("→", 64, T.ACCENT).move_to([0.3, 0.9, 0])
-        sm = txt("softmax over A, B, C", 30, weight="BOLD").move_to([1.1, 1.95, 0], aligned_edge=LEFT)
+        sm = txt(d["softmax_label"], 30, weight="BOLD").move_to([1.1, 1.95, 0], aligned_edge=LEFT)
         self.play(FadeIn(arrow), FadeIn(sm), run_time=0.4)
         anims = []
         for i, s in enumerate(d["slots"]):
@@ -382,16 +409,18 @@ class Explainer(Scene):
         note = txt(d["note"], 30, T.WARN).move_to([1.1, -1.75, 0], aligned_edge=LEFT)
         self.play(FadeIn(note), run_time=0.3)
         self.beat("ignored", 4)
-        acct = next(r for v, r in rows if v["tok"] == "Account")
-        self.play(FadeIn(ignored, shift=LEFT * 0.2), acct.animate(rate_func=rate_functions.there_and_back).scale(1.06), run_time=0.6)
+        self.play(FadeIn(ignored, shift=LEFT * 0.2), marked.animate(rate_func=rate_functions.there_and_back).scale(1.06), run_time=0.6)
 
     def scene_branch(self, d, cap):
+        """A shared prefix read once into a cache, then many short branches off it; rates compared as bars.
+        data: {prefix_label, prefix_note, cache_label, branches, branch_label, unit, workload, rates: [{label, v}]}
+        steps: document (0), read_once (1), questions (2), rates (3)."""
         n = d["branches"]
         left = -7.1 + 160 / PX
         label = txt(d["prefix_label"], 30, weight="BOLD").move_to([left, 1.55, 0], aligned_edge=LEFT)
         track = bar(600 / PX, 80 / PX, T.EMPTY).move_to([left, 1.0, 0], aligned_edge=LEFT)
         prefill = bar(600 / PX, 80 / PX, T.MUTED).move_to(track)
-        once = txt("prefilled once", 26, T.MUTED).next_to(track, DOWN, aligned_edge=LEFT, buff=0.12)
+        once = txt(d["prefix_note"], 26, T.MUTED).next_to(track, DOWN, aligned_edge=LEFT, buff=0.12)
         self.beat("document", 0)
         self.play(FadeIn(label), FadeIn(track), FadeIn(cap), run_time=0.3)
         self.beat("read_once", 1)
@@ -422,24 +451,50 @@ class Explainer(Scene):
         self.play(*anims, run_time=1.0)
 
     def scene_metrics(self, d, cap):
+        """Big-number cards, one per sentence, with an optional headline on top and a closing footnote under them.
+        data: {title?, subtitle?, cards: [{label, value, compare}], footnote?}
+        steps: title (sentence 0, when there is one), card{i} (i, or i+1 after a title), footnote (after the cards).
+        A footnote is a closing line: narrating it before every card is an error — a headline said first is `title`."""
+        head = self.headline(d)
         n = len(d["cards"])
+        first = 1 if head else 0  # a title takes sentence 0; cards follow
         w = min(500, (1780 - 50 * (n - 1)) / n)  # up to 3 cards at full width; more cards share the frame
+        foot = fit(txt(d["footnote"], 32, weight="BOLD"), 13) if d.get("footnote") else None
+        card_h = 380 / PX
+        if head:
+            # Cards (+ footnote) centred in the space between the headline and the caption band; shorter if needed.
+            top = head.get_bottom()[1] - 0.45
+            bottom = CAPTION_TOP + 0.12 + (foot.height + 0.55 if foot else 0)
+            card_h = min(card_h, top - bottom)
+            cy = (top + bottom) / 2
+        else:
+            cy = 0.5
         cards = VGroup()
         for c in d["cards"]:
-            p = panel(w / PX, 380 / PX, 0.18)
+            p = panel(w / PX, card_h, 0.18)
             r = p[-1]
             lab = fit(txt(c["label"], 30, T.MUTED), r.width - 0.4).move_to(r.get_top(), aligned_edge=UP).shift(DOWN * 0.35)
             val = fit(txt(c["value"], 70, T.ACCENT, weight="BOLD"), r.width - 0.5).move_to(r)
             cmp = fit(txt(c["compare"], 30), r.width - 0.4).move_to(r.get_bottom(), aligned_edge=DOWN).shift(UP * 0.35)
             cards.add(VGroup(p, lab, val, cmp))
-        cards.arrange(RIGHT, buff=50 / PX).shift(UP * 0.5)
-        foot = fit(txt(d["footnote"], 32, weight="BOLD"), 13).next_to(cards, DOWN, buff=0.55) if d.get("footnote") else None
-        steps = [(f"card{i}", i, c) for i, c in enumerate(cards)] + ([("footnote", n, foot)] if foot else [])
+        cards.arrange(RIGHT, buff=50 / PX).move_to([0, cy, 0])
+        if foot:
+            foot.next_to(cards, DOWN, buff=0.55)
+        steps = ([("title", 0, head)] if head else []) + [(f"card{i}", i + first, c) for i, c in enumerate(cards)] + \
+                ([("footnote", n + first, foot)] if foot else [])
+        last = len(self.sentences) - 1
+
+        def sentence(name, default):
+            b = self.beats.get(name, default)
+            return min(b[0] if isinstance(b, list) else b, last)
+
+        if foot and self.sentences and sentence("footnote", n + first) < min(sentence(f"card{i}", i + first) for i in range(n)):
+            raise ValueError("metrics: footnote narrated before the cards — use `title` for a headline said first "
+                             "(the footnote is a closing line under the cards)")
         # Play in the order the narration reaches them (beats can put the footnote before some cards).
-        order = sorted(steps, key=lambda st: (min(self.beats.get(st[0], st[1]), len(self.sentences) - 1), st[1]))
-        for name, default, m in order:
+        for name, default, m in sorted(steps, key=lambda st: (sentence(st[0], st[1]), st[1])):
             self.beat(name, default)
-            self.play(FadeIn(m, shift=UP * 0.2), run_time=0.35)
+            self.play(FadeIn(m, shift=UP * 0.2), run_time=self.step_time(name, default, 0.35 if m is not head else 0.4))
 
     # ---- templates added for agent-unwrapped + Habitat ------------------------------------------------------
 
@@ -665,11 +720,424 @@ class Explainer(Scene):
         self.play(slow_bar.animate(rate_func=rate_functions.there_and_back).scale(1.08), run_time=0.6)
         run(1, "second", 3)
 
+    # ---- compare + commands: side-by-side tradeoffs, and terminal usage ----------------------------------------
+
+    @staticmethod
+    def mark(kind, center, r, color, width=9):
+        """Drawn tick or cross (paths, not glyphs: fonts lack ✓/✗ — NOTES #26). r = half-size of the mark."""
+        c = center
+        if kind == "tick":
+            return VMobject(stroke_color=color, stroke_width=width).set_points_as_corners(
+                [c + v * r for v in (LEFT * 0.85 + UP * 0.05, DOWN * 0.7 + LEFT * 0.15, UP * 0.8 + RIGHT * 0.9)])
+        return VGroup(Line(c + (LEFT + UP) * r * 0.7, c + (RIGHT + DOWN) * r * 0.7),
+                      Line(c + (LEFT + DOWN) * r * 0.7, c + (RIGHT + UP) * r * 0.7)).set_stroke(color, width)
+
+    def role_style(self, role):
+        """(fill, stroke, text) for a role slot (neutral, c1..c5); unknown/missing → neutral."""
+        return T.ROLES[role if role in T.ROLES else "neutral"]
+
+    def scene_compare(self, d, cap):
+        """Two-column comparison: header labels, then one row per sentence; the winning cell gets a drawn tick,
+        the other a cross and muted text.
+        data: {title, subtitle?, left: {label, role?}, right: {label, role?}, rows: [{left, right, winner?}],
+               winner?: "left"|"right"|"both"|"none" (default left; a row's own `winner` overrides), footer?}
+        role: a theme role slot (neutral, c1..c5) colouring the column header. 2-5 rows.
+        steps: title (sentence 0), row{i} (i+1), footer (len(rows)+1)."""
+        title = fit(txt(d["title"], 52, weight="BOLD"), 13).to_edge(UP, buff=0.45)
+        top = VGroup(title)
+        if d.get("subtitle"):
+            top.add(fit(txt(d["subtitle"], 30, T.MUTED), 13).next_to(title, DOWN, buff=0.18))
+        col_w, gap = 6.3, 0.3
+        xs = {"left": -(col_w + gap) / 2, "right": (col_w + gap) / 2}
+        heads = VGroup()
+        for side in ("left", "right"):
+            fill, stroke, text = self.role_style(d[side].get("role"))
+            h = RoundedRectangle(corner_radius=0.12 * T.RADIUS + 0.001, width=col_w, height=0.8, fill_color=fill,
+                                 fill_opacity=1, stroke_color=stroke, stroke_width=max(3, T.BORDER_W))
+            lab = fit(txt(d[side]["label"], 34, text, weight="BOLD"), col_w - 0.5).move_to(h)
+            heads.add(VGroup(h, lab).move_to([xs[side], 0, 0]))
+        heads.next_to(top, DOWN, buff=0.4)
+        foot = fit(txt(d["footer"], 30, T.MUTED, weight="BOLD"), 13) if d.get("footer") else None
+        # Rows share the space between the headers and the caption band (less the footer's line).
+        n = len(d["rows"])
+        y_top = heads.get_bottom()[1] - 0.2
+        y_bot = CAPTION_TOP + 0.12 + (foot.height + 0.3 if foot else 0)
+        pitch = min(1.1, (y_top - y_bot) / max(1, n))
+        row_h = min(0.9, pitch - 0.14)
+        rows = []
+        for i, r in enumerate(d["rows"]):
+            y = y_top - pitch * (i + 0.5)
+            win = r.get("winner", d.get("winner", "left"))
+            cells, marks, losers = VGroup(), [], []
+            for side in ("left", "right"):
+                p = panel(col_w, row_h, 0.1).move_to([xs[side], y, 0])
+                c = p[-1]
+                icon_c = c.get_left() + RIGHT * 0.45
+                t = txt(r[side], 30)
+                w0 = t.width
+                if t.height > row_h * 0.55:
+                    t.scale_to_fit_height(row_h * 0.55)
+                t = fit(t, col_w - 1.1).move_to(icon_c + RIGHT * 0.4, aligned_edge=LEFT)
+                cap_h = txt("H", 30).height * t.width / w0  # cap height at this text's final size
+                on_baseline(t, y - cap_h / 2)
+                if win != "none":  # "none": a plain row, no marks
+                    won = win in (side, "both")
+                    marks.append(self.mark("tick" if won else "cross", icon_c, min(0.2, row_h * 0.28),
+                                           T.ACCENT if won else T.MUTED, 9 if won else 7))
+                    if not won:
+                        losers.append(t)
+                cells.add(VGroup(p, t))
+            rows.append((cells, marks, losers))
+        self.beat("title", 0)
+        self.play(FadeIn(top, shift=UP * 0.2), run_time=0.4)
+        self.play(LaggedStart(*[FadeIn(h, shift=UP * 0.15) for h in heads], lag_ratio=0.3), run_time=0.5)
+        for i, (cells, marks, losers) in enumerate(rows):
+            self.beat(f"row{i}", i + 1)
+            show = FadeIn(cells, shift=UP * 0.15, run_time=0.35)
+            if marks:
+                show = Succession(show, AnimationGroup(*[Create(m) for m in marks],
+                                                       *[t.animate.set_color(T.MUTED) for t in losers], run_time=0.4))
+            self.play(show, run_time=self.step_time(f"row{i}", i + 1, show.run_time))
+        if foot:
+            self.beat("footer", n + 1)
+            foot.move_to([0, y_top - pitch * n - 0.15 - foot.height / 2, 0])
+            self.play(FadeIn(foot, shift=UP * 0.15), run_time=self.fit_time(0.35, 1))
+
+    def scene_commands(self, d, cap):
+        """Terminal panel: each command types in after a `$` prompt over ~40% of its sentence; its note fades in
+        beneath in muted text.
+        data: {title, lines: [{cmd, note?}], footer?}
+        steps: title (sentence 0), line{i} (i+1), footer (len(lines)+1)."""
+        title = fit(txt(d["title"], 52, weight="BOLD"), 13).to_edge(UP, buff=0.45)
+        foot = fit(txt(d["footer"], 30, T.MUTED, weight="BOLD"), 13) if d.get("footer") else None
+        W, pad, bar_h = 12.4, 0.45, 0.5
+        text_w = W - 2 * pad
+        prompt0 = txt("$", 34, T.ACCENT, font=T.MONO)
+        cmd_w = text_w - prompt0.width - 0.25
+        # One shared size for every command so the terminal reads as one font; only a very long command shrinks
+        # further on its own (never below what fits the width).
+        need = [min(1.0, cmd_w / txt(ln["cmd"], 34, font=T.MONO).width) for ln in d["lines"]]
+        shared = max(min(need), 0.7)
+        scales = [min(shared, s) for s in need]
+        notes = [fit(txt(ln["note"], 24, T.MUTED), cmd_w) if ln.get("note") else None for ln in d["lines"]]
+        line_h = prompt0.height
+        ref = txt("$H", 34, font=T.MONO)
+        dollar_dy, cap_h = ref[0].get_bottom()[1] - ref[1].get_bottom()[1], ref[1].height
+        heights = [line_h + (nt.height + 0.14 if nt else 0) for nt in notes]
+        gap = 0.32
+        content_h = sum(heights) + gap * (len(heights) - 1)
+        avail = (title.get_bottom()[1] - 0.35) - (CAPTION_TOP + 0.15 + (foot.height + 0.3 if foot else 0))
+        k = min(1.0, (avail - bar_h - 2 * pad) / content_h)  # too many/tall lines → shrink the whole body
+        H = content_h * k + bar_h + 2 * pad
+        p = panel(W, H, 0.14).move_to([0, title.get_bottom()[1] - 0.35 - H / 2, 0])
+        body = p[-1]
+        # Title bar = the card's top band, cut from the card itself so it follows the theme's corner radius.
+        band = Rectangle(width=body.width + 0.2, height=bar_h).move_to(body.get_top(), aligned_edge=UP)
+        strip = Intersection(body.copy(), band, fill_color=T.EMPTY, fill_opacity=1,
+                             stroke_color=T.BORDER or T.EMPTY, stroke_width=T.BORDER_W if T.BORDER else 0)
+        dots = VGroup(*[Dot(radius=0.08, color=T.MUTED) for _ in range(3)]).arrange(RIGHT, buff=0.14).move_to(
+            strip.get_left() + RIGHT * 0.45, aligned_edge=LEFT)
+        frame = VGroup(p, strip, dots)
+        x0 = body.get_left()[0] + pad
+        y = strip.get_bottom()[1] - pad
+        items = []
+        for i, ln in enumerate(d["lines"]):
+            # Prompt and command share a baseline (the "$" glyph hangs below it, so place it by the offset measured
+            # against "H" in the same font, not by its box).
+            base = y - line_h * k * 0.8
+            prompt = prompt0.copy().scale(k).move_to([x0, 0, 0], aligned_edge=LEFT).set_y(base + dollar_dy * k, direction=DOWN)
+            s = scales[i] * k
+            anchor = prompt.get_right() + RIGHT * 0.25 * k
+            cmd = ln["cmd"]
+            # Typed text = the first glyphs of the full, already-placed command (Text drops spaces from its glyphs),
+            # so the baseline never jumps as descenders appear and nothing is re-laid out per frame.
+            full = txt(cmd, 34, font=T.MONO).scale(s).move_to(anchor, aligned_edge=LEFT)
+            on_baseline(full, base)
+            glyphs = [sum(1 for ch in cmd[:n] if not ch.isspace()) for n in range(len(cmd) + 1)]
+            cw = full.width / max(1, len(cmd))  # monospace advance: where the cursor sits after n chars
+
+            def typed(n, full=full, glyphs=glyphs, cw=cw, anchor=anchor, base=base, cmd=cmd):
+                shown = full[:glyphs[n]].copy()
+                if n >= len(cmd):
+                    return VGroup(shown)
+                cursor = Rectangle(width=cw * 0.8, height=line_h * k * 0.95, fill_color=T.ACCENT, fill_opacity=1,
+                                   stroke_width=0).move_to([anchor[0] + n * cw, base + cap_h * k / 2, 0], aligned_edge=LEFT)
+                return VGroup(shown, cursor)
+
+            nt = notes[i]
+            if nt:
+                nt = nt.copy().scale(k).move_to([anchor[0], prompt.get_bottom()[1] - 0.14 * k, 0], aligned_edge=UP + LEFT)
+            items.append((prompt, typed, cmd, nt))
+            y -= (heights[i] + gap) * k
+        self.beat("title", 0)
+        self.play(FadeIn(title, shift=UP * 0.2), run_time=0.4)
+        self.play(FadeIn(frame, shift=UP * 0.15), run_time=0.4)
+        for i, (prompt, typed, cmd, nt) in enumerate(items):
+            step = f"line{i}"
+            self.beat(step, i + 1)
+            chars = ValueTracker(0)
+            self.add(prompt, on_change(lambda chars=chars: int(chars.get_value()), typed))  # prompts appear instantly, like a shell
+            t_type = max(0.6, self.span(step, i + 1) * 0.4) if self.sentences else 1.0  # ~40% of the sentence
+            show = chars.animate(rate_func=linear, run_time=t_type).set_value(len(cmd))
+            if nt:
+                show = Succession(show, FadeIn(nt, shift=UP * 0.1, run_time=0.3))
+            self.play(show, run_time=self.step_time(step, i + 1, t_type + (0.3 if nt else 0)))
+        if foot:
+            self.beat("footer", len(items) + 1)
+            foot.next_to(p, DOWN, buff=0.3)
+            self.play(FadeIn(foot, shift=UP * 0.15), run_time=self.fit_time(0.35, 1))
+
+    # ---- alternatives: two ways to do the same thing, as two app windows side by side ------------------------------
+
+    def scene_alternatives(self, d, cap):
+        """Two windows side by side, each one alternative way to do the same thing (e.g. command line vs browser).
+        Both windows appear empty with the title; each then fills in on its own sentence (terminal lines type in;
+        browser fields, slider, button press, then log lines) and its one-line caption lands under it.
+        data: {title, subtitle?, panels: [left, right], footer?}
+          panel: {label (title-bar text), kind: "terminal"|"browser", role? (theme slot tinting the title bar),
+                  caption? (one plain line under the window),
+                  terminal: lines: [{cmd} | {out} | {comment}],
+                  browser: url?, fields?: [{label, value}], slider?: {label, value (0-1: knob position, not shown)},
+                           button?: str, log?: [str]}
+          Keep each window to ~6 rows; anything taller is scaled down to fit, long lines shrink to the width.
+        steps: title (sentence 0), left (1), right (2), footer (3)."""
+        head = self.headline(d)
+        W, gap, bar_h, pad = 6.55, 0.5, 0.5, 0.32
+        xs = [-(W + gap) / 2, (W + gap) / 2]
+        caps = [fit(txt(p["caption"], 28, T.MUTED), W) if p.get("caption") else None for p in d["panels"]]
+        foot = fit(txt(d["footer"], 30, T.FG, weight="BOLD"), 13) if d.get("footer") else None
+        cap_h = max([c.height for c in caps if c] + [0])
+        below = (cap_h + 0.22 if cap_h else 0)  # caption line under the windows
+        top = head.get_bottom()[1] - 0.4
+        bottom = CAPTION_TOP + 0.12 + below + (foot.height + 0.3 if foot else 0)
+        iw = W - 2 * pad
+        built = [{"terminal": self.alt_terminal, "browser": self.alt_browser}[p["kind"]](p, iw) for p in d["panels"]]
+        # Windows are sized to their fullest contents (both the same height), within what the frame leaves.
+        body_extra = 0.25 + pad  # gap under the title bar + bottom padding
+        H = min(top - bottom, max(2.8, bar_h + body_extra + max(c.height for c, _, _ in built)))
+        windows, blocks, builds, live = [], [], [], []
+        for i, p in enumerate(d["panels"]):
+            chrome, inner = self.alt_window(p, W, H, bar_h, pad)
+            chrome.move_to([xs[i], top - H / 2, 0])
+            inner.move_to([xs[i], chrome[0][-1].get_bottom()[1] + inner.height / 2, 0])
+            windows.append(chrome)
+            content, anims, rows_live = built[i]
+            # Built at natural size, then scaled down (never up) to the window body. Every animation is created
+            # only after this (they're factories): `.animate`/Grow targets snapshot positions when constructed.
+            avail_h = inner.height - body_extra
+            if content.height > avail_h:
+                content.scale(avail_h / content.height)
+            content.move_to([inner.get_left()[0] + pad, inner.get_top()[1] - 0.25, 0], aligned_edge=UP + LEFT)
+            blocks.append(content)
+            if caps[i]:
+                # Shared baseline: captions with and without descenders ("rows" vs "fields") line up.
+                on_baseline(caps[i].set_x(xs[i]), chrome[0][-1].get_bottom()[1] - 0.22 - txt("H", 28).height)
+                anims.append((lambda c=caps[i]: FadeIn(c, shift=UP * 0.1), 0.6))
+            builds.append(anims)
+            live += rows_live
+        if foot:
+            foot.set_y(windows[0][0][-1].get_bottom()[1] - below - 0.3 - foot.height / 2)
+        # Centre windows + captions + footer between the headline and the caption band. The blocks hold the typed
+        # rows' reference text, so they move too.
+        group = VGroup(*windows, *[c for c in caps if c], *([foot] if foot else []))
+        dy = (top + CAPTION_TOP + 0.12) / 2 - group.get_center()[1]
+        for m in [*windows, *blocks, *[c for c in caps if c], *([foot] if foot else [])]:
+            m.shift(UP * dy)
+        # Typed rows draw nothing until their command starts. On top: added now, they'd sit under the window cards
+        # that fade in later (draw order = add order).
+        self.add(*[r.set_z_index(1) for r in live])
+
+        steps = [("title", 0), ("left", 1), ("right", 2)] + ([("footer", 3)] if foot else [])
+        last = max(0, len(self.sentences) - 1)
+
+        def sentence(step, default):
+            b = self.beats.get(step, default)
+            return min(b[0] if isinstance(b, list) else b, last)
+
+        # Play in the order the narration reaches them (beats may put the right window first).
+        for name, default in sorted(steps, key=lambda s: (sentence(*s), s[1])):
+            self.beat(name, default)
+            if name == "title":
+                self.play(FadeIn(head, shift=UP * 0.2), run_time=self.step_time(name, default, 0.4))
+                self.play(LaggedStart(*[FadeIn(w, shift=UP * 0.15) for w in windows], lag_ratio=0.3),
+                          run_time=self.step_time(name, default, 0.6))
+            elif name == "footer":
+                self.play(FadeIn(foot, shift=UP * 0.15), run_time=self.step_time(name, default, 0.35))
+            else:
+                anims = builds[default - 1]
+                if not anims:
+                    continue
+                # Share the step's time by weight: typing a long command takes longer than a log line appearing.
+                want = max(1.2, self.span(name, default) * 0.75) if self.sentences else 2.5
+                run = self.step_time(name, default, want)
+                total = sum(w for _, w in anims)
+                self.play(Succession(*[prepare_animation(make()).set_run_time(run * w / total) for make, w in anims]),
+                          run_time=run)
+                # play() put a Group of the Succession's mobjects in the scene, typing trackers included. Fading a
+                # tracker at scene end moves its value, the typed row rebuilds mid-fade and Manim fails ("zip()
+                # argument 2 is longer than argument 1"). The trackers are done; take them out.
+                self.remove(*[r.tracker for r in live])
+
+    def alt_window(self, p, W, H, bar_h, pad):
+        """Window chrome: card, title bar (three dots + label, tinted by role), URL pill for browsers.
+        Returns (chrome, inner) — inner is the empty body rectangle (not drawn) the contents go in."""
+        if p.get("kind") not in ("terminal", "browser"):
+            raise ValueError(f"alternatives panel kind must be terminal or browser, got {p.get('kind')!r}")
+        fill, _, text = self.role_style(p["role"]) if p.get("role") else (T.EMPTY, None, T.FG)
+        card = panel(W, H, 0.14)
+        body = card[-1]
+        # Title bar = the card's top band, cut from the card itself so it follows the theme's corner radius.
+        band = Rectangle(width=W + 0.2, height=bar_h).move_to(body.get_top(), aligned_edge=UP)
+        strip = Intersection(body.copy(), band, fill_color=fill, fill_opacity=1,
+                             stroke_color=T.BORDER or fill, stroke_width=T.BORDER_W if T.BORDER else 0)
+        dots = VGroup(*[Dot(radius=0.075, color=T.MUTED) for _ in range(3)]).arrange(RIGHT, buff=0.13).move_to(
+            strip.get_left() + RIGHT * 0.4, aligned_edge=LEFT)
+        label = txt(p["label"], 26, text, weight="BOLD")
+        parts = [card, strip, dots, label]
+        if p["kind"] == "browser" and p.get("url"):
+            # Browser bar: label on the left like a tab, the URL pill fills the rest of the bar.
+            fit(label, W * 0.3).next_to(dots, RIGHT, buff=0.3)
+            left = label.get_right()[0] + 0.3
+            pill = RoundedRectangle(corner_radius=0.17, width=body.get_right()[0] - 0.2 - left, height=0.34, fill_color=T.BG,
+                                    fill_opacity=1, stroke_color=T.BORDER or T.MUTED, stroke_width=2)
+            pill.move_to([left, strip.get_center()[1], 0], aligned_edge=LEFT)
+            url = fit(txt(p["url"], 20, T.MUTED, font=T.MONO), pill.width - 0.36).move_to(
+                pill.get_left() + RIGHT * 0.18, aligned_edge=LEFT)
+            parts += [pill, url]
+        else:
+            fit(label, W - 2 * (dots.width + 0.6)).move_to(strip)
+        inner = Rectangle(width=W, height=strip.get_bottom()[1] - body.get_bottom()[1], stroke_width=0)
+        return VGroup(*parts), inner
+
+    def alt_terminal(self, p, iw):
+        """Terminal rows: `$ cmd` types in (prompt, text and cursor rebuilt from reference text that moves with the
+        block), `out` output and `# comment` lines fade in. Returns (block, [(factory, weight)], live rows)."""
+        dim = interpolate_color(ManimColor(T.PANEL), ManimColor(T.MUTED), 0.7)  # comments: quieter than output
+        block, anims, live = VGroup(), [], []
+        # One shared size so the terminal reads as one font (floor 0.7x); only a still-too-long line shrinks further.
+        shown = [ln["cmd"] if "cmd" in ln else ln.get("out", f"# {ln.get('comment', '')}") for ln in p.get("lines", [])]
+        x_cmd0 = txt("$", 26, font=T.MONO).width + 0.2 + 0.15  # "$ " + right margin, as placed below (at full size)
+        room = [iw - (x_cmd0 if "cmd" in ln else 0) for ln in p.get("lines", [])]
+        need = [min(1.0, r / txt(t, 26, font=T.MONO).width) for t, r in zip(shown, room)] or [1.0]
+        size = 26 * max(0.7, min(need))
+        pitch = 0.52 * size / 26
+        ref = txt("$H", size, font=T.MONO)
+        dollar_dy, cap_h = ref[0].get_bottom()[1] - ref[1].get_bottom()[1], ref[1].height
+        for i, ln in enumerate(p.get("lines", [])):
+            base = -i * pitch
+            if "cmd" in ln:
+                cmd = ln["cmd"]
+                prompt = txt("$", size, T.ACCENT, font=T.MONO).move_to([0, 0, 0], aligned_edge=LEFT)
+                prompt.set_y(base + dollar_dy, direction=DOWN)
+                x_cmd = prompt.get_right()[0] + 0.2
+                full = fit(txt(cmd, size, font=T.MONO), iw - x_cmd - 0.15).move_to([x_cmd, 0, 0], aligned_edge=LEFT)
+                s = full.height / txt(cmd, size, font=T.MONO).height
+                on_baseline(full, base)
+                cur = Rectangle(width=full.width / max(1, len(cmd)) * 0.8, height=cap_h * s * 1.35, fill_color=T.ACCENT,
+                                fill_opacity=1, stroke_width=0).move_to([x_cmd, base + cap_h * s / 2, 0], aligned_edge=LEFT)
+                row = VGroup(prompt, full, cur)  # reference only (never added); scaled/moved with the block
+                block.add(row)
+                glyphs = [sum(1 for ch in cmd[:n] if not ch.isspace()) for n in range(len(cmd) + 1)]
+                chars = ValueTracker(-1)
+
+                def typed(n, row=row, glyphs=glyphs, cmd=cmd):
+                    if n < 0:  # not reached yet
+                        return VGroup()
+                    prompt, full, cur = row
+                    shown = VGroup(prompt.copy(), full[:glyphs[n]].copy())
+                    if n < len(cmd):  # monospace: the cursor sits n advances right of the command's left edge
+                        shown.add(cur.copy().shift(RIGHT * n * full.width / len(cmd)))
+                    return shown
+
+                row_live = on_change(lambda chars=chars: math.floor(chars.get_value()), typed)
+                row_live.tracker = chars
+                live.append(row_live)
+                anims.append((lambda chars=chars, n=len(cmd): chars.animate(rate_func=linear).set_value(n), 0.4 + len(cmd) / 18))
+            else:
+                is_out = "out" in ln
+                t = txt(ln["out"] if is_out else f"# {ln['comment']}", size, T.MUTED if is_out else dim, font=T.MONO)
+                t = fit(t, iw).move_to([0, 0, 0], aligned_edge=LEFT)
+                on_baseline(t, base)
+                block.add(t)
+                anims.append((lambda t=t: FadeIn(t, shift=UP * 0.08), 0.5))
+        return block, anims, live
+
+    def alt_browser(self, p, iw):
+        """Browser page: a form (labelled fields, a slider, a button that gets pressed) and, beside it, a progress log
+        whose lines appear after the press. Returns (block, [(factory, weight)], [])."""
+        block, anims = VGroup(), []
+        has_form = bool(p.get("fields") or p.get("slider") or p.get("button"))
+        fw = iw * 0.5 if has_form and p.get("log") else iw  # form column width; the log takes the rest
+        labels = [f["label"] for f in p.get("fields", [])] + ([p["slider"]["label"]] if p.get("slider") else [])
+        lab_w = min(fw * 0.36, max([txt(s, 22, T.MUTED).width for s in labels] + [0]) + 0.05)
+        col = lab_w + 0.2 if labels else 0  # the input column starts here
+        in_w = fw - col
+        pitch, box_h = 0.56, 0.42
+        y = 0.0
+        for f in p.get("fields", []):
+            lab = fit(txt(f["label"], 22, T.MUTED), lab_w).move_to([0, y, 0], aligned_edge=LEFT)
+            box_ = Rectangle(width=in_w, height=box_h, fill_color=T.BG, fill_opacity=1,
+                             stroke_color=T.BORDER or T.MUTED, stroke_width=2).move_to([col, y, 0], aligned_edge=LEFT)
+            val = fit(txt(f["value"], 22), in_w - 0.26).move_to(box_.get_left() + RIGHT * 0.13, aligned_edge=LEFT)
+            row = VGroup(lab, box_, val)
+            block.add(row)
+            anims.append((lambda row=row: FadeIn(row, shift=UP * 0.1), 0.5))
+            y -= pitch
+        if p.get("slider"):
+            sl = p["slider"]
+            v = min(1.0, max(0.0, float(sl.get("value", 0.5))))
+            lab = fit(txt(sl["label"], 22, T.MUTED), lab_w).move_to([0, y, 0], aligned_edge=LEFT)
+            track = Rectangle(width=in_w - 0.26, height=0.08, fill_color=T.EMPTY, fill_opacity=1, stroke_width=0).move_to(
+                [col + 0.13, y, 0], aligned_edge=LEFT)
+            filled = Rectangle(width=max(0.02, track.width * v), height=0.08, fill_color=T.ACCENT, fill_opacity=1,
+                               stroke_width=0).move_to(track, aligned_edge=LEFT)
+            knob = Dot(radius=0.12, color=T.ACCENT).set_stroke(T.BORDER or T.PANEL, 3).move_to(track.get_left())
+            knob.set_z_index(1)  # the growing fill is added later; keep the knob on top of it
+            row = VGroup(lab, track, knob)
+            block.add(VGroup(row, filled))
+            anims.append((lambda row=row: FadeIn(row, shift=UP * 0.1), 0.4))
+            anims.append((lambda: AnimationGroup(GrowFromEdge(filled, LEFT), knob.animate.move_to(filled.get_right())), 0.6))
+            y -= pitch
+        if p.get("button"):
+            t = fit(txt(p["button"], 24, T.ON_ACCENT, weight="BOLD"), in_w - 0.3)
+            r = RoundedRectangle(corner_radius=0.1 * T.RADIUS + 0.001, width=in_w, height=0.48, fill_color=T.ACCENT,
+                                 fill_opacity=1, stroke_color=T.BORDER or T.ACCENT, stroke_width=T.BORDER_W if T.BORDER else 0)
+            btn = VGroup(r, t.move_to(r)).move_to([col, y - 0.04, 0], aligned_edge=LEFT)
+            block.add(btn)
+            anims.append((lambda: FadeIn(btn, shift=UP * 0.1), 0.35))
+            anims.append((lambda: btn.animate(rate_func=rate_functions.there_and_back).scale(0.92), 0.4))  # the press
+        if p.get("log"):
+            x0 = fw + 0.25 if has_form else 0
+            lines = VGroup(*[txt(s, 20, T.MUTED, font=T.MONO) for s in p["log"]]).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
+            fit(lines, iw - x0 - 0.36)
+            form_h = (block.get_top()[1] - block.get_bottom()[1]) if has_form else 0
+            top = block.get_top()[1] if has_form else 0.0
+            logbox = Rectangle(width=iw - x0, height=max(form_h, lines.height + 0.36), fill_color=T.BG, fill_opacity=1,
+                               stroke_color=T.BORDER or T.MUTED, stroke_width=2).move_to([x0, top, 0], aligned_edge=UP + LEFT)
+            lines.move_to(logbox.get_corner(UP + LEFT) + RIGHT * 0.18 + DOWN * 0.18, aligned_edge=UP + LEFT)
+            block.add(VGroup(logbox, lines))
+            anims.append((lambda: FadeIn(logbox), 0.25))
+            anims += [(lambda ln=ln: FadeIn(ln, shift=UP * 0.06), 0.4) for ln in lines]
+        return block, anims, []
+
     # ---- flow: any figure described as data (panels, nodes with shape + role, edges, steps) --------------------
+
+    def headline(self, d, size=52):
+        """Optional title (+ muted subtitle) at the top of the frame, fitted to its width; None without a title."""
+        if not d.get("title"):
+            return None
+        title = fit(txt(d["title"], size, weight="BOLD"), 13).to_edge(UP, buff=0.45)
+        head = VGroup(title)
+        if d.get("subtitle"):
+            head.add(fit(txt(d["subtitle"], 30, T.MUTED), 13).next_to(title, DOWN, buff=0.18))
+        return head
 
     def scene_flow(self, d, cap):
         """Generic animated figure. Layout comes from layout.py; nothing here is specific to one figure.
-        All parts start ghosted and are revealed/animated by `steps` (figure mode: fixed holds; narrated: beats)."""
+        All parts start ghosted and are revealed/animated by `steps` (figure mode: fixed holds; narrated: beats).
+        data: {title?, subtitle?, mode?, roles?, panels?, nodes: [{id, label, sub?, role?, shape?, art?: "wave"|"lines",
+               panel?, ...}], edges, steps}. A title sits at the top and the figure is laid out (and vertically
+        centred) in the space left between it and the caption band. Step names are the steps' own `id`s."""
         roles = d.get("roles", {})
 
         def style(role):
@@ -678,11 +1146,16 @@ class Explainer(Scene):
                 raise ValueError(f"unknown role slot {slot!r} (role {role!r})")
             return T.ROLES[slot]
 
+        figure = d.get("mode") == "figure"
+        head = self.headline(d)
+        # The figure's box: below the headline (or the frame's top margin), above the captions (narrated) or the
+        # frame's bottom margin (silent figure mode, no captions).
+        top = head.get_bottom()[1] - 0.35 if head else 3.65
+        bottom = -3.45 if figure else CAPTION_TOP + 0.12
         built = {n["id"]: self.flow_node(n, style) for n in d["nodes"]}
         sizes = {k: (m.width, m.height) for k, m in built.items()}
         label_w = {(e["from"], e["to"]): txt(e["label"], 20, T.MUTED).width for e in d.get("edges", []) if e.get("label")}
-        geo = layout_graph(d, sizes, area=(13.6, 7.1 if d.get("mode") == "figure" else 6.4),
-                           center=(0, 0.1 if d.get("mode") == "figure" else 0.45), label_w=label_w)
+        geo = layout_graph(d, sizes, area=(13.6, top - bottom), center=(0, (top + bottom) / 2), label_w=label_w)
         k = geo["scale"]
         for nid, m in built.items():
             m.scale(k).move_to([*geo["nodes"][nid]["center"], 0])
@@ -715,6 +1188,26 @@ class Explainer(Scene):
             g.shown, g.tip = shown, tip
             rails[(r["from"], r["to"])] = (g, line)
 
+        # Centre what is actually drawn (stack offsets, rail labels, loop-back floors) in the figure's box; the
+        # layout only centres its own node/panel rectangles. Packet paths (`line`) move with their rails.
+        drawn = VGroup(frames, *built.values(), *[g for g, _ in rails.values()])
+        dy = (top + bottom) / 2 - drawn.get_center()[1]
+        for m in [*frames, *built.values(), *[x for pair in rails.values() for x in pair]]:
+            m.shift(UP * dy)
+
+        # A wave first reached by a flow starts flat (silence) and rises when the packets land.
+        first = {}
+        for st in d["steps"]:
+            ids = st.get("targets") or st.get("path") or [st.get("target")]
+            for i in ids:
+                first.setdefault(i, st)
+        for nid, m in built.items():
+            st = first.get(nid)
+            if getattr(m, "wave", None) and st and st["do"] == "flow" and st["path"][-1] == nid:
+                m.wave_h = [b.height for b in m.wave]  # final (scaled) heights, restored by the rise
+                for b in m.wave:
+                    b.stretch_to_fit_height(0.03 * k)  # a linear stretch, so stretching back restores the bar exactly
+
         def rail_opacity(g, a):
             # Stroke/tip only: set_opacity on a polyline would also turn on its fill (filled wedges behind rails).
             g.shown.set_stroke(opacity=a)
@@ -728,7 +1221,8 @@ class Explainer(Scene):
             m.set_opacity(T.GHOST)
         for g, _ in rails.values():
             rail_opacity(g, T.GHOST)
-        self.play(FadeIn(frames), *[FadeIn(m) for m in built.values()], *[FadeIn(g) for g, _ in rails.values()], run_time=0.6)
+        self.play(*([FadeIn(head, shift=UP * 0.2)] if head else []), FadeIn(frames), *[FadeIn(m) for m in built.values()],
+                  *[FadeIn(g) for g, _ in rails.values()], run_time=0.6)
 
         def unghost(ids):
             anims = []
@@ -775,10 +1269,20 @@ class Explainer(Scene):
                 self.beat(st.get("id", f"step{i}"), i)
             do = st["do"]
             if do in ("reveal", "highlight"):
+                ghosted = [t for t in st["targets"] if t not in revealed]
                 anims = unghost(st["targets"])
                 if do == "highlight":
-                    anims += [built[t].animate(rate_func=rate_functions.there_and_back).scale(1.06) for t in st["targets"]]
-                if anims:
+                    # `.animate` stores its target on the mobject (generate_target), so a second .animate on the same
+                    # node overwrites the first one's target: reveal + pulse together left a ghosted node ghosted.
+                    # Reveal first, and build the pulse only after that has played.
+                    def pulse():
+                        return [built[t].animate(rate_func=rate_functions.there_and_back).scale(1.06) for t in st["targets"]]
+                    if ghosted:
+                        self.play(*anims, run_time=self.fit_time(0.3, 2))
+                        self.play(*pulse(), run_time=self.fit_time(0.45, 1))
+                    else:
+                        self.play(*anims, *pulse(), run_time=self.fit_time(0.5, 1))
+                elif anims:
                     self.play(*anims, run_time=0.5)
             elif do == "flow":
                 anims = unghost(st["path"])
@@ -786,8 +1290,15 @@ class Explainer(Scene):
                     self.play(*anims, run_time=0.4)
                 packets(st["path"], st.get("kind", "request"), share=2 if st.get("back") else 1)
                 # Pulse the node the packets reach, so every flow visibly lands (small packets alone read as still).
-                self.play(built[st["path"][-1]].animate(rate_func=rate_functions.there_and_back).scale(1.07),
-                          run_time=self.fit_time(0.45, 1))
+                # A flat wave rises instead (never both: a node pulse and bar animations would fight over the bars).
+                end = built[st["path"][-1]]
+                if getattr(end, "wave_h", None):
+                    rise = [b.animate(rate_func=rate_functions.ease_out_back).stretch_to_fit_height(h)
+                            for b, h in zip(end.wave, end.wave_h)]
+                    end.wave_h = None
+                    self.play(LaggedStart(*rise, lag_ratio=0.06), run_time=self.fit_time(0.7, 1))
+                else:
+                    self.play(end.animate(rate_func=rate_functions.there_and_back).scale(1.07), run_time=self.fit_time(0.45, 1))
                 if st.get("back"):
                     self.flow_return(st["path"], st["back"], rails)
             elif do == "diagonal":
@@ -813,6 +1324,11 @@ class Explainer(Scene):
                 raise ValueError(f"unknown step {do!r}")
             if figure:
                 self.wait(st.get("hold", 0.8))
+
+    def step_time(self, step, default, want):
+        """Run time for one step's animation: at most ~90% of its sentence (so short sentences don't push later
+        steps late and the scene past its narration) and never past the scene's fade-out."""
+        return self.fit_time(min(want, max(0.3, self.span(step, default) * 0.9)), 1) if self.sentences else want
 
     def fit_time(self, want, share):
         """Shrink an animation so it (and `share - 1` more like it) ends before the scene's fade-out; a step that
@@ -862,7 +1378,37 @@ class Explainer(Scene):
         return VGroup(r, t.move_to(r))
 
     def flow_node(self, n, style):
-        """Build one node, centred at the origin, from its shape + role. Sizes are measured by the layout."""
+        """Build one node, centred at the origin, from its shape + role. Sizes are measured by the layout.
+        A wave node keeps its bars as `.wave` so a flow can make them rise."""
+        art = {}
+        m = self.flow_shape(n, style, art)
+        if "wave" in art:
+            m.wave = art["wave"]
+        return m
+
+    def flow_art(self, kind, nid, width, fill, stroke):
+        """Decoration under a node's label, drawn (not glyphs). "wave": a row of bars in the role colour, heights
+        from the node id (crc32, not hash(): Python salts str hashes per process, so frames would differ per render);
+        "lines": three grey rounded text-line bars (a document)."""
+        if kind == "wave":
+            n_bars = max(9, int(width / 0.13))
+            pitch = width / n_bars
+            bars = VGroup()
+            for i in range(n_bars):
+                r = (zlib.crc32(f"{nid}:{i}".encode()) % 1000) / 999
+                env = 0.45 + 0.55 * math.sin(math.pi * (i + 0.5) / n_bars)  # louder in the middle, like speech
+                h = 0.07 + 0.36 * r * env
+                bars.add(Rectangle(width=pitch * 0.55, height=h, fill_color=stroke, fill_opacity=1, stroke_width=0)
+                         .move_to([i * pitch, 0, 0]))
+            return bars
+        if kind == "lines":
+            grey = interpolate_color(ManimColor(fill), ManimColor(T.MUTED), 0.55)
+            return VGroup(*[RoundedRectangle(corner_radius=0.045, width=width * f, height=0.09, fill_color=grey,
+                                             fill_opacity=1, stroke_width=0) for f in (1.0, 0.86, 0.6)]
+                          ).arrange(DOWN, buff=0.1, aligned_edge=LEFT)
+        raise ValueError(f"unknown node art {kind!r} (node {nid!r}); use wave or lines")
+
+    def flow_shape(self, n, style, art):
         fill, stroke, text = style(n.get("role", "neutral"))
         shape = n.get("shape", "box")
 
@@ -870,7 +1416,14 @@ class Explainer(Scene):
             parts = [self.rich(n["label"], size, text)] if n.get("label") else []
             if n.get("sub"):
                 parts.append(txt(n["sub"], 20, T.MUTED))
-            return VGroup(*parts).arrange(DOWN, buff=0.08)
+            block = VGroup(*parts).arrange(DOWN, buff=0.08)
+            if not n.get("art"):
+                return block
+            a = self.flow_art(n["art"], n["id"], max(block.width, 1.6), fill, stroke)
+            if n["art"] == "wave":
+                art["wave"] = a
+            # Centre the art under the label; the node grows to hold it, and the layout measures the node as built.
+            return VGroup(block, a.next_to(block, DOWN, buff=0.18)) if len(block) else a
 
         def card(content, pad=0.3, min_w=1.3):
             r = RoundedRectangle(corner_radius=0.12 * max(T.RADIUS, 0.3), width=max(content.width + 2 * pad, min_w),

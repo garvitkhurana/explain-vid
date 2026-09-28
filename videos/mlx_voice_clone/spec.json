@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "mlx-voice-clone",
+    "title": "Clone your voice, locally",
     "source": {
       "kind": "repo",
       "url": "https://github.com/garvitkhurana/mlx-voice-clone"
@@ -17,12 +17,12 @@
     },
     "glossary": [
       {
-        "term": "MLX",
-        "plain": "Apple Silicon"
+        "term": "TTS",
+        "plain": "voice model"
       },
       {
-        "term": "subprocess",
-        "plain": "runs the same command-line script"
+        "term": "transcript",
+        "plain": "exactly what you said"
       }
     ]
   },
@@ -32,99 +32,66 @@
       "type": "title",
       "duration_s": 3,
       "narration": [
-        "mlx-voice-clone: clone your voice from a short clip, entirely on your Apple Silicon Mac."
+        "MLX voice clone reads any script aloud, in your own voice."
       ],
       "data": {
         "title": "mlx-voice-clone",
-        "subtitle": "Your voice, cloned locally",
-        "kicker": "Qwen3 TTS on Apple Silicon, via mlx-audio"
+        "subtitle": "Clone your voice, locally",
+        "kicker": "No cloud service \u00b7 no per-use bill \u00b7 just your Mac"
       }
     },
     {
-      "id": "how",
+      "id": "idea",
       "type": "flow",
-      "duration_s": 8,
+      "duration_s": 4,
       "narration": [
-        "You give it three things: a short recording of your voice, the exact words you said, and the script to read.",
-        "The recording is converted to 24 kilohertz mono audio, and cached, so the next run skips that step.",
-        "Because you supplied the words, it doesn't need a speech-recognition model to work them out.",
-        "The script is split into chunks of about 450 characters, at paragraph and sentence breaks.",
-        "Each chunk is spoken in your voice by Qwen3 TTS, running on Apple Silicon.",
-        "The pieces are joined and exported as one m4a file."
+        "Record a short clip of your voice.",
+        "Add a script: the words you want said.",
+        "A voice model, Qwen three TTS, takes both, on your Mac.",
+        "Out comes your script as narration, in your voice. No cloud, no per-use bill."
       ],
       "data": {
+        "title": "A short clip of your voice + a script = narration",
         "roles": {
-          "input": "c1",
-          "process": "c4",
+          "input": "neutral",
           "model": "c2",
           "output": "c3"
         },
         "nodes": [
           {
             "id": "clip",
-            "shape": "stack",
+            "label": "Voice clip",
             "role": "input",
-            "label": "sample_clip.m4a",
-            "sub": "~15 s of your voice"
-          },
-          {
-            "id": "words",
-            "shape": "stack",
-            "role": "input",
-            "label": "ref_voice_transcript.txt",
-            "sub": "exactly what you said"
+            "art": "wave"
           },
           {
             "id": "script",
-            "shape": "stack",
+            "label": "Script",
             "role": "input",
-            "label": "01_intro.txt",
-            "sub": "what to narrate"
-          },
-          {
-            "id": "wav",
-            "role": "process",
-            "label": "24 kHz mono WAV",
-            "sub": "converted once, cached"
-          },
-          {
-            "id": "chunks",
-            "role": "process",
-            "label": "chunks",
-            "sub": "~450 chars each"
+            "art": "lines"
           },
           {
             "id": "model",
-            "shape": "trapezoid",
+            "label": "Qwen3 TTS",
+            "sub": "on your Mac",
             "role": "model",
-            "label": "Qwen3\nTTS"
+            "shape": "trapezoid"
           },
           {
             "id": "out",
+            "label": "Narration",
+            "sub": "in your voice",
             "role": "output",
-            "label": "HHMMSS_01_intro.m4a",
-            "sub": "chunks joined, AAC export"
+            "art": "wave"
           }
         ],
         "edges": [
           {
             "from": "clip",
-            "to": "wav"
-          },
-          {
-            "from": "wav",
-            "to": "model"
-          },
-          {
-            "from": "words",
             "to": "model"
           },
           {
             "from": "script",
-            "to": "chunks"
-          },
-          {
-            "from": "chunks",
             "to": "model"
           },
           {
@@ -141,57 +108,32 @@
             ]
           },
           {
-            "id": "words_in",
-            "do": "reveal",
-            "targets": [
-              "words"
-            ]
-          },
-          {
-            "id": "script_in",
+            "id": "script",
             "do": "reveal",
             "targets": [
               "script"
             ]
           },
           {
-            "id": "convert",
+            "id": "learn",
             "do": "flow",
             "path": [
               "clip",
-              "wav"
-            ],
-            "kind": "request"
-          },
-          {
-            "id": "words",
-            "do": "flow",
-            "path": [
-              "words",
               "model"
             ],
             "kind": "request"
           },
           {
-            "id": "chunk",
+            "id": "read",
             "do": "flow",
             "path": [
               "script",
-              "chunks"
+              "model"
             ],
             "kind": "request"
           },
           {
-            "id": "speak",
-            "do": "flow",
-            "path": [
-              "chunks",
-              "model"
-            ],
-            "kind": "change"
-          },
-          {
-            "id": "join",
+            "id": "out",
             "do": "flow",
             "path": [
               "model",
@@ -201,144 +143,322 @@
           }
         ],
         "beats": {
-          "clip": [
-            0,
-            0.15
+          "clip": 0,
+          "script": 1,
+          "learn": [
+            2,
+            0.0
           ],
-          "words_in": [
-            0,
-            0.45
+          "read": [
+            2,
+            0.35
           ],
-          "script_in": [
-            0,
-            0.75
-          ],
-          "convert": 1,
-          "words": 2,
-          "chunk": 3,
+          "out": 3
+        }
+      }
+    },
+    {
+      "id": "local",
+      "type": "compare",
+      "duration_s": 4,
+      "narration": [
+        "Why run it locally?",
+        "It runs on your Mac, after one model download.",
+        "There's no bill per use.",
+        "And your clip and script stay local."
+      ],
+      "data": {
+        "title": "Why local",
+        "left": {
+          "label": "Your Mac",
+          "role": "c3"
+        },
+        "right": {
+          "label": "Cloud service",
+          "role": "neutral"
+        },
+        "rows": [
+          {
+            "left": "Runs on your Mac",
+            "right": "Runs on remote servers"
+          },
+          {
+            "left": "No per-use bill",
+            "right": "Often billed per use"
+          },
+          {
+            "left": "Clip and script stay local",
+            "right": "Clip and script are uploaded"
+          }
+        ]
+      }
+    },
+    {
+      "id": "generate",
+      "type": "flow",
+      "duration_s": 4,
+      "narration": [
+        "Hit generate: it takes your clip, plus exactly what you said.",
+        "Knowing the words already makes it faster.",
+        "It loads the voice model once.",
+        "It splits the script into pieces, so nothing gets cut off.",
+        "Speaks each piece in your voice.",
+        "And joins them end to end into one file."
+      ],
+      "data": {
+        "roles": {
+          "input": "neutral",
+          "model": "c2",
+          "step": "c4",
+          "output": "c3"
+        },
+        "nodes": [
+          {
+            "id": "clip",
+            "label": "Your clip",
+            "role": "input",
+            "sub": "+ exact transcript"
+          },
+          {
+            "id": "script",
+            "label": "Your script",
+            "role": "input"
+          },
+          {
+            "id": "model",
+            "label": "Load the model",
+            "role": "model",
+            "sub": "once per run"
+          },
+          {
+            "id": "split",
+            "label": "Split the script",
+            "role": "step",
+            "sub": "into pieces"
+          },
+          {
+            "id": "speak",
+            "label": "Speak each piece",
+            "role": "step",
+            "sub": "in your voice",
+            "shape": "stack"
+          },
+          {
+            "id": "join",
+            "label": "Join",
+            "role": "output",
+            "sub": "one audio file"
+          }
+        ],
+        "edges": [
+          {
+            "from": "clip",
+            "to": "model"
+          },
+          {
+            "from": "script",
+            "to": "split"
+          },
+          {
+            "from": "model",
+            "to": "speak"
+          },
+          {
+            "from": "split",
+            "to": "speak"
+          },
+          {
+            "from": "speak",
+            "to": "join"
+          }
+        ],
+        "steps": [
+          {
+            "id": "clip",
+            "do": "reveal",
+            "targets": [
+              "clip"
+            ]
+          },
+          {
+            "id": "words",
+            "do": "highlight",
+            "targets": [
+              "clip"
+            ]
+          },
+          {
+            "id": "load",
+            "do": "flow",
+            "path": [
+              "clip",
+              "model"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "split",
+            "do": "flow",
+            "path": [
+              "script",
+              "split"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "speak",
+            "do": "reveal",
+            "targets": [
+              "speak"
+            ]
+          },
+          {
+            "id": "pulse",
+            "do": "highlight",
+            "targets": [
+              "speak"
+            ]
+          },
+          {
+            "id": "join",
+            "do": "flow",
+            "path": [
+              "speak",
+              "join"
+            ],
+            "kind": "response"
+          }
+        ],
+        "beats": {
+          "clip": 0,
+          "words": 1,
+          "load": 2,
+          "split": 3,
           "speak": 4,
+          "pulse": [
+            4,
+            0.5
+          ],
           "join": 5
         }
       }
     },
     {
-      "id": "models",
-      "type": "metrics",
-      "duration_s": 6,
+      "id": "two_ways",
+      "type": "alternatives",
+      "duration_s": 4,
       "narration": [
-        "You only need about fifteen seconds of your voice.",
-        "The lite model, 0.6 billion parameters, is for quick iterations.",
-        "The pro model, 1.7 billion, is for when quality matters."
+        "Two ways in, one engine.",
+        "The command line is one command, easy to rerun or automate.",
+        "The browser page runs that same command, and shows progress as it goes."
+      ],
+      "data": {
+        "title": "Two ways in, one engine",
+        "panels": [
+          {
+            "label": "Terminal",
+            "kind": "terminal",
+            "role": "c4",
+            "lines": [
+              {
+                "cmd": "uv run python scripts/qwen3_clone.py"
+              },
+              {
+                "comment": "plus your clip, your script, lite or pro"
+              },
+              {
+                "out": "Saved narration"
+              }
+            ],
+            "caption": "batches & automation"
+          },
+          {
+            "label": "Voice clone",
+            "kind": "browser",
+            "role": "c4",
+            "url": "127.0.0.1:8765",
+            "fields": [
+              {
+                "label": "Script",
+                "value": "Hey! I'm Garvit Khurana\u2026"
+              },
+              {
+                "label": "Quality",
+                "value": "lite"
+              }
+            ],
+            "slider": {
+              "label": "Speed",
+              "value": 0.6
+            },
+            "button": "Generate",
+            "log": [
+              "Loading model...",
+              "Generating piece...",
+              "Saved narration"
+            ],
+            "caption": "same engine, live progress"
+          }
+        ]
+      }
+    },
+    {
+      "id": "quality",
+      "type": "metrics",
+      "duration_s": 4,
+      "narration": [
+        "Lite is the faster model, for drafts while you iterate.",
+        "Pro is bigger, for when the wording is final.",
+        "And you can make it speak a little faster or slower."
       ],
       "data": {
         "cards": [
           {
-            "label": "Reference clip",
-            "value": "~15 s",
-            "compare": "recorded once"
+            "label": "Lite",
+            "value": "Drafts",
+            "compare": "faster, while you iterate"
           },
           {
-            "label": "lite model",
-            "value": "0.6B",
-            "compare": "faster iterations"
+            "label": "Pro",
+            "value": "Final takes",
+            "compare": "when quality matters"
           },
           {
-            "label": "pro model",
-            "value": "1.7B",
-            "compare": "better quality"
+            "label": "Speaking speed",
+            "value": "Adjustable",
+            "compare": "a little faster or slower"
           }
         ],
-        "footnote": "Qwen3-TTS 12Hz Base, 8-bit, via mlx-audio"
+        "footnote": "Default: lite"
       }
     },
     {
-      "id": "ui",
-      "type": "flow",
-      "duration_s": 6,
+      "id": "start",
+      "type": "commands",
+      "duration_s": 4,
       "narration": [
-        "There's also a browser UI.",
-        "It's a thin FastAPI server that runs the same command-line script,",
-        "and streams its progress back to the page as it works."
+        "Three commands to start.",
+        "On an Apple Silicon Mac with ffmpeg, uv sync sets it up.",
+        "Record your clip, reading the lines provided.",
+        "Then start the browser page, on your machine."
       ],
       "data": {
-        "roles": {
-          "ui": "c3",
-          "server": "c4",
-          "cli": "c2",
-          "file": "c1"
-        },
-        "nodes": [
+        "title": "Get started",
+        "lines": [
           {
-            "id": "page",
-            "role": "ui",
-            "label": "Browser UI",
-            "sub": "web/tts/index.html"
+            "cmd": "uv sync",
+            "note": "install"
           },
           {
-            "id": "server",
-            "role": "server",
-            "label": "FastAPI server",
-            "sub": "tts_ui_server.py"
+            "cmd": "./scripts/record_sample.sh",
+            "note": "record your clip"
           },
           {
-            "id": "cli",
-            "shape": "trapezoid",
-            "role": "cli",
-            "label": "qwen3_clone.py"
-          },
-          {
-            "id": "file",
-            "role": "file",
-            "label": "outputs/",
-            "sub": ".m4a files"
+            "cmd": "uv run python scripts/tts_ui_server.py",
+            "note": "open the browser page"
           }
         ],
-        "edges": [
-          {
-            "from": "page",
-            "to": "server"
-          },
-          {
-            "from": "server",
-            "to": "cli",
-            "label": "subprocess"
-          },
-          {
-            "from": "cli",
-            "to": "file"
-          }
-        ],
-        "steps": [
-          {
-            "id": "page",
-            "do": "reveal",
-            "targets": [
-              "page"
-            ]
-          },
-          {
-            "id": "run",
-            "do": "flow",
-            "path": [
-              "page",
-              "server",
-              "cli"
-            ],
-            "kind": "request"
-          },
-          {
-            "id": "stream",
-            "do": "flow",
-            "path": [
-              "page",
-              "server",
-              "cli",
-              "file"
-            ],
-            "kind": "change",
-            "back": "response"
-          }
-        ]
+        "footer": "http://127.0.0.1:8765/"
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "agent-unwrapped: see the wire",
+    "title": "agent-unwrapped",
     "source": {
       "kind": "repo",
       "url": "https://github.com/garvitkhurana/agent-unwrapped"
@@ -17,8 +17,20 @@
     },
     "glossary": [
       {
-        "term": "tool_calls",
-        "plain": "asks for a tool"
+        "term": "tool_call",
+        "plain": "asks"
+      },
+      {
+        "term": "MCP",
+        "plain": "separate tool server"
+      },
+      {
+        "term": "eval",
+        "plain": "evals"
+      },
+      {
+        "term": "venv",
+        "plain": "virtual environment"
       }
     ]
   },
@@ -28,54 +40,142 @@
       "type": "title",
       "duration_s": 3,
       "narration": [
-        "agent-unwrapped: see the wire of an AI agent."
+        "agent-unwrapped shows what an AI agent really is, without a framework."
       ],
       "data": {
         "title": "agent-unwrapped",
-        "subtitle": "See the wire",
-        "kicker": "messages → tools → agent loop → evals"
+        "subtitle": "The raw agent loop, no framework required",
+        "kicker": "The model asks. Your code runs the tool."
       }
     },
     {
-      "id": "frameworks",
-      "type": "pipeline",
-      "duration_s": 6,
+      "id": "ask",
+      "type": "flow",
+      "duration_s": 8,
       "narration": [
-        "Agent frameworks can feel like magic.",
-        "LangChain, Strands, LangGraph: underneath, they all run the same small loop.",
-        "Each turn, the model either asks for a tool, or gives a final answer."
+        "Take a task from the repo's evals: twenty-one times two.",
+        "Your code sends it to the model, with a list of tools.",
+        "The model never runs anything. It only asks.",
+        "Your code runs the calculator function.",
+        "Then it hands the result back to the model."
       ],
       "data": {
-        "head": "Under every framework",
-        "inputs": [
-          "LangChain",
-          "Strands",
-          "LangGraph"
+        "roles": {
+          "input": "c1",
+          "process": "c4",
+          "model": "c2",
+          "tool": "c5"
+        },
+        "nodes": [
+          {
+            "id": "task",
+            "shape": "stack",
+            "role": "input",
+            "label": "Task",
+            "sub": "calculator for 21 * 2"
+          },
+          {
+            "id": "model",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Model"
+          },
+          {
+            "id": "code",
+            "role": "process",
+            "label": "Your code",
+            "sub": "the loop"
+          },
+          {
+            "id": "tool",
+            "role": "tool",
+            "label": "calculator()",
+            "sub": "plain Python function"
+          }
         ],
-        "model": "the same loop",
-        "stages": [
-          "asks for a tool",
-          "final answer"
+        "edges": [
+          {
+            "from": "task",
+            "to": "model"
+          },
+          {
+            "from": "model",
+            "to": "code",
+            "label": "tool_call"
+          },
+          {
+            "from": "code",
+            "to": "tool"
+          },
+          {
+            "from": "code",
+            "to": "model"
+          }
+        ],
+        "steps": [
+          {
+            "id": "task",
+            "do": "reveal",
+            "targets": [
+              "task"
+            ]
+          },
+          {
+            "id": "send",
+            "do": "flow",
+            "path": [
+              "task",
+              "model"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "ask",
+            "do": "flow",
+            "path": [
+              "model",
+              "code"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "run",
+            "do": "flow",
+            "path": [
+              "code",
+              "tool"
+            ],
+            "kind": "request",
+            "back": "response"
+          },
+          {
+            "id": "result",
+            "do": "flow",
+            "path": [
+              "code",
+              "model"
+            ],
+            "kind": "response"
+          }
         ]
       }
     },
     {
       "id": "loop",
       "type": "loop",
-      "duration_s": 10,
+      "duration_s": 8,
       "narration": [
-        "Here's the whole agent, with one task: use the calculator for 21 times 2.",
-        "The loop sends the messages to the model.",
-        "Instead of answering, the model asks for a tool: calculator, 21 times 2.",
-        "Your code runs that tool, and appends the result, 42, to the messages.",
-        "Then it loops. This time the model has what it needs, and answers: 42.",
-        "That's it: a while loop, a list of messages, and a few plain functions."
+        "Under the hood, it's a loop over a growing list of messages.",
+        "Each round, the whole list goes to the model.",
+        "If the reply asks for a tool, that request is added.",
+        "Your code runs it, and appends the result as data.",
+        "It repeats until a reply asks for nothing."
       ],
       "data": {
         "nodes": {
-          "chat": "chat()",
-          "decide": "tool calls?",
-          "run": "run tool",
+          "chat": "call the model",
+          "decide": "tool_calls?",
+          "run": "run each tool",
           "append": "append result",
           "final": "final answer"
         },
@@ -86,11 +186,11 @@
           },
           {
             "role": "user",
-            "text": "Use the calculator tool for 21 * 2."
+            "text": "Use the calculator tool for 21 * 2. Reply with only the numeric value."
           },
           {
             "role": "assistant",
-            "text": "calculator(expression=\"21*2\")",
+            "text": "tool_call: calculator(\"21*2\")",
             "code": true
           },
           {
@@ -103,7 +203,260 @@
             "text": "42"
           }
         ],
-        "footnote": "agent/loop.py · 127 lines, no framework"
+        "footnote": "illustrative run of eval case calc-basic"
+      }
+    },
+    {
+      "id": "why",
+      "type": "flow",
+      "duration_s": 8,
+      "narration": [
+        "Every agent library runs this same loop.",
+        "LangChain just writes it for you.",
+        "Here, you write it, so nothing is hidden.",
+        "Tools are Python functions, or MCP, a separate tool server."
+      ],
+      "data": {
+        "roles": {
+          "owner": "c1",
+          "loop": "c4",
+          "tool": "c5"
+        },
+        "nodes": [
+          {
+            "id": "framework",
+            "role": "owner",
+            "label": "LangChain",
+            "sub": "owns the while"
+          },
+          {
+            "id": "diy",
+            "role": "owner",
+            "label": "Your for-loop",
+            "sub": "the lessons"
+          },
+          {
+            "id": "loop",
+            "shape": "trapezoid",
+            "role": "loop",
+            "label": "Agent loop"
+          },
+          {
+            "id": "py",
+            "role": "tool",
+            "label": "Python functions",
+            "sub": "in-process"
+          },
+          {
+            "id": "mcp",
+            "role": "tool",
+            "label": "MCP server",
+            "sub": "separate process"
+          }
+        ],
+        "edges": [
+          {
+            "from": "framework",
+            "to": "loop",
+            "style": "dashed"
+          },
+          {
+            "from": "diy",
+            "to": "loop"
+          },
+          {
+            "from": "loop",
+            "to": "py"
+          },
+          {
+            "from": "loop",
+            "to": "mcp"
+          }
+        ],
+        "steps": [
+          {
+            "id": "loop",
+            "do": "highlight",
+            "targets": [
+              "loop"
+            ]
+          },
+          {
+            "id": "framework",
+            "do": "flow",
+            "path": [
+              "framework",
+              "loop"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "diy",
+            "do": "flow",
+            "path": [
+              "diy",
+              "loop"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "py",
+            "do": "flow",
+            "path": [
+              "loop",
+              "py"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "mcp",
+            "do": "flow",
+            "path": [
+              "loop",
+              "mcp"
+            ],
+            "kind": "request",
+            "back": "response"
+          }
+        ],
+        "beats": {
+          "loop": 0,
+          "framework": 1,
+          "diy": 2,
+          "py": 3,
+          "mcp": [
+            3,
+            0.4
+          ]
+        }
+      }
+    },
+    {
+      "id": "course",
+      "type": "flow",
+      "duration_s": 8,
+      "narration": [
+        "Thirteen lessons build this up in four stages.",
+        "Call a tool yourself, then let the model call it.",
+        "Then the agent loop,",
+        "then evals of the answer and the path.",
+        "Frameworks come last, and they're optional."
+      ],
+      "data": {
+        "roles": {
+          "stage": "c4",
+          "loop": "c2",
+          "measure": "c3",
+          "optional": "neutral"
+        },
+        "nodes": [
+          {
+            "id": "foundation",
+            "role": "stage",
+            "label": "Foundation",
+            "items": [
+              "message",
+              "chat"
+            ]
+          },
+          {
+            "id": "capability",
+            "role": "stage",
+            "label": "Capability",
+            "items": [
+              "tools",
+              "MCP",
+              "structured"
+            ]
+          },
+          {
+            "id": "agency",
+            "role": "loop",
+            "label": "Agency",
+            "items": [
+              "agent loop"
+            ]
+          },
+          {
+            "id": "measure",
+            "role": "measure",
+            "label": "Measure",
+            "items": [
+              "output evals",
+              "behaviour evals"
+            ]
+          },
+          {
+            "id": "frameworks",
+            "role": "optional",
+            "label": "Frameworks",
+            "sub": "optional"
+          }
+        ],
+        "edges": [
+          {
+            "from": "foundation",
+            "to": "capability"
+          },
+          {
+            "from": "capability",
+            "to": "agency"
+          },
+          {
+            "from": "agency",
+            "to": "measure"
+          },
+          {
+            "from": "measure",
+            "to": "frameworks",
+            "style": "dashed"
+          }
+        ],
+        "steps": [
+          {
+            "id": "foundation",
+            "do": "reveal",
+            "targets": [
+              "foundation"
+            ]
+          },
+          {
+            "id": "capability",
+            "do": "flow",
+            "path": [
+              "foundation",
+              "capability"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "agency",
+            "do": "flow",
+            "path": [
+              "capability",
+              "agency"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "measure",
+            "do": "flow",
+            "path": [
+              "agency",
+              "measure"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "frameworks",
+            "do": "flow",
+            "path": [
+              "measure",
+              "frameworks"
+            ],
+            "kind": "change"
+          }
+        ]
       }
     },
     {
@@ -111,70 +464,53 @@
       "type": "checklist",
       "duration_s": 8,
       "narration": [
-        "But how do you know an agent works? You test it.",
-        "Lesson ten scores the answer: does it contain 42?",
-        "Lesson eleven scores the behaviour too: did it use the calculator, and finish within four model calls?",
-        "Keep the cases in a file, and rerun them whenever you change a prompt or a model."
+        "Evals check two things.",
+        "Output: does the answer contain forty-two?",
+        "Behaviour: did it use the right tool, the calculator?",
+        "A right answer reached the wrong way is still a bad agent."
       ],
       "data": {
-        "title": "Did it work?",
+        "title": "Two kinds of evals",
         "rows": [
           {
-            "label": "Answer contains \"42\"",
-            "tag": "lesson 10 · the answer"
+            "label": "Answer contains 42",
+            "tag": "output eval"
           },
           {
-            "label": "Used the calculator",
-            "tag": "lesson 11 · the behaviour"
-          },
-          {
-            "label": "Finished in ≤ 4 model calls",
-            "tag": "lesson 11 · the behaviour"
+            "label": "Used the right tool: calculator",
+            "tag": "behaviour eval"
           }
         ],
-        "footer": "evals/agent_cases.jsonl",
-        "beats": {
-          "row2": 2
-        }
+        "footer": "good answer + wrong path = bad agent"
       }
     },
     {
-      "id": "curriculum",
-      "type": "metrics",
-      "duration_s": 7,
+      "id": "start",
+      "type": "commands",
+      "duration_s": 6,
       "narration": [
-        "The repo builds this up in thirteen short lessons: first, plain messages and chat.",
-        "Then tools, MCP, and structured output.",
-        "Then the agent loop itself.",
-        "Then evals to measure it. Frameworks come last, as optional sugar."
+        "Get started in four steps.",
+        "Clone the repo.",
+        "Install the requirements.",
+        "Copy the env file and add your OpenRouter key.",
+        "Run the first lesson."
       ],
       "data": {
-        "cards": [
+        "title": "Get started",
+        "lines": [
           {
-            "label": "Foundation",
-            "value": "00–03",
-            "compare": "messages & chat"
+            "cmd": "git clone https://github.com/garvitkhurana/agent-unwrapped"
           },
           {
-            "label": "Capability",
-            "value": "04–08",
-            "compare": "tools, MCP, structured"
+            "cmd": "pip install -r requirements.txt"
           },
           {
-            "label": "Agency",
-            "value": "09",
-            "compare": "the agent loop"
+            "cmd": "cp .env.example .env"
           },
           {
-            "label": "Measure",
-            "value": "10–11",
-            "compare": "evals"
+            "cmd": "python lessons/00_mental_model.py"
           }
-        ],
-        "footnote": "12 · frameworks: optional sugar on the same loop",
-        "beats": {
-          "footnote": 3
-        }
+        ]
       }
     },
     {
