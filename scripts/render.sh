@@ -3,7 +3,8 @@
 # narration → voice + timing → Manim, one process per scene in parallel → concat → mux audio.
 # Outputs in out/<spec>/: final.mp4 (video + narration), manim.mp4 (silent), subtitles.srt.
 # Env: THEME (default brutalist), TTS=say|none (none = silent, timing estimated from word count),
-#      JOBS (parallel scene renders, default = CPU cores).
+#      JOBS (parallel scene renders, default = CPU cores),
+#      SCENES=id,id (re-render only these; reuse the other scenes' existing renders — narration must be unchanged).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SPEC="${1:-semif.json}"
@@ -17,7 +18,13 @@ ids=$(uv run --no-project python -c "import json; print(' '.join(s['id'] for s i
 
 # Each scene gets its own media dir: parallel Manim runs would otherwise overwrite each other's partial files.
 # Text SVG caches live inside it and are cleared (they're keyed on text+size, not layout width).
-rm -rf "$OUT/scenes" && mkdir -p "$OUT/scenes"
+if [[ -n "${SCENES:-}" ]]; then
+  todo=$(echo "$SCENES" | tr ',' ' ')
+  for id in $todo; do rm -rf "$OUT/scenes/$id"; done
+else
+  todo=$ids
+  rm -rf "$OUT/scenes" && mkdir -p "$OUT/scenes"
+fi
 render_scene() {
   local id=$1
   if ! (cd renderers/manim && SPEC="$SPEC" SCENES="$id" uv run manim -qh --disable_caching --progress_bar none \
@@ -26,7 +33,10 @@ render_scene() {
   fi
 }
 export -f render_scene; export SPEC OUT
-echo "$ids" | tr ' ' '\n' | xargs -P "$JOBS" -I{} bash -c 'render_scene {}'
+echo "$todo" | tr ' ' '\n' | xargs -P "$JOBS" -I{} bash -c 'render_scene {}'
+for id in $ids; do
+  [[ -f "$OUT/scenes/$id/videos/main/1080p30/$id.mp4" ]] || { echo "missing render for scene $id (run without SCENES first)"; exit 1; }
+done
 
 # Scenes are frame-exact, so stream-copy concatenation keeps them in sync with the narration timeline.
 : > "$OUT/scenes/list.txt"

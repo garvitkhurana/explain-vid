@@ -76,6 +76,18 @@ for name in ["remotion", "manim", "final"]:
     runs = re.findall(r"black_start:\S+ black_end:\S+ black_duration:(\S+)", bd)
     gate(not runs, f"{name}: no black runs >0.5s ({len(runs)} found)")
 
+# Per-scene frame counts: a scene that overruns its narration shifts every later caption.
+if timing:
+    wrong = []
+    for sid, sc in timing["scenes"].items():
+        f = OUT / "scenes" / sid / "videos" / "main" / "1080p30" / f"{sid}.mp4"
+        if f.exists():
+            n = int(subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries",
+                                    "stream=nb_read_packets", "-of", "csv=p=0", str(f)], capture_output=True, text=True).stdout or 0)
+            if n != sc["frames"]:
+                wrong.append(f"{sid} {n}/{sc['frames']}")
+    gate(not wrong, f"scene frame counts match narration timing ({', '.join(wrong) or 'all exact'})")
+
 final = OUT / "final.mp4"
 if final.exists() and timing and timing.get("backend") != "none":
     audio = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "format=duration",

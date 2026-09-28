@@ -92,7 +92,7 @@ def main() -> None:
                 cues.append({"text": p, "start": round(ct, 3), "end": round(ct + cd, 3)})
                 ct += cd
             t += d + GAP_S
-        spoken = t - GAP_S + TAIL_S
+        spoken = (t - GAP_S + TAIL_S) if s["narration"] else 0.0  # silent scenes: length = duration_s
         # Snap scene boundaries to whole frames so scenes rendered separately concatenate without drift.
         start_f = round(t0 * fps)
         frames = round((t0 + max(s["duration_s"], spoken)) * fps) - start_f
@@ -111,7 +111,7 @@ def main() -> None:
             lines += [str(n), f"{srt_time(sc['start'] + c['start'])} --> {srt_time(sc['start'] + c['end'])}", c["text"], ""]
     (OUT.parent / "subtitles.srt").write_text("\n".join(lines))
 
-    if backend == "say":
+    if backend == "say" and clips:  # silent specs (e.g. figure mode) have no clips and get no narration.wav
         # One track: every clip delayed to its absolute start, mixed over silence of the full length.
         inputs, filters = [], []
         for k, (start, wav) in enumerate(clips):

@@ -1,7 +1,10 @@
 {
   "meta": {
     "title": "SemIf: decisions without generation",
-    "source": "https://github.com/TheoLeeCJ/SemIf-OpenJev",
+    "source": {
+      "kind": "repo",
+      "url": "https://github.com/TheoLeeCJ/SemIf-OpenJev"
+    },
     "fps": 30,
     "size": [
       1920,
@@ -256,16 +259,11 @@
       }
     },
     {
-      "id": "outro",
-      "type": "outro",
-      "duration_s": 4,
-      "narration": [
-        "No waitlist. Try it in your browser."
-      ],
-      "data": {
-        "headline": "Try it in your browser",
-        "url": "github.com/TheoLeeCJ/SemIf-OpenJev"
-      }
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
     }
   ]
 }

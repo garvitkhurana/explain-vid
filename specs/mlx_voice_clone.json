@@ -1,0 +1,352 @@
+{
+  "meta": {
+    "title": "mlx-voice-clone",
+    "source": {
+      "kind": "repo",
+      "url": "https://github.com/garvitkhurana/mlx-voice-clone"
+    },
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "backend": "say",
+      "voice": "Samantha",
+      "rate_wpm": 175
+    },
+    "glossary": [
+      {
+        "term": "MLX",
+        "plain": "Apple Silicon"
+      },
+      {
+        "term": "subprocess",
+        "plain": "runs the same command-line script"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "duration_s": 3,
+      "narration": [
+        "mlx-voice-clone: clone your voice from a short clip, entirely on your Apple Silicon Mac."
+      ],
+      "data": {
+        "title": "mlx-voice-clone",
+        "subtitle": "Your voice, cloned locally",
+        "kicker": "Qwen3 TTS on Apple Silicon, via mlx-audio"
+      }
+    },
+    {
+      "id": "how",
+      "type": "flow",
+      "duration_s": 8,
+      "narration": [
+        "You give it three things: a short recording of your voice, the exact words you said, and the script to read.",
+        "The recording is converted to 24 kilohertz mono audio, and cached, so the next run skips that step.",
+        "Because you supplied the words, it doesn't need a speech-recognition model to work them out.",
+        "The script is split into chunks of about 450 characters, at paragraph and sentence breaks.",
+        "Each chunk is spoken in your voice by Qwen3 TTS, running on Apple Silicon.",
+        "The pieces are joined and exported as one m4a file."
+      ],
+      "data": {
+        "roles": {
+          "input": "c1",
+          "process": "c4",
+          "model": "c2",
+          "output": "c3"
+        },
+        "nodes": [
+          {
+            "id": "clip",
+            "shape": "stack",
+            "role": "input",
+            "label": "sample_clip.m4a",
+            "sub": "~15 s of your voice"
+          },
+          {
+            "id": "words",
+            "shape": "stack",
+            "role": "input",
+            "label": "ref_voice_transcript.txt",
+            "sub": "exactly what you said"
+          },
+          {
+            "id": "script",
+            "shape": "stack",
+            "role": "input",
+            "label": "01_intro.txt",
+            "sub": "what to narrate"
+          },
+          {
+            "id": "wav",
+            "role": "process",
+            "label": "24 kHz mono WAV",
+            "sub": "converted once, cached"
+          },
+          {
+            "id": "chunks",
+            "role": "process",
+            "label": "chunks",
+            "sub": "~450 chars each"
+          },
+          {
+            "id": "model",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Qwen3\nTTS"
+          },
+          {
+            "id": "out",
+            "role": "output",
+            "label": "HHMMSS_01_intro.m4a",
+            "sub": "chunks joined, AAC export"
+          }
+        ],
+        "edges": [
+          {
+            "from": "clip",
+            "to": "wav"
+          },
+          {
+            "from": "wav",
+            "to": "model"
+          },
+          {
+            "from": "words",
+            "to": "model"
+          },
+          {
+            "from": "script",
+            "to": "chunks"
+          },
+          {
+            "from": "chunks",
+            "to": "model"
+          },
+          {
+            "from": "model",
+            "to": "out"
+          }
+        ],
+        "steps": [
+          {
+            "id": "clip",
+            "do": "reveal",
+            "targets": [
+              "clip"
+            ]
+          },
+          {
+            "id": "words_in",
+            "do": "reveal",
+            "targets": [
+              "words"
+            ]
+          },
+          {
+            "id": "script_in",
+            "do": "reveal",
+            "targets": [
+              "script"
+            ]
+          },
+          {
+            "id": "convert",
+            "do": "flow",
+            "path": [
+              "clip",
+              "wav"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "words",
+            "do": "flow",
+            "path": [
+              "words",
+              "model"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "chunk",
+            "do": "flow",
+            "path": [
+              "script",
+              "chunks"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "speak",
+            "do": "flow",
+            "path": [
+              "chunks",
+              "model"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "join",
+            "do": "flow",
+            "path": [
+              "model",
+              "out"
+            ],
+            "kind": "response"
+          }
+        ],
+        "beats": {
+          "clip": [
+            0,
+            0.15
+          ],
+          "words_in": [
+            0,
+            0.45
+          ],
+          "script_in": [
+            0,
+            0.75
+          ],
+          "convert": 1,
+          "words": 2,
+          "chunk": 3,
+          "speak": 4,
+          "join": 5
+        }
+      }
+    },
+    {
+      "id": "models",
+      "type": "metrics",
+      "duration_s": 6,
+      "narration": [
+        "You only need about fifteen seconds of your voice.",
+        "The lite model, 0.6 billion parameters, is for quick iterations.",
+        "The pro model, 1.7 billion, is for when quality matters."
+      ],
+      "data": {
+        "cards": [
+          {
+            "label": "Reference clip",
+            "value": "~15 s",
+            "compare": "recorded once"
+          },
+          {
+            "label": "lite model",
+            "value": "0.6B",
+            "compare": "faster iterations"
+          },
+          {
+            "label": "pro model",
+            "value": "1.7B",
+            "compare": "better quality"
+          }
+        ],
+        "footnote": "Qwen3-TTS 12Hz Base, 8-bit, via mlx-audio"
+      }
+    },
+    {
+      "id": "ui",
+      "type": "flow",
+      "duration_s": 6,
+      "narration": [
+        "There's also a browser UI.",
+        "It's a thin FastAPI server that runs the same command-line script,",
+        "and streams its progress back to the page as it works."
+      ],
+      "data": {
+        "roles": {
+          "ui": "c3",
+          "server": "c4",
+          "cli": "c2",
+          "file": "c1"
+        },
+        "nodes": [
+          {
+            "id": "page",
+            "role": "ui",
+            "label": "Browser UI",
+            "sub": "web/tts/index.html"
+          },
+          {
+            "id": "server",
+            "role": "server",
+            "label": "FastAPI server",
+            "sub": "tts_ui_server.py"
+          },
+          {
+            "id": "cli",
+            "shape": "trapezoid",
+            "role": "cli",
+            "label": "qwen3_clone.py"
+          },
+          {
+            "id": "file",
+            "role": "file",
+            "label": "outputs/",
+            "sub": ".m4a files"
+          }
+        ],
+        "edges": [
+          {
+            "from": "page",
+            "to": "server"
+          },
+          {
+            "from": "server",
+            "to": "cli",
+            "label": "subprocess"
+          },
+          {
+            "from": "cli",
+            "to": "file"
+          }
+        ],
+        "steps": [
+          {
+            "id": "page",
+            "do": "reveal",
+            "targets": [
+              "page"
+            ]
+          },
+          {
+            "id": "run",
+            "do": "flow",
+            "path": [
+              "page",
+              "server",
+              "cli"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "stream",
+            "do": "flow",
+            "path": [
+              "page",
+              "server",
+              "cli",
+              "file"
+            ],
+            "kind": "change",
+            "back": "response"
+          }
+        ]
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}
