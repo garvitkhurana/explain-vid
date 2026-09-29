@@ -1,6 +1,7 @@
 # explain-vid
 
-Explainer videos for software projects, generated from a JSON scene spec.
+Turn a blog post, paper or repo into a narrated explainer video, with one command in Claude Code.
+Facts are pulled from the source first, and every number and command on screen is checked against them.
 
 Sample (100 s), made from Rich Sutton's essay *The Bitter Lesson* with one command in Claude Code:
 ```
