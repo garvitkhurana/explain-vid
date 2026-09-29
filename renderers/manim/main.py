@@ -114,7 +114,12 @@ class Explainer(Scene):
     def play(self, *args, **kw):
         # Log every stretch where nothing animates (captions change on their own, so they don't count). A PLAN=1
         # dry run writes these to plan.json, so check.py can flag long still screens before any frame is rendered.
-        if all(isinstance(a, Wait) for a in args):  # self.wait() plays a Wait: time passes, nothing moves
+        def moves(a):  # small packet dots alone read as still, to viewers and to the render's freeze gate alike
+            if isinstance(a, AnimationGroup):
+                return any(moves(x) for x in a.animations)
+            return not isinstance(a, (Wait, MoveAlongPath))
+
+        if not any(moves(a) for a in args):  # self.wait() plays a Wait: time passes, nothing moves
             return super().play(*args, **kw)
         if self.time - self.moved_at > 1:
             self.stills.append([self.sid, round(self.moved_at - self.scene_start, 2), round(self.time - self.moved_at, 2)])

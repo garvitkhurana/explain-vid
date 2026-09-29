@@ -14,7 +14,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - Narration is the single source: audio, on-screen caption cues, subtitles and scene length all derive from `narration`.
 - Scripts explain, not just describe: intuition → mechanism → proof per concept; on-screen jargon needs its plain phrase said first (glossary gate).
 - Subagents only when the user asks, at most 2 at once; prefer inline work for spec edits and single-scene fixes.
-- Non-goals now: voice cloning, Blender, publishing, agents writing templates (template-builder is manual).
+- Non-goals now: voice cloning, Blender, publishing, agents writing templates (template-builder is manual), general topics without one source (a trial on company finances fit poorly; the pipeline is for coding blogs, papers and repos).
 
 ## Key decisions
 - 2026-09-27 — Scene spec JSON + fixed, generic, data-driven templates (list in the schema); explainers show why (mechanism templates), not just inputs/outputs. Keeps renders deterministic and LLM output checkable.
