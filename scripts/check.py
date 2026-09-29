@@ -2,9 +2,11 @@
 # requires-python = ">=3.12"
 # dependencies = ["jsonschema>=4"]
 # ///
-"""Hard gates for one explainer. Exit 1 on any failure. Usage: uv run scripts/check.py <video>
+"""Hard gates for one explainer. Exit 1 on any failure. Usage: uv run scripts/check.py <video> [--plan]
 
-Spec gates (schema, structure, words, grounding) need only video-specs/<video>/; render gates need out/<video>/."""
+Spec gates (schema, structure, words, grounding) need only video-specs/<video>/; render gates need out/<video>/.
+--plan: spec gates plus still screens predicted by a dry run (out/<video>/voice/plan.json), then stop. render.sh
+runs it before rendering, so a long still fails in seconds instead of after a full render."""
 
 import json
 import re
@@ -15,9 +17,10 @@ from pathlib import Path
 import jsonschema
 
 ROOT = Path(__file__).resolve().parents[1]
-if len(sys.argv) != 2:
-    sys.exit("Usage: uv run scripts/check.py <video>   (a folder in video-specs/)")
-VIDEO = sys.argv[1]
+args = [a for a in sys.argv[1:] if a != "--plan"]
+if len(args) != 1:
+    sys.exit("Usage: uv run scripts/check.py <video> [--plan]   (a folder in video-specs/)")
+VIDEO, PLAN = args[0], "--plan" in sys.argv
 SPEC_DIR = ROOT / "video-specs" / VIDEO
 OUT = ROOT / "out" / VIDEO
 spec = json.loads((SPEC_DIR / "spec.json").read_text())
@@ -32,7 +35,10 @@ ARCS = {
     "concept": ["hook", "how", "why", "takeaway"],  # an idea: what it is → how it works → why it matters → the point
     "result": ["hook", "problem", "how", "proof"],  # a finding: the problem → the method → the evidence
 }
-MAX_CUE = 64       # caption characters per cue (voice.py splits to this)
+# Where the spec's one-sentence point (meta.thesis) must be said: a tool says what it does up front; an idea or a
+# finding lands it at the end. A video once promised "one bitter lesson" and never said what it was.
+THESIS_AT = {"tool": "hook", "concept": "takeaway", "result": "proof"}
+MAX_CUE = 64      # caption characters per cue (voice.py splits to this)
 MAX_STILL_S = 4.5  # user flagged a ~5 s screen with only a title and voice as "nothing comes up"
 REPEAT = 0.6       # share of a closing sentence's words already said in the opening that counts as a repeat
 
@@ -74,6 +80,12 @@ def words(text):
 opening = words(" ".join(scenes[0]["narration"]))
 repeats = [s for s in body[-1]["narration"] if words(s) and len(words(s) & opening) / len(words(s)) >= REPEAT]
 gate(not repeats, f"closing scene doesn't restate the opening ({listed(repeats)})")
+
+# The thesis is said, not just shown: one sentence in a scene of its role carries most of its words.
+thesis, at = words(spec["meta"].get("thesis", "")), THESIS_AT.get(spec["meta"].get("arc"))
+said_at = [x for s in body if s.get("role") == at for x in s["narration"]]
+gate(bool(thesis) and any(len(words(x) & thesis) / len(thesis) >= REPEAT for x in said_at),
+     f"thesis said in the {at} narration ({spec['meta'].get('thesis', 'no meta.thesis')})")
 
 # ---- words -----------------------------------------------------------------------------------------------------
 # Jargon: an on-screen glossary term needs its plain phrase said in the same or an earlier scene.
@@ -141,6 +153,14 @@ fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "so
 unquoted = [f"{s['id']}:{c}" for s in scenes for c in quoted(s["data"]) if c not in fact_text]
 gate(not unquoted, f"commands and code appear verbatim in facts.json ({listed(unquoted)})")
 
+# ---- plan (dry run, before rendering) ---------------------------------------------------------------------------
+if PLAN:
+    timing = json.loads((OUT / "voice" / "timing.json").read_text())["scenes"]
+    long = [f"{sid} sentence {sum(t >= x for x in timing[sid]['sentences']) - 1}: {d}s from {t}s"
+            for sid, t, d in json.loads((OUT / "voice" / "plan.json").read_text())["stills"] if d > MAX_STILL_S]
+    gate(not long, f"predicted still screens <= {MAX_STILL_S:.1f}s ({listed(long)})")
+    sys.exit(1 if failures else 0)
+
 # ---- render ----------------------------------------------------------------------------------------------------
 timing_path, final = OUT / "voice" / "timing.json", OUT / "final.mp4"
 if not (timing_path.exists() and final.exists()):
@@ -163,8 +183,7 @@ info = json.loads(probe(final, "stream=width,height,r_frame_rate:format=duration
 v, dur = info["streams"][0], float(info["format"]["duration"])
 gate(abs(dur - expected) <= 0.2, f"duration {dur:.2f}s vs narration timing {expected:.2f}s")
 gate((v["width"], v["height"], v["r_frame_rate"]) == (w, h, f"{fps}/1"), f"format {v['width']}x{v['height']} @ {v['r_frame_rate']}")
-if timing["backend"] != "none":
-    gate(bool(json.loads(probe(final, "stream=index", "a:0"))["streams"]), "narration audio track present")
+gate(bool(json.loads(probe(final, "stream=index", "a:0"))["streams"]), "narration audio track present")
 
 # A scene that overruns its narration shifts every later caption.
 wrong = []

@@ -2,7 +2,8 @@
 # Usage: ./scripts/render.sh <video>   (renders video-specs/<video>/spec.json)
 # narration → voice + timing → Manim, one process per scene in parallel → concat → mux audio.
 # Outputs in out/<video>/: final.mp4 (video + narration), manim.mp4 (silent), subtitles.srt. Then runs the gates.
-# Env: THEME (default brutalist), TTS=kokoro|none (none = silent, timing estimated from word count),
+# Env: THEME (default brutalist),
+#      DRY=1 (stop after the dry run: spec gates + predicted stills, ~30 s with the voice),
 #      JOBS (parallel scene renders, default = CPU cores),
 #      SCENES=id,id (re-render only these; reuse the other scenes' existing renders — narration must be unchanged).
 set -euo pipefail
@@ -14,6 +15,13 @@ mkdir -p "$OUT"
 start=$(date +%s)
 
 uv run scripts/voice.py "$SPEC"
+# Dry run: every scene's timeline without drawing a frame (~15 s), then the spec gates and predicted still screens.
+# A failure here stops before the render.
+rm -rf "$OUT/plan"
+(cd renderers/manim && SPEC="$SPEC" PLAN=1 uv run manim --dry_run --disable_caching --progress_bar none \
+  --media_dir "../../$OUT/plan" main.py Explainer) > "$OUT/plan.log" 2>&1 || { echo "dry run failed:"; tail -20 "$OUT/plan.log"; exit 1; }
+uv run scripts/check.py "$SPEC" --plan || { echo "fix the spec before rendering"; exit 1; }
+[[ -n "${DRY:-}" ]] && exit 0
 ids=$(uv run --no-project python -c "import json; print(' '.join(s['id'] for s in json.load(open('video-specs/$SPEC/spec.json'))['scenes']))")
 
 # Each scene gets its own media dir: parallel Manim runs would otherwise overwrite each other's partial files.

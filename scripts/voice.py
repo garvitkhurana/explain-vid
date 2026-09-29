@@ -5,14 +5,12 @@
 """Narration → audio, caption cues and scene timing. The spec's `narration` is the single source for all three.
 
 Usage: uv run scripts/voice.py <video>   (reads video-specs/<video>/spec.json)
-Env:   TTS=kokoro|none   (kokoro, the default = local Kokoro-82M via scripts/tts_kokoro.py, with the spec's
-       meta.voice {voice, speed}; none = no audio, timing estimated from word count, for fast silent previews)
+Voice: local Kokoro-82M via scripts/tts_kokoro.py, with the spec's meta.voice {voice, speed}.
 
 Writes out/<video>/voice/timing.json (read by the Manim renderer), out/<video>/voice/narration.wav, out/<video>/subtitles.srt.
 """
 
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -25,7 +23,6 @@ LEAD_S = 0.4      # silence before a scene's first sentence (lets the visuals la
 GAP_S = 0.3       # silence between sentences
 TAIL_S = 0.6      # silence after the last sentence before the cut
 MAX_CUE = 64      # characters per on-screen caption cue
-WPM = 165         # TTS=none: Kokoro's pace at speed 1.0, for estimated timing
 
 
 def tts_kokoro(items: list[tuple[str, Path]], voice: dict) -> None:
@@ -69,17 +66,13 @@ def main() -> None:
     spec = json.loads((ROOT / "video-specs" / video / "spec.json").read_text())
     OUT = ROOT / "out" / video / "voice"  # one output dir per spec so videos don't overwrite each other
     voice = spec["meta"].get("voice", {})
-    backend = os.environ.get("TTS", "kokoro")
-    if backend not in ("kokoro", "none"):
-        raise SystemExit(f"Unknown TTS backend {backend!r} (kokoro|none)")
 
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     fps = spec["meta"]["fps"]
-    if backend == "kokoro":
-        tts_kokoro([(sentence, OUT / f"{s['id']}_{i:02}.wav")
-                    for s in spec["scenes"] for i, sentence in enumerate(s["narration"])], voice)
+    tts_kokoro([(sentence, OUT / f"{s['id']}_{i:02}.wav")
+                for s in spec["scenes"] for i, sentence in enumerate(s["narration"])], voice)
 
     scenes, clips, t0 = {}, [], 0.0  # clips: (absolute start, wav path)
     for s in spec["scenes"]:
@@ -87,12 +80,9 @@ def main() -> None:
         cues, sentences = [], []
         for i, sentence in enumerate(s["narration"]):
             sentences.append(round(t, 3))  # scene-relative start; scene templates pace their steps on these
-            if backend == "kokoro":
-                wav = OUT / f"{s['id']}_{i:02}.wav"
-                d = duration(wav)
-                clips.append((t0 + t, wav))
-            else:
-                d = len(sentence.split()) / WPM * 60
+            wav = OUT / f"{s['id']}_{i:02}.wav"
+            d = duration(wav)
+            clips.append((t0 + t, wav))
             # Split the sentence's time across its cues by character count.
             parts = split_cues(sentence)
             total = sum(len(p) for p in parts)
@@ -110,7 +100,7 @@ def main() -> None:
                            "spoken": round(spoken, 3), "sentences": sentences, "cues": cues}
         t0 = (start_f + frames) / fps
 
-    timing = {"video": video, "backend": backend, "fps": fps, "total": t0, "scenes": scenes}
+    timing = {"video": video, "fps": fps, "total": t0, "scenes": scenes}
     (OUT / "timing.json").write_text(json.dumps(timing, indent=2) + "\n")
 
     # Subtitles use the same cues, shifted to absolute time.
@@ -133,7 +123,7 @@ def main() -> None:
         subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(filters),
                         "-map", "[out]", "-ar", str(RATE), "-ac", "1", str(OUT / "narration.wav")], check=True)
 
-    print(f"{backend}: {n} cues, {t0:.1f}s total")
+    print(f"voice: {n} cues, {t0:.1f}s total")
 
 
 if __name__ == "__main__":

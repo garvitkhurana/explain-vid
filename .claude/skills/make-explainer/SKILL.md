@@ -18,15 +18,17 @@ already exists, unless the user asked to redo it.
    source, stop and tell the user.
 3. **Spec:** spawn `spec-author` with `<video>`. If it reports a missing template, stop and tell the user what the
    scene needs. Building templates is a separate, reviewed step (`template-builder`) and never part of this loop.
-4. **Check:** run `TTS=none ./scripts/render.sh <video>` yourself; it renders silently and ends with the gates.
-   If a scene crashes, read the last 20 lines of `out/<video>/scenes/<id>.log`.
+4. **Check:** run `./scripts/render.sh <video>` yourself, with the voice (~15 s: timing is exact, a silent estimate
+   isn't). A dry run (~15 s) checks the spec and predicted still screens first and stops there on a FAIL; otherwise
+   it renders (~60 s) and ends with the gates.
+   If the dry run or a scene crashes, read the last 20 lines of `out/<video>/plan.log` or `out/<video>/scenes/<id>.log`.
 5. **Loop (at most 3 rounds):** send each FAIL line exactly as printed to the agent that owns it (continue it with
    SendMessage if it's still around, otherwise spawn it with the failure text), then repeat step 4:
    - spec: schema, arc and roles, opening, ending, glossary, grounding, labels, still screen, caption length → `spec-author`
    - a number that's correct in the source but missing from facts.json → `fact-extractor`
    - a scene crash, wrong format, black frames, or a still screen the template can't fix → tell the user (templates are a
      separate, reviewed `template-builder` step)
-6. **Final:** run `./scripts/render.sh <video>` with the voice. Show the user the story spine, what was cut, the gate
+6. **Final:** once step 4 passes, that render is the final one. Show the user the story spine, what was cut, the gate
    results, `out/<video>/final.mp4`, and any gate left failing, with the reason.
 
 Run at most 2 agents at once. Each agent's final report is ≤ 15 lines (files changed, gate results, blockers);

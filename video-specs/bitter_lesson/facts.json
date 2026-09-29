@@ -1,0 +1,242 @@
+[
+ {
+  "id": "title",
+  "claim": "Essay title and author: The Bitter Lesson by Rich Sutton",
+  "value": "The Bitter Lesson",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"The Bitter Lesson Rich Sutton\"",
+  "kind": "measured"
+ },
+ {
+  "id": "date",
+  "claim": "Essay published March 13, 2019",
+  "value": "March 13, 2019",
+  "unit": "date",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"March 13, 2019\"",
+  "kind": "measured"
+ },
+ {
+  "id": "span",
+  "claim": "The lesson is read from 70 years of AI research",
+  "value": "70",
+  "unit": "years",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"The biggest lesson that can be read from 70 years of AI research\"",
+  "kind": "measured"
+ },
+ {
+  "id": "thesis",
+  "claim": "General methods that leverage computation are ultimately the most effective, by a large margin",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"general methods that leverage computation are ultimately the most effective, and by a large margin\"",
+  "kind": "measured"
+ },
+ {
+  "id": "moore",
+  "claim": "Underlying reason: Moore's law, the continued exponentially falling cost per unit of computation",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"continued exponentially falling cost per unit of computation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "constant-assumption",
+  "claim": "Most AI research assumed the computation available to the agent was constant, so human knowledge looked like the main way to improve; over a slightly longer time than a typical research project, massively more computation becomes available",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"Most AI research has been conducted as if the computation available to the agent were constant\"",
+  "kind": "measured"
+ },
+ {
+  "id": "short-vs-long",
+  "claim": "Human knowledge helps in the short term; only leveraging computation matters in the long run",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"the only thing that matters in the long run is the leveraging of computation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "tradeoff",
+  "claim": "Time spent on human knowledge is time not spent on computation; human-knowledge methods complicate things and suit scaling worse",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"Time spent on one is time not spent on the other\"",
+  "kind": "measured"
+ },
+ {
+  "id": "chess",
+  "claim": "Chess (running-example candidate, first in source): 1997 Kasparov defeat came from massive, deep search",
+  "value": "1997",
+  "unit": "year",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"the methods that defeated the world champion, Kasparov, in 1997, were based on massive, deep search\"",
+  "kind": "measured"
+ },
+ {
+  "id": "chess-reaction",
+  "claim": "Chess researchers who used human understanding of chess structure were dismayed; said brute force was not general and not how people play",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"it was not a general strategy, and anyway it was not how people played chess\"",
+  "kind": "measured"
+ },
+ {
+  "id": "go-delay",
+  "claim": "Go followed the same pattern, delayed by a further 20 years",
+  "value": "20",
+  "unit": "years",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"only delayed by a further 20 years\"",
+  "kind": "measured"
+ },
+ {
+  "id": "go-mechanism",
+  "claim": "In Go, human-knowledge efforts to avoid search proved irrelevant or worse once search was applied at scale; learning by self play learned a value function",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"all those efforts proved irrelevant, or worse, once search was applied effectively at scale\"",
+  "kind": "measured"
+ },
+ {
+  "id": "search-learning",
+  "claim": "Search and learning are the two most important classes of techniques for using massive computation; both scale arbitrarily",
+  "value": "2",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"Search and learning are the two most important classes of techniques for utilizing massive amounts of computation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "speech-1970s",
+  "claim": "Speech recognition: DARPA-sponsored competition in the 1970s; special methods using knowledge of words, phonemes, vocal tract",
+  "value": "1970s",
+  "unit": "decade",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"there was an early competition, sponsored by DARPA, in the 1970s\"",
+  "kind": "measured"
+ },
+ {
+  "id": "speech-hmm",
+  "claim": "Statistical methods based on hidden Markov models (HMMs) did much more computation and won over human-knowledge methods",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"the statistical methods won out over the human-knowledge-based methods\"",
+  "kind": "measured"
+ },
+ {
+  "id": "nlp",
+  "claim": "The win shifted all of natural language processing over decades toward statistics and computation",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"statistics and computation came to dominate the field\"",
+  "kind": "measured"
+ },
+ {
+  "id": "deep-speech",
+  "claim": "Deep learning uses even less human knowledge and more computation with huge training sets, giving dramatically better speech recognition",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"Deep learning methods rely even less on human knowledge, and use even more computation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "vision",
+  "claim": "Vision: early methods (edges, generalized cylinders, SIFT features) are discarded; modern deep nets use only convolution and certain invariances and perform much better",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"Modern deep-learning neural networks use only the notions of convolution and certain kinds of invariances\"",
+  "kind": "measured"
+ },
+ {
+  "id": "pattern-1",
+  "claim": "Bitter lesson observation 1: researchers often build knowledge into their agents",
+  "value": "1)",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"AI researchers have often tried to build knowledge into their agents\"",
+  "kind": "measured"
+ },
+ {
+  "id": "pattern-2",
+  "claim": "Observation 2: it always helps in the short term and is personally satisfying to the researcher",
+  "value": "2)",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"this always helps in the short term, and is personally satisfying to the researcher\"",
+  "kind": "measured"
+ },
+ {
+  "id": "pattern-3",
+  "claim": "Observation 3: in the long run it plateaus and even inhibits further progress",
+  "value": "3)",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"in the long run it plateaus and even inhibits further progress\"",
+  "kind": "measured"
+ },
+ {
+  "id": "pattern-4",
+  "claim": "Observation 4: breakthrough progress arrives by the opposing approach, scaling computation by search and learning",
+  "value": "4)",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"breakthrough progress eventually arrives by an opposing approach based on scaling computation by search and learning\"",
+  "kind": "measured"
+ },
+ {
+  "id": "bitter",
+  "claim": "Why bitter: success comes over a favored, human-centric approach",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"it is success over a favored, human-centric approach\"",
+  "kind": "measured"
+ },
+ {
+  "id": "core-sentence",
+  "claim": "Core statement: building in how we think we think does not work in the long run",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"building in how we think we think does not work in the long run\"",
+  "kind": "measured"
+ },
+ {
+  "id": "lesson-1",
+  "claim": "Point 1: the great power of general purpose methods that keep scaling with computation; search and learning",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"the great power of general purpose methods, of methods that continue to scale with increased computation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "lesson-2",
+  "claim": "Point 2: contents of minds are irredeemably complex (space, objects, agents, symmetries); build in only meta-methods that find and capture complexity",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"build in only the meta-methods that can find and capture this arbitrary complexity\"",
+  "kind": "measured"
+ },
+ {
+  "id": "discover",
+  "claim": "We want agents that can discover like we can, not ones that contain what we have discovered",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"We want AI agents that can discover like we can, not which contain what we have discovered\"",
+  "kind": "measured"
+ },
+ {
+  "id": "not-learned",
+  "claim": "Sutton says the field still has not thoroughly learned the lesson",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"we still have not thoroughly learned it\"",
+  "kind": "measured"
+ },
+ {
+  "id": "timeline",
+  "claim": "Timeline of examples: chess 1997, Go about 20 years later, speech 1970s onward, vision (deep learning); illustrative ordering only, Go year not stated",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"delayed by a further 20 years\"",
+  "kind": "illustrative"
+ },
+ {
+  "id": "no-numbers",
+  "claim": "Source contains no benchmark numbers or charts; only years, the 70-year span and the 20-year delay are numeric",
+  "value": "-",
+  "unit": "-",
+  "source": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html + \"essay text\"",
+  "kind": "illustrative"
+ }
+]

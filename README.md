@@ -27,8 +27,8 @@ Apple Silicon only (Kokoro runs on MLX). The voice model downloads on the first 
 
 ## Use
 ```bash
-./scripts/render.sh ai_harness                   # voice → render → gates; out/ai_harness/final.mp4
-TTS=none ./scripts/render.sh ai_harness          # silent, timing estimated from word count (fast)
+./scripts/render.sh ai_harness                   # voice → dry run (spec gates, predicted stills) → render → gates
+DRY=1 ./scripts/render.sh ai_harness             # stop after the dry run (~30 s): spec gates + predicted stills
 SCENES=thesis ./scripts/render.sh ai_harness     # re-render one scene, reuse the rest (narration unchanged)
 uv run scripts/check.py ai_harness               # gates only
 ```
@@ -39,6 +39,8 @@ New video from a source, end to end (in Claude Code): `/make-explainer <repo pat
   Each sentence reveals one step of the scene (`data.beats` remaps steps to sentences).
 - Every number on screen or written as digits must match a `value` in `facts.json`; commands and code must appear
   there verbatim.
+- `meta.thesis` is the video's point in one sentence; it must be said in the narration of the hook (tool), takeaway
+  (concept) or proof (result).
 - Open on a `title` scene (role `hook`); end on `{"id": "source", "type": "source", ...}`, the only call to action.
   It reads "Clone the repo to get started" / "Read the full post at" / "Read the full paper at" + `meta.source.url`,
   and may be narrated.

@@ -185,3 +185,20 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
 69. **Cards in a row share one text size.** Each metrics card used to shrink its own text to fit, so "Average model"
     sat smaller than "Best model" next to it. The longest text in a row now sets the size for the whole row, and
     values and bottom lines sit on shared baselines.
+
+## Pass 12 (2026-09-28): first run on a new source (The Bitter Lesson)
+70. **Say the thesis.** The bitter_lesson video promised "one bitter lesson" and never said what it was: shortening
+    the title sentence for the still-screen gate dropped the only line that stated it, and every gate still passed.
+    A spec now declares `meta.thesis` (one sentence, written first), and check.py requires one sentence in the arc's
+    thesis scene (tool: hook, concept: takeaway, result: proof) to carry ≥ 60% of its words. Column headings stay
+    plain nouns ("Search and learning", not "Methods that find it"); that one is taste, not a gate.
+71. **No silent timing estimate.** `TTS=none` estimated 165 wpm; Kokoro measured 149–166 across four videos, and
+    per sentence the error is larger, so a silent pass cleared the still-screen gate and the voiced render failed it
+    (bitter_lesson's title: 5.6 s); at 150 wpm it flagged a 5.2 s still that Kokoro reads in 4.0 s. Kokoro takes
+    ~15 s and is exact, so `TTS=none` and the word-count estimate were removed. A title's sentence stays short.
+72. **Predict still screens before rendering.** A fix round cost a spec edit plus a ~60 s silent render just to
+    re-measure stills. The renderer now logs every gap between animations; a PLAN=1 dry run jumps each animation
+    to its end (no frames, ~15 s) and writes them to plan.json, and `check.py --plan` fails any over 4.5 s with its
+    scene and sentence. On bitter_lesson the 12 predicted stills matched ffmpeg's freezedetect within 0.05 s.
+    render.sh runs it first and stops on a FAIL; the freeze gate on the final video stays as the last word.
+    `DRY=1` stops after the dry run (~30 s with the voice, #71).

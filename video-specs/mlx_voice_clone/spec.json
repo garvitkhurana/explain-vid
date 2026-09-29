@@ -6,6 +6,7 @@
       "url": "https://github.com/garvitkhurana/mlx-voice-clone"
     },
     "arc": "tool",
+    "thesis": "It reads any script aloud, in your own voice.",
     "fps": 30,
     "size": [
       1920,

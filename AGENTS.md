@@ -2,7 +2,7 @@
 Turn software projects into short explainer videos from a JSON scene spec; automated repo → facts → spec → video by agents.
 
 ## Run
-- Render: `./scripts/render.sh <video>` (renders `video-specs/<video>/spec.json`, then runs the gates) → `out/<video>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `TTS=none` silent, `SCENES=` re-render only changed scenes, `THEME=`, `JOBS=`)
+- Render: `./scripts/render.sh <video>` (renders `video-specs/<video>/spec.json`; a frameless dry run checks spec + predicted still screens first, then full gates) → `out/<video>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `DRY=1` stop after it, `SCENES=` re-render only changed scenes, `THEME=`, `JOBS=`)
 - Gates only: `uv run scripts/check.py <video>` (structure + grounding against `video-specs/<video>/facts.json`, then `out/<video>/`)
 - New video end to end: `/make-explainer <source> <video>` (agents in `.claude/agents/`: fact-extractor, spec-author; template-builder is manual)
 - Needs: Apple Silicon (Kokoro TTS via mlx-audio; model fetched on first run), ffmpeg, uv (Python via uv only, 3.12 pinned in renderers/manim), brew `cairo pango pkg-config` (for Manim)
@@ -10,7 +10,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 ## Constraints
 - Goal: one shared spec format (`video-specs/<video>/spec.json`, schema in `video-specs/scene.schema.json`) rendered by fixed scene templates; LLMs fill specs, never write animation code.
 - Hard gates are code (`scripts/check.py`), never model judgment. Every number on screen must trace to `facts.json` (grounding gate).
-- Story follows the content, not the medium: `meta.arc` tool | concept | result, every scene has a `role` in it, one title opening and one source-card ending (structure gates).
+- Story follows the content, not the medium: `meta.arc` tool | concept | result, every scene has a `role` in it, `meta.thesis` said aloud, one title opening and one source-card ending (structure gates).
 - Narration is the single source: audio, on-screen caption cues, subtitles and scene length all derive from `narration`.
 - Scripts explain, not just describe: intuition → mechanism → proof per concept; on-screen jargon needs its plain phrase said first (glossary gate).
 - Subagents only when the user asks, at most 2 at once; prefer inline work for spec edits and single-scene fixes.

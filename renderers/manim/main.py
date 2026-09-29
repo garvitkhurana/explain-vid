@@ -16,7 +16,7 @@ from manim import (
     DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Line, Rectangle, Transform,
     LaggedStart, RoundedRectangle, Scene, Square, Text, ValueTracker, VGroup, VMobject, config, linear, rate_functions,
     DashedVMobject, Dot, Arc, Circle, MoveAlongPath, Polygon, Succession, AnimationGroup, Intersection, ManimColor,
-    interpolate_color,
+    interpolate_color, Wait,
 )
 
 from manim.animation.animation import prepare_animation
@@ -32,7 +32,7 @@ SPEC = json.loads((ROOT / "video-specs" / VIDEO / "spec.json").read_text())
 ONLY = {x for x in os.environ.get("SCENES", "").split(",") if x}
 TIMING_PATH = ROOT / "out" / VIDEO / "voice" / "timing.json"
 if not TIMING_PATH.exists():
-    raise SystemExit(f"Missing {TIMING_PATH}: run `uv run scripts/voice.py {VIDEO}` first (TTS=none for silent timing).")
+    raise SystemExit(f"Missing {TIMING_PATH}: run `uv run scripts/voice.py {VIDEO}` first.")
 TIMING = json.loads(TIMING_PATH.read_text())["scenes"]
 
 config.background_color = T.BG
@@ -111,11 +111,24 @@ class Explainer(Scene):
         kw.setdefault("frozen_frame", False)
         return super().wait(duration, **kw)
 
+    def play(self, *args, **kw):
+        # Log every stretch where nothing animates (captions change on their own, so they don't count). A PLAN=1
+        # dry run writes these to plan.json, so check.py can flag long still screens before any frame is rendered.
+        if all(isinstance(a, Wait) for a in args):  # self.wait() plays a Wait: time passes, nothing moves
+            return super().play(*args, **kw)
+        if self.time - self.moved_at > 1:
+            self.stills.append([self.sid, round(self.moved_at - self.scene_start, 2), round(self.time - self.moved_at, 2)])
+        super().play(*args, **kw)
+        self.moved_at = self.time
+
     def construct(self):
+        self.stills, self.moved_at = [], 0.0
+        if os.environ.get("PLAN"):  # jump each animation to its end: timing only, no frames (seconds, not minutes)
+            self.renderer._original_skipping_status = True
         for s in SPEC["scenes"]:
             if ONLY and s["id"] not in ONLY:
                 continue
-            start = self.time
+            start, self.sid = self.time, s["id"]
             timing = TIMING[s["id"]]
             self.scene_start, self.sentences, self.beats = start, timing["sentences"], s["data"].get("beats", {})
             self.scene_end = start + timing["frames"] / config.frame_rate
@@ -132,6 +145,8 @@ class Explainer(Scene):
             if rest > 0:
                 self.wait((rest - 0.5) / fps)
             self.play(*[FadeOut(m) for m in self.mobjects], run_time=(fade - 0.5) / fps)
+        if os.environ.get("PLAN"):
+            (TIMING_PATH.parent / "plan.json").write_text(json.dumps({"stills": self.stills}, indent=1) + "\n")
 
     def cues(self, cues, scene_start):
         """One caption per narration cue, visible only during its spoken time window."""

@@ -1,0 +1,275 @@
+{
+  "meta": {
+    "title": "The Bitter Lesson",
+    "source": {
+      "kind": "blog",
+      "url": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html",
+      "credit": "Source: Rich Sutton, The Bitter Lesson"
+    },
+    "arc": "concept",
+    "thesis": "General methods that use computation win.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.0
+    },
+    "glossary": [
+      {
+        "term": "Moore's law",
+        "plain": "keeps falling"
+      },
+      {
+        "term": "meta-methods",
+        "plain": "methods that can find"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "role": "hook",
+      "duration_s": 3,
+      "narration": [
+        "Seventy years of AI research taught one bitter lesson."
+      ],
+      "data": {
+        "title": "The Bitter Lesson",
+        "subtitle": "General methods that leverage computation win, by a large margin",
+        "kicker": "Rich Sutton · March 13, 2019"
+      }
+    },
+    {
+      "id": "chess",
+      "type": "compare",
+      "role": "how",
+      "duration_s": 8,
+      "narration": [
+        "Start with chess, the essay's first example.",
+        "One camp built in human know-how; the other, deep search.",
+        "In nineteen ninety-seven, deep search beat the world champion, Kasparov.",
+        "Critics called it brute force: not how people play."
+      ],
+      "data": {
+        "title": "Chess: two bets",
+        "left": {
+          "label": "Human knowledge",
+          "role": "c1"
+        },
+        "right": {
+          "label": "Deep search",
+          "role": "c2"
+        },
+        "rows": [
+          {
+            "left": "Built in how people play",
+            "right": "Massive, deep search",
+            "winner": "none"
+          },
+          {
+            "left": "Not what won",
+            "right": "Beat Kasparov, 1997",
+            "winner": "right"
+          }
+        ],
+        "footer": "Critics: \"brute force, not how people play\""
+      }
+    },
+    {
+      "id": "why_search",
+      "type": "metrics",
+      "role": "why",
+      "duration_s": 8,
+      "narration": [
+        "So why did search win?",
+        "Most research assumed the computing power it had was fixed.",
+        "But the cost of computation keeps falling, exponentially.",
+        "Soon, far more of it becomes available.",
+        "Time spent on knowledge is time not spent on computation."
+      ],
+      "data": {
+        "title": "Why search won",
+        "cards": [
+          {
+            "label": "Research assumed",
+            "value": "Fixed",
+            "compare": "computing power"
+          },
+          {
+            "label": "In fact",
+            "value": "Falling",
+            "compare": "cost per unit: Moore's law"
+          },
+          {
+            "label": "Soon after",
+            "value": "Far more",
+            "compare": "computation available"
+          }
+        ],
+        "footnote": "Time on one is time not spent on the other"
+      }
+    },
+    {
+      "id": "pattern",
+      "type": "cycle",
+      "role": "how",
+      "duration_s": 20,
+      "narration": [
+        "Chess wasn't a one-off; the same four steps keep coming round.",
+        "Researchers build what they know into their programs.",
+        "That helps at first, and it's satisfying.",
+        "Then it levels off, and even gets in the way.",
+        "The breakthrough comes from search and learning, scaled up.",
+        "Chess went round in nineteen ninety-seven.",
+        "Go went round twenty years later, once search ran at scale.",
+        "In speech, statistical methods beat hand-built knowledge of words and sounds.",
+        "In vision, deep networks replaced hand-designed features."
+      ],
+      "data": {
+        "title": "The same four steps, field after field",
+        "nodes": [
+          {
+            "id": "build",
+            "label": "Build in knowledge",
+            "sub": "what researchers\nknow"
+          },
+          {
+            "id": "helps",
+            "label": "Helps, short term",
+            "sub": "and feels\nsatisfying"
+          },
+          {
+            "id": "plateau",
+            "label": "Plateaus",
+            "sub": "even blocks\nprogress"
+          },
+          {
+            "id": "scale",
+            "label": "Breakthrough",
+            "sub": "search + learning\nat scale",
+            "edge": "next field"
+          }
+        ],
+        "panel": {
+          "title": "Where it happened",
+          "lines": [
+            {
+              "role": "chess",
+              "text": "search beat Kasparov, 1997"
+            },
+            {
+              "role": "go",
+              "text": "same, 20 years later"
+            },
+            {
+              "role": "speech",
+              "text": "statistics beat hand-built rules"
+            },
+            {
+              "role": "vision",
+              "text": "deep nets beat hand-made features"
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "ring"
+          },
+          {
+            "id": "build",
+            "at": "build"
+          },
+          {
+            "id": "helps",
+            "at": "helps"
+          },
+          {
+            "id": "plateau",
+            "at": "plateau"
+          },
+          {
+            "id": "scale",
+            "at": "scale"
+          },
+          {
+            "id": "chess",
+            "at": "scale",
+            "lap": true,
+            "show": 1
+          },
+          {
+            "id": "go",
+            "at": "scale",
+            "lap": true,
+            "show": 2
+          },
+          {
+            "id": "speech",
+            "at": "scale",
+            "lap": true,
+            "show": 3
+          },
+          {
+            "id": "vision",
+            "at": "scale",
+            "lap": true,
+            "show": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "build_in",
+      "type": "compare",
+      "role": "takeaway",
+      "duration_s": 8,
+      "narration": [
+        "That's the bitter lesson: what we know loses to what scales.",
+        "Don't build in how we think we think; build in search and learning.",
+        "Those keep scaling with computation; hand-built knowledge levels off.",
+        "We want agents that discover like we can.",
+        "General methods that use computation win, by a large margin."
+      ],
+      "data": {
+        "title": "The bitter lesson",
+        "left": {
+          "label": "Built-in knowledge",
+          "role": "c1"
+        },
+        "right": {
+          "label": "Search and learning",
+          "role": "c2"
+        },
+        "rows": [
+          {
+            "left": "Our ideas of space, objects, agents",
+            "right": "General methods that find structure",
+            "winner": "none"
+          },
+          {
+            "left": "Plateaus",
+            "right": "Keeps scaling with computation",
+            "winner": "right"
+          },
+          {
+            "left": "Contain what we discovered",
+            "right": "Discover like we can",
+            "winner": "right"
+          }
+        ],
+        "footer": "General methods + computation win"
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

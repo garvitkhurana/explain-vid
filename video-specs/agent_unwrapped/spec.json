@@ -6,6 +6,7 @@
       "url": "https://github.com/garvitkhurana/agent-unwrapped"
     },
     "arc": "tool",
+    "thesis": "It shows what an AI agent really is, without a framework.",
     "fps": 30,
     "size": [
       1920,

@@ -12,7 +12,8 @@
         "title",
         "fps",
         "size",
-        "arc"
+        "arc",
+        "thesis"
       ],
       "properties": {
         "title": {
@@ -80,6 +81,10 @@
             "result"
           ],
           "description": "Story shape, picked by what the content is (not where it came from). tool: hook → how → why → use. concept: hook → how → why → takeaway. result: hook → problem → how → proof. Every part must appear (check.py)."
+        },
+        "thesis": {
+          "type": "string",
+          "description": "The video's point in one sentence, written before the scenes. It must be said in the narration of the scene with the arc's thesis role (tool: hook, concept: takeaway, result: proof), not just shown (check.py)."
         }
       }
     },

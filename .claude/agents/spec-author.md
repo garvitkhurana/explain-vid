@@ -14,8 +14,10 @@ Never edit templates, scripts, facts.json or AGENTS.md. If a scene needs a templ
 report what it would need to show. The main session decides whether `template-builder` makes it.
 
 ## Checklist (reasons in NOTES.md)
-1. Pick one aha, then the arc by what the content *is*, not where it came from: a blog can describe a tool and a repo
-   can hold a result (#42, #68). Set `meta.arc` and give every scene except the closing card a `role`:
+1. Pick one aha and write it first as `meta.thesis`, one plain sentence. Then pick the arc by what the content *is*,
+   not where it came from: a blog can describe a tool and a repo can hold a result (#42, #68). The thesis must be said
+   aloud in the arc's thesis scene: tool → hook, concept → takeaway, result → proof (#70). Set `meta.arc` and give
+   every scene except the closing card a `role`:
    - `tool` (something you run): hook (what it does, as a formula) → how → why → use
    - `concept` (an idea): hook → how → why → takeaway
    - `result` (a finding): hook → problem → how → proof
@@ -46,7 +48,8 @@ report what it would need to show. The main session decides whether `template-bu
 11. Aim for about 60–110 s. Keep each caption cue ≤ 64 chars; voice.py splits at commas.
 
 ## Verify before reporting
-`TTS=none ./scripts/render.sh <video>` (renders silently, then runs every gate in `scripts/check.py`).
+`DRY=1 ./scripts/render.sh <video>` (~30 s: the real voice for exact timing, then a dry run with the spec gates and
+still screens predicted by scene and sentence; nothing is rendered). The render gates run when the user renders.
 Fix every gate that fails because of the spec. Report: the story spine in one line per scene, what you cut, the gate results,
 and any gate you couldn't fix, with the reason.
 
