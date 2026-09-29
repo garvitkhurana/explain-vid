@@ -1,0 +1,387 @@
+{
+  "meta": {
+    "title": "Harness-Zero",
+    "source": {
+      "kind": "paper",
+      "url": "https://arxiv.org/abs/2609.24974"
+    },
+    "arc": "result",
+    "thesis": "The harness's gains now live in the model's weights.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.0
+    },
+    "glossary": [
+      {
+        "term": "harnessing agent",
+        "plain": "second agent"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "role": "hook",
+      "duration_s": 3,
+      "narration": [
+        "Harness-Zero trains a harness's skills into a small model."
+      ],
+      "data": {
+        "title": "Harness-Zero",
+        "subtitle": "Move a harness's skills into the model",
+        "kicker": "arXiv:2609.24974"
+      }
+    },
+    {
+      "id": "tied",
+      "type": "flow",
+      "role": "problem",
+      "duration_s": 8,
+      "narration": [
+        "A harness is the system around a model: tools, state, rules.",
+        "Tune one for a single job, and scores jump.",
+        "But the skill lives in the harness, not the model.",
+        "Swap in a plain harness, and the gains are gone."
+      ],
+      "data": {
+        "roles": {
+          "model": "c2",
+          "special": "c4",
+          "plain": "neutral"
+        },
+        "nodes": [
+          {
+            "id": "model",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Model",
+            "sub": "reasons, decides"
+          },
+          {
+            "id": "special",
+            "role": "special",
+            "label": "Special harness",
+            "sub": "tuned for one job",
+            "items": [
+              "tools",
+              "rules",
+              "skills",
+              "memory"
+            ]
+          },
+          {
+            "id": "plain",
+            "role": "plain",
+            "label": "Plain harness",
+            "sub": "one Bash tool"
+          }
+        ],
+        "edges": [
+          {
+            "from": "model",
+            "to": "special",
+            "label": "scores jump"
+          },
+          {
+            "from": "model",
+            "to": "plain",
+            "style": "dashed",
+            "label": "moved"
+          }
+        ],
+        "steps": [
+          {
+            "id": "harness",
+            "do": "flow",
+            "path": [
+              "model",
+              "special"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "tuned",
+            "do": "highlight",
+            "targets": [
+              "special"
+            ]
+          },
+          {
+            "id": "lives",
+            "do": "highlight",
+            "targets": [
+              "model"
+            ]
+          },
+          {
+            "id": "moved",
+            "do": "flow",
+            "path": [
+              "model",
+              "plain"
+            ],
+            "kind": "request"
+          }
+        ]
+      }
+    },
+    {
+      "id": "review",
+      "type": "cycle",
+      "role": "how",
+      "duration_s": 20,
+      "narration": [
+        "The fix: during training, a second agent plays the harness.",
+        "The student model proposes its next step.",
+        "The harnessing agent reviews it, using the harness's rules.",
+        "Sound steps pass unchanged.",
+        "Weak ones get the smallest fix.",
+        "The plain harness runs it.",
+        "The result joins the student's own history."
+      ],
+      "data": {
+        "title": "Agent as harness",
+        "nodes": [
+          {
+            "id": "propose",
+            "label": "Propose",
+            "sub": "student model\nsuggests a step"
+          },
+          {
+            "id": "review",
+            "label": "Review",
+            "sub": "harnessing agent\npasses or fixes it"
+          },
+          {
+            "id": "run",
+            "label": "Run",
+            "sub": "plain harness\nexecutes it"
+          },
+          {
+            "id": "observe",
+            "label": "Observe",
+            "sub": "result joins the\nstudent's history",
+            "edge": "next step"
+          }
+        ],
+        "panel": {
+          "title": "Review",
+          "lines": [
+            {
+              "role": "sound step",
+              "text": "passes unchanged"
+            },
+            {
+              "role": "weak step",
+              "text": "smallest fix"
+            },
+            {
+              "role": "student sees",
+              "text": "only its own steps"
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "ring"
+          },
+          {
+            "id": "propose",
+            "at": "propose"
+          },
+          {
+            "id": "review",
+            "at": "review"
+          },
+          {
+            "id": "sound",
+            "at": "review",
+            "show": 1
+          },
+          {
+            "id": "weak",
+            "at": "review",
+            "show": 2
+          },
+          {
+            "id": "run",
+            "at": "run"
+          },
+          {
+            "id": "observe",
+            "at": "observe",
+            "show": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "example",
+      "type": "steps",
+      "role": "how",
+      "duration_s": 14,
+      "narration": [
+        "In a real spreadsheet case, a few answer cells come pre-filled.",
+        "The special harness rejects any finish that changed them.",
+        "Harness-Zero's reviewer swaps that finish for a check.",
+        "It prints pass or fail, right where the student can see it."
+      ],
+      "data": {
+        "title": "Example: pre-filled cells",
+        "items": [
+          {
+            "label": "Example cells are the spec",
+            "sub": "a few answer cells come pre-filled"
+          },
+          {
+            "label": "Special harness blocks the finish",
+            "sub": "if an example cell was changed"
+          },
+          {
+            "label": "Reviewer swaps the finish for a check",
+            "sub": "a Bash command the student could run itself"
+          },
+          {
+            "label": "Student sees PASS or FAIL",
+            "sub": "in its own history, on the next turn"
+          }
+        ],
+        "beats": {
+          "title": 0,
+          "item0": [
+            0,
+            0.35
+          ],
+          "item1": 1,
+          "item2": 2,
+          "item3": 3
+        }
+      }
+    },
+    {
+      "id": "train",
+      "type": "flow",
+      "role": "how",
+      "duration_s": 8,
+      "narration": [
+        "Those reviewed runs become the student's training data.",
+        "At test time, the reviewer and special harness are gone.",
+        "Just the small model, plain harness."
+      ],
+      "data": {
+        "title": "Train, then drop the helpers",
+        "roles": {
+          "data": "c1",
+          "train": "c2",
+          "deploy": "c3"
+        },
+        "nodes": [
+          {
+            "id": "runs",
+            "shape": "stack",
+            "role": "data",
+            "label": "Reviewed runs",
+            "art": "lines"
+          },
+          {
+            "id": "tune",
+            "role": "train",
+            "label": "Train",
+            "sub": "student model"
+          },
+          {
+            "id": "deploy",
+            "role": "deploy",
+            "label": "Student + plain harness",
+            "sub": "no reviewer, no special harness"
+          }
+        ],
+        "edges": [
+          {
+            "from": "runs",
+            "to": "tune"
+          },
+          {
+            "from": "tune",
+            "to": "deploy",
+            "label": "at test time"
+          }
+        ],
+        "steps": [
+          {
+            "id": "train",
+            "do": "flow",
+            "path": [
+              "runs",
+              "tune"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "deploy",
+            "do": "flow",
+            "path": [
+              "tune",
+              "deploy"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "alone",
+            "do": "highlight",
+            "targets": [
+              "deploy"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "result",
+      "type": "metrics",
+      "role": "proof",
+      "duration_s": 12,
+      "narration": [
+        "Tested on a small model, across three domains.",
+        "Plain harness: twenty-three point three percent.",
+        "Special harness attached: forty-one point seven.",
+        "Harness-Zero, plain harness only: forty-four point three.",
+        "The harness's gains now live in the model's weights."
+      ],
+      "data": {
+        "title": "9B model, average over 3 domains",
+        "cards": [
+          {
+            "label": "Base, plain harness",
+            "value": "23.3%",
+            "compare": "success"
+          },
+          {
+            "label": "Base, special harness",
+            "value": "41.7%",
+            "compare": "harness attached"
+          },
+          {
+            "label": "Harness-Zero",
+            "value": "44.3%",
+            "compare": "plain harness only"
+          }
+        ],
+        "footnote": "The harness's gains, now inside the model"
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

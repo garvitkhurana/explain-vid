@@ -14,8 +14,11 @@ already exists, unless the user asked to redo it.
 
 0. **Setup (first run only).** If `renderers/manim/.venv` is missing, run `./scripts/setup.sh` and show the user its
    output; stop if it fails (it says what's missing, such as Homebrew or an Apple Silicon Mac).
-1. **Source text.** For a URL, check that it can be fetched. If it returns 403 or an empty page, read it in the in-app
-   browser, save the article text to the scratchpad, and pass that path on. For a repo, pass the path.
+1. **Source text.** For an arXiv link (`arxiv.org/abs/<id>`), fetch the full paper from `arxiv.org/html/<id>` (or
+   `/pdf/<id>` if there's no HTML version), save its text to the scratchpad and pass that path with the abs URL; the abs
+   page is only the abstract. For any other URL, check that it can be fetched. If it returns 403 or an empty page,
+   read it in the in-app browser, save the article text to the scratchpad, and pass that path on. For a repo, pass
+   the path.
 2. **Facts:** spawn `fact-extractor` with the source and `<video>`, then read its report. If it couldn't read the
    source, stop and tell the user.
 3. **Spec:** spawn `spec-author` with `<video>`. If it reports a missing template, stop and tell the user what the

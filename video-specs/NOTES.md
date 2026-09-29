@@ -202,3 +202,11 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
     scene and sentence. On bitter_lesson the 12 predicted stills matched ffmpeg's freezedetect within 0.05 s.
     render.sh runs it first and stops on a FAIL; the freeze gate on the final video stays as the last word.
     `DRY=1` stops after the dry run (~30 s with the voice, #71).
+
+## Pass 13 (2026-09-29): harness_zero, a paper
+73. **End on the point, in plain words.** harness_zero's first cut added a "habits" scene after the result: more
+    numbers (24/26, 82.3% over 28 habits), labelled with the paper's own term, after the thesis had landed. The user:
+    "makes no sense". check.py now fails a concept or result video with any scene after the one that says the thesis
+    (tool videos state it in the hook, so they're exempt). The source's coinages ("habits", "patterns", "h*") never
+    go on screen as labels; that one is a spec-author rule, since code can't tell a coinage from a plain word.
+    An arXiv abs link is only the abstract: /make-explainer now fetches the full paper from /html/<id>.

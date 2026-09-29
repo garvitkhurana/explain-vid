@@ -34,12 +34,14 @@ report what it would need to show. The main session decides whether `template-bu
    reference video said it.
 3. No disclaimers, warnings or usage-policy lines anywhere, least of all at the end. The generated source card is
    the ending: no call-to-action scene before it; narrate the card instead if needed. Don't restate the opening
-   claim in the last scene, close on something new (#38, #44, #66, #67).
+   claim in the last scene, close on something new (#38, #44, #66, #67). A concept or result video ends on the
+   scene that says the thesis: put extra evidence before it or cut it (#73).
 4. Pick the most visual evidence for each claim, and put each mechanism scene next to the number it explains (#3, #9).
 5. Use one running example from the source itself, carried through the scenes (#22).
 6. Narration explains, not describes: intuition → mechanism → proof for each concept you choose to explain (#14).
 7. Use plain words in the voice and precise terms on screen. Add every on-screen term to `meta.glossary`, with its plain phrase
-   spoken in the same or an earlier scene (#15).
+   spoken in the same or an earlier scene (#15). Never use the source's own coinages as labels ("habits", "patterns",
+   "h*"); say what they mean in everyday words, or leave the point out (#73).
 8. Map one sentence to one visible step; a sentence with no step is a still screen (#19). Add `data.beats` only when the
    sentences don't follow the template's default order (#21).
 9. Every number on screen, and every number written as digits in narration, must be a fact `value`. Spell numbers in narration

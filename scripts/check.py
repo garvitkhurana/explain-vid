@@ -86,6 +86,13 @@ thesis, at = words(spec["meta"].get("thesis", "")), THESIS_AT.get(spec["meta"].g
 said_at = [x for s in body if s.get("role") == at for x in s["narration"]]
 gate(bool(thesis) and any(len(words(x) & thesis) / len(thesis) >= REPEAT for x in said_at),
      f"thesis said in the {at} narration ({spec['meta'].get('thesis', 'no meta.thesis')})")
+# An idea or a finding ends on its point: nothing after the scene that says it (a "habits" scene of extra numbers
+# after harness_zero's result read as an afterthought). A tool says its thesis up front, so it's exempt.
+if at != "hook":
+    says = [s["id"] for s in body if any(thesis and len(words(x) & thesis) / len(thesis) >= REPEAT for x in s["narration"])]
+    ids = [s["id"] for s in body]
+    after = ids[ids.index(says[-1]) + 1:] if says else []
+    gate(not after, f"ends on the thesis: no scene after the one that says it ({listed(after, 'none')})")
 
 # ---- words -----------------------------------------------------------------------------------------------------
 # Jargon: an on-screen glossary term needs its plain phrase said in the same or an earlier scene.
