@@ -6,7 +6,8 @@ Sample: [bitter_lesson.mp4](https://github.com/garvitkhurana/explain-vid/release
 
 
 
-https://github.com/user-attachments/assets/a0f33241-18ac-4b76-8aeb-c75472f69bb7
+https://github.com/user-attachments/assets/7205e1c0-1a89-41f7-ba52-2ba94467b6e0
+
 
 
 
