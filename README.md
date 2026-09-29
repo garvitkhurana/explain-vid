@@ -3,6 +3,10 @@
 Explainer videos for software projects, generated from a JSON scene spec.
 
 Sample: [bitter_lesson.mp4](https://github.com/garvitkhurana/explain-vid/releases/download/samples/bitter_lesson.mp4)
+
+https://github.com/user-attachments/assets/cc570f32-5f51-442a-9f2b-7a26f59ad779
+
+
 (100 s, made from Rich Sutton's essay *The Bitter Lesson* with one command).
 
 ## Quickstart
