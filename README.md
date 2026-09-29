@@ -2,16 +2,12 @@
 
 Explainer videos for software projects, generated from a JSON scene spec.
 
-Sample: [bitter_lesson.mp4](https://github.com/garvitkhurana/explain-vid/releases/download/samples/bitter_lesson.mp4)
-
-
+Sample (100 s), made from Rich Sutton's essay *The Bitter Lesson* with one command in Claude Code:
+```
+/make-explainer http://www.incompleteideas.net/IncIdeas/BitterLesson.html bitter_lesson
+```
 
 https://github.com/user-attachments/assets/7205e1c0-1a89-41f7-ba52-2ba94467b6e0
-
-
-
-
-(100 s, made from Rich Sutton's essay *The Bitter Lesson* with one command).
 
 ## Quickstart
 Needs an Apple Silicon Mac, [Homebrew](https://brew.sh) and [Claude Code](https://claude.com/claude-code).
