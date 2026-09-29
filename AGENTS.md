@@ -5,7 +5,7 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - Render: `./scripts/render.sh <video>` (renders `video-specs/<video>/spec.json`; a frameless dry run checks spec + predicted still screens first, then full gates) → `out/<video>/final.mp4` + `subtitles.srt` (voice → Manim, one process per scene in parallel → concat → mux; `DRY=1` stop after it, `SCENES=` re-render only changed scenes, `THEME=`, `JOBS=`)
 - Gates only: `uv run scripts/check.py <video>` (structure + grounding against `video-specs/<video>/facts.json`, then `out/<video>/`)
 - New video end to end: `/make-explainer <source> <video>` (agents in `.claude/agents/`: fact-extractor, spec-author; template-builder is manual)
-- Needs: Apple Silicon (Kokoro TTS via mlx-audio; model fetched on first run), ffmpeg, uv (Python via uv only, 3.12 pinned in renderers/manim), brew `cairo pango pkg-config` (for Manim)
+- Setup: `./scripts/setup.sh` (run by `/make-explainer` on first use). Needs: Apple Silicon (Kokoro TTS via mlx-audio), ffmpeg, uv (Python via uv only, 3.12 pinned in renderers/manim), brew `cairo pango pkg-config` (for Manim)
 
 ## Constraints
 - Goal: one shared spec format (`video-specs/<video>/spec.json`, schema in `video-specs/scene.schema.json`) rendered by fixed scene templates; LLMs fill specs, never write animation code.

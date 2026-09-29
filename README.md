@@ -2,6 +2,23 @@
 
 Explainer videos for software projects, generated from a JSON scene spec.
 
+Sample: [bitter_lesson.mp4](https://github.com/garvitkhurana/explain-vid/releases/download/samples/bitter_lesson.mp4)
+(100 s, made from Rich Sutton's essay *The Bitter Lesson* with one command).
+
+## Quickstart
+Needs an Apple Silicon Mac, [Homebrew](https://brew.sh) and [Claude Code](https://claude.com/claude-code).
+```bash
+git clone https://github.com/garvitkhurana/explain-vid.git && cd explain-vid
+claude
+```
+Then, in Claude Code:
+```
+/make-explainer https://example.com/some-post my_video
+```
+The first run installs everything (`scripts/setup.sh`, a few minutes: Homebrew tools, the Manim environment and a
+~350 MB voice model). Each video takes about 5–10 minutes and lands in `out/my_video/final.mp4` with `subtitles.srt`.
+The source can be a blog post, a paper or a repo (URL or local path).
+
 ## Pipeline
 ```
 source (repo, blog, paper)
@@ -20,10 +37,9 @@ in its `scene_<type>` docstring in `main.py`.
 
 ## Setup
 ```bash
-brew install cairo pango pkg-config ffmpeg uv
-cd renderers/manim && uv sync && cd ../..
+./scripts/setup.sh    # Homebrew tools, Manim environment, voice model; safe to re-run
 ```
-Apple Silicon only (Kokoro runs on MLX). The voice model downloads on the first render.
+Apple Silicon only (Kokoro runs on MLX). `/make-explainer` runs it for you on the first run.
 
 ## Use
 ```bash

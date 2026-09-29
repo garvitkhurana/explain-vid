@@ -12,6 +12,8 @@ verdict; never pass a video that fails a gate, and never edit a gate to make it 
 `<video>` is a new folder name in `video-specs/` (lowercase, `_` between words). Stop if `video-specs/<video>/spec.json`
 already exists, unless the user asked to redo it.
 
+0. **Setup (first run only).** If `renderers/manim/.venv` is missing, run `./scripts/setup.sh` and show the user its
+   output; stop if it fails (it says what's missing, such as Homebrew or an Apple Silicon Mac).
 1. **Source text.** For a URL, check that it can be fetched. If it returns 403 or an empty page, read it in the in-app
    browser, save the article text to the scratchpad, and pass that path on. For a repo, pass the path.
 2. **Facts:** spawn `fact-extractor` with the source and `<video>`, then read its report. If it couldn't read the
