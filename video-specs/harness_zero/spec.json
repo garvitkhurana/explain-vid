@@ -14,7 +14,7 @@
     ],
     "voice": {
       "voice": "af_heart",
-      "speed": 1.0
+      "speed": 1.15
     },
     "glossary": [
       {
@@ -219,49 +219,6 @@
             "show": 3
           }
         ]
-      }
-    },
-    {
-      "id": "example",
-      "type": "steps",
-      "role": "how",
-      "duration_s": 14,
-      "narration": [
-        "In a real spreadsheet case, a few answer cells come pre-filled.",
-        "The special harness rejects any finish that changed them.",
-        "Harness-Zero's reviewer swaps that finish for a check.",
-        "It prints pass or fail, right where the student can see it."
-      ],
-      "data": {
-        "title": "Example: pre-filled cells",
-        "items": [
-          {
-            "label": "Example cells are the spec",
-            "sub": "a few answer cells come pre-filled"
-          },
-          {
-            "label": "Special harness blocks the finish",
-            "sub": "if an example cell was changed"
-          },
-          {
-            "label": "Reviewer swaps the finish for a check",
-            "sub": "a Bash command the student could run itself"
-          },
-          {
-            "label": "Student sees PASS or FAIL",
-            "sub": "in its own history, on the next turn"
-          }
-        ],
-        "beats": {
-          "title": 0,
-          "item0": [
-            0,
-            0.35
-          ],
-          "item1": 1,
-          "item2": 2,
-          "item3": 3
-        }
       }
     },
     {

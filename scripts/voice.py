@@ -19,9 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 48000
-LEAD_S = 0.4      # silence before a scene's first sentence (lets the visuals land first)
-GAP_S = 0.3       # silence between sentences
-TAIL_S = 0.6      # silence after the last sentence before the cut
+LEAD_S = 0.25     # silence before a scene's first sentence (lets the visuals land first)
+GAP_S = 0.2       # silence between sentences
+TAIL_S = 0.4      # silence after the last sentence before the cut
 MAX_CUE = 64      # characters per on-screen caption cue
 
 
