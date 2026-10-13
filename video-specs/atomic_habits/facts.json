@@ -1,0 +1,90 @@
+[
+ {
+  "id": "better-1pct",
+  "claim": "Getting 1 percent better each day for one year makes you thirty-seven times better",
+  "value": "1%; 37",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"if you can get 1 percent better each day for one year, you'll end up thirty-seven times better\"",
+  "kind": "measured"
+ },
+ {
+  "id": "worse-1pct",
+  "claim": "Getting 1 percent worse each day for one year declines you nearly down to zero",
+  "value": "1%; nearly 0",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"if you get 1 percent worse each day for one year, you'll decline nearly down to zero\"",
+  "kind": "measured"
+ },
+ {
+  "id": "after-year",
+  "claim": "The compounding figures are after one year",
+  "value": "1 year",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"for one year\"",
+  "kind": "measured"
+ },
+ {
+  "id": "loop",
+  "claim": "A cue triggers a craving, which motivates a response, which provides a reward",
+  "value": "-",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"cue triggers a craving, which motivates a response, which provides a reward\"",
+  "kind": "measured"
+ },
+ {
+  "id": "loop-feedback",
+  "claim": "Cue, craving, response and reward form a neurological feedback loop",
+  "value": "-",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"form a neurological feedback loop\"",
+  "kind": "measured"
+ },
+ {
+  "id": "laws",
+  "claim": "Four Laws of Behavior Change: make it obvious (cue), attractive (craving), easy (response), satisfying (reward)",
+  "value": "4",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"The 1st law (Cue): Make it obvious\"",
+  "kind": "measured"
+ },
+ {
+  "id": "inversions",
+  "claim": "To break a bad habit, invert the laws: make it invisible, unattractive, difficult, unsatisfying",
+  "value": "4",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"Make it invisible\"",
+  "kind": "measured"
+ },
+ {
+  "id": "identity",
+  "claim": "Your current behaviors are simply a reflection of your current identity",
+  "value": "-",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"Your current behaviors are simply a reflection of your current identity\"",
+  "kind": "measured"
+ },
+ {
+  "id": "identity-steps",
+  "claim": "Two steps: decide the type of person you want to be, then prove it to yourself with small wins",
+  "value": "2",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"Decide the type of person you want to be\"",
+  "kind": "measured"
+ },
+ {
+  "id": "systems",
+  "claim": "Goals are about the results you want to achieve; systems are about the processes",
+  "value": "-",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"Goals are about the results you want to achieve. Systems are about the processes\"",
+  "kind": "measured"
+ },
+ {
+  "id": "fall",
+  "claim": "You fall to the level of your systems",
+  "value": "-",
+  "unit": "-",
+  "source": "https://jamesclear.com/atomic-habits-summary + \"You fall to the level of your systems\"",
+  "kind": "measured"
+ }
+]

@@ -80,11 +80,41 @@
             "concept",
             "result"
           ],
-          "description": "Story shape, picked by what the content is (not where it came from). tool: hook → how → why → use. concept: hook → how → why → takeaway. result: hook → problem → how → proof. Every part must appear (check.py)."
+          "description": "Story shape, picked by what the content is (not where it came from). tool: hook \u2192 how \u2192 why \u2192 use. concept: hook \u2192 how \u2192 why \u2192 takeaway. result: hook \u2192 problem \u2192 how \u2192 proof. Every part must appear (check.py)."
         },
         "thesis": {
           "type": "string",
           "description": "The video's point in one sentence, written before the scenes. It must be said in the narration of the scene with the arc's thesis role (tool: hook, concept: takeaway, result: proof), not just shown (check.py)."
+        },
+        "cast": {
+          "type": "object",
+          "required": [
+            "skin",
+            "roles"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "skin": {
+              "enum": [
+                "office",
+                "rpg"
+              ],
+              "description": "Default setting; SKIN=<name> overrides at render time."
+            },
+            "roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "explainer",
+                  "asker",
+                  "reactor"
+                ]
+              }
+            }
+          },
+          "description": "Pixel cast (renderers/manim/skins.py). Narration names roles, never characters; the skin decides who plays them."
         }
       }
     },
@@ -117,7 +147,8 @@
               "flow",
               "source",
               "steps",
-              "chunks"
+              "chunks",
+              "interview"
             ]
           },
           "role": {
@@ -139,17 +170,135 @@
             "description": "Minimum length; the narration audio can make the scene longer."
           },
           "data": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "set": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "shot": {
+                    "enum": [
+                      "board"
+                    ]
+                  },
+                  "cast": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                      "enum": [
+                        "explainer",
+                        "asker",
+                        "reactor"
+                      ]
+                    }
+                  },
+                  "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
+                    "description": "Name tags: role \u2192 the concept that character plays in this scene."
+                  },
+                  "acts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "who",
+                        "do",
+                        "at"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "who": {
+                          "enum": [
+                            "explainer",
+                            "asker",
+                            "reactor"
+                          ]
+                        },
+                        "do": {
+                          "enum": [
+                            "point",
+                            "shrug",
+                            "facepalm",
+                            "look_camera",
+                            "nod",
+                            "level_up"
+                          ]
+                        },
+                        "at": {
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              },
+                              "minItems": 2,
+                              "maxItems": 2
+                            },
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          ],
+                          "description": "Sentence index, [sentence, fraction], or a phrase from this scene's narration (lands on its first word)."
+                        }
+                      }
+                    }
+                  }
+                },
+                "description": "Board shot: the template runs on the skin's board with up to two cast members beside it."
+              }
+            }
           },
           "narration": {
             "type": "array",
             "minItems": 0,
             "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 160
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "who",
+                    "say"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "who": {
+                      "enum": [
+                        "explainer",
+                        "asker",
+                        "reactor"
+                      ]
+                    },
+                    "say": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 160
+                    },
+                    "kind": {
+                      "enum": [
+                        "wrong",
+                        "question"
+                      ],
+                      "description": "An asker's wrong guess (the explainer must answer it in the same scene) or plain question."
+                    }
+                  }
+                }
+              ]
             },
-            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. Empty only for the closing `source` card."
+            "description": "Spoken sentences. Single source for audio, on-screen captions and subtitles. Empty only for the closing `source` card. With meta.cast, an item may be {who, say, kind?}; plain strings are the explainer's."
           }
         },
         "allOf": [
@@ -664,6 +813,95 @@
                     },
                     "footnote": {
                       "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "interview"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "data": {
+                  "required": [
+                    "who"
+                  ],
+                  "properties": {
+                    "who": {
+                      "enum": [
+                        "explainer",
+                        "asker",
+                        "reactor"
+                      ]
+                    },
+                    "set": {
+                      "type": "object",
+                      "properties": {
+                        "acts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "who",
+                              "do",
+                              "at"
+                            ],
+                            "additionalProperties": false,
+                            "properties": {
+                              "who": {
+                                "enum": [
+                                  "explainer",
+                                  "asker",
+                                  "reactor"
+                                ]
+                              },
+                              "do": {
+                                "enum": [
+                                  "point",
+                                  "shrug",
+                                  "facepalm",
+                                  "look_camera",
+                                  "nod",
+                                  "level_up"
+                                ]
+                              },
+                              "at": {
+                                "oneOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "number"
+                                    },
+                                    "minItems": 2,
+                                    "maxItems": 2
+                                  },
+                                  {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                ],
+                                "description": "Sentence index, [sentence, fraction], or a phrase from this scene's narration (lands on its first word)."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "label": {
+                      "type": "string",
+                      "maxLength": 32,
+                      "description": "What this character stands for in the video; shown under their name."
                     }
                   }
                 }

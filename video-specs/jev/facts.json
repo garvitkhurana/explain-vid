@@ -1,0 +1,98 @@
+[
+ {
+  "id": "what",
+  "claim": "System One models are a new class of frontier models built to make fast, structured decisions that software can use directly",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"a new class of frontier models built to make fast, structured decisions that software can use directly\"",
+  "kind": "measured"
+ },
+ {
+  "id": "function",
+  "claim": "Jev is a frontier-intelligence function call: unstructured state in, typed probabilistic decisions out",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"Think of Jev as a frontier-intelligence function call: unstructured state in, typed probabilistic decisions out\"",
+  "kind": "measured"
+ },
+ {
+  "id": "kahneman",
+  "claim": "Named after Kahneman's fast, intuitive System 1 and slow, deliberate System 2",
+  "value": "1; 2",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"fast, intuitive System 1 thinking and slow, deliberate System 2 reasoning\"",
+  "kind": "measured"
+ },
+ {
+  "id": "input",
+  "claim": "Input is unstructured data such as text, with an emphasis on structured program state",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"Unstructured data (e.g. text) with an emphasis on structured program state\"",
+  "kind": "measured"
+ },
+ {
+  "id": "output",
+  "claim": "Output is type-safe structured values with calibrated probabilities and confidence scores",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"Type-safe structured values...accompanied with calibrated probabilities and confidence scores\"",
+  "kind": "measured"
+ },
+ {
+  "id": "rlcd",
+  "claim": "Trained with Reinforcement Learning for Calibrated Decisions (RLCD)",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"Reinforcement Learning for Calibrated Decisions (RLCD)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "calibrated",
+  "claim": "Calibrated means epistemically honest probabilities on System One tasks",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"answers with epistemically honest probabilities on System One tasks\"",
+  "kind": "measured"
+ },
+ {
+  "id": "latency",
+  "claim": "TypeSafe reports 70ms-500ms end-to-end response time",
+  "value": "70ms-500ms",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"70ms-500ms\"",
+  "kind": "measured"
+ },
+ {
+  "id": "speed",
+  "claim": "TypeSafe reports 40x-200x faster than frontier models for System One shaped queries",
+  "value": "40x-200x",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"40x-200x faster for the same levels of frontier intelligence for System One shaped queries\"",
+  "kind": "measured"
+ },
+ {
+  "id": "price",
+  "claim": "TypeSafe lists input at $0.042 per million tokens; output free",
+  "value": "$0.042 / MTok",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"$0.042 / MTok ($42 per billion tokens)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ops",
+  "claim": "Uses: classify, route, score, extract, or branch; verify, guardrail, detect jailbreaks",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"classify, route, score, extract, or branch\"",
+  "kind": "measured"
+ },
+ {
+  "id": "usecase",
+  "claim": "Use case: AI-powered workflows, smart if-statements",
+  "value": "-",
+  "unit": "-",
+  "source": "https://typesafe.ai/blog/introducing-system-one-models-and-jev + \"AI-Powered Workflows / smart if-statements\"",
+  "kind": "measured"
+ }
+]

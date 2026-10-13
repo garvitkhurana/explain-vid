@@ -8,7 +8,10 @@ Spec gates (schema, structure, words, grounding) need only video-specs/<video>/;
 --plan: spec gates plus still screens predicted by a dry run (out/<video>/voice/plan.json), then stop. render.sh
 runs it before rendering, so a long still fails in seconds instead of after a full render."""
 
+import difflib
+import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -22,8 +25,12 @@ if len(args) != 1:
     sys.exit("Usage: uv run scripts/check.py <video> [--plan]   (a folder in video-specs/)")
 VIDEO, PLAN = args[0], "--plan" in sys.argv
 SPEC_DIR = ROOT / "video-specs" / VIDEO
-OUT = ROOT / "out" / VIDEO
+OUT = ROOT / "out" / (VIDEO + (f"-{os.environ['SKIN']}" if os.environ.get("SKIN") else ""))
 spec = json.loads((SPEC_DIR / "spec.json").read_text())
+_mod = importlib.util.spec_from_file_location("skins", ROOT / "renderers" / "manim" / "skins.py")
+skins = importlib.util.module_from_spec(_mod)
+_mod.loader.exec_module(skins)
+said_in = {s["id"]: skins.texts(s["narration"]) for s in spec["scenes"]}  # narration as text, whoever says it
 facts = json.loads((SPEC_DIR / "facts.json").read_text())
 scenes = spec["scenes"]
 failures = []
@@ -69,7 +76,7 @@ gate(scenes[0]["type"] == "title" and scenes[0].get("role") == "hook", "opens on
 gate(scenes[-1]["type"] == "source" and len(scenes) - len(body) == 1, "ends on one source card")
 # The card is the only call to action; a scene of its own that says "clone the repo" is a second ending.
 url = spec["meta"]["source"]["url"].rstrip("/")
-cta = [s["id"] for s in body if "clone the repo" in " ".join(s["narration"]).lower() or url in json.dumps(s["data"])]
+cta = [s["id"] for s in body if "clone the repo" in " ".join(said_in[s["id"]]).lower() or url in json.dumps(s["data"])]
 gate(not cta, f"only the source card sends viewers to the source ({listed(cta)})")
 
 
@@ -77,19 +84,19 @@ def words(text):
     return {w for w in re.findall(r"[a-z']+", text.lower()) if len(w) > 3}
 
 
-opening = words(" ".join(scenes[0]["narration"]))
-repeats = [s for s in body[-1]["narration"] if words(s) and len(words(s) & opening) / len(words(s)) >= REPEAT]
+opening = words(" ".join(said_in[scenes[0]["id"]]))
+repeats = [s for s in said_in[body[-1]["id"]] if words(s) and len(words(s) & opening) / len(words(s)) >= REPEAT]
 gate(not repeats, f"closing scene doesn't restate the opening ({listed(repeats)})")
 
 # The thesis is said, not just shown: one sentence in a scene of its role carries most of its words.
 thesis, at = words(spec["meta"].get("thesis", "")), THESIS_AT.get(spec["meta"].get("arc"))
-said_at = [x for s in body if s.get("role") == at for x in s["narration"]]
+said_at = [x for s in body if s.get("role") == at for x in said_in[s["id"]]]
 gate(bool(thesis) and any(len(words(x) & thesis) / len(thesis) >= REPEAT for x in said_at),
      f"thesis said in the {at} narration ({spec['meta'].get('thesis', 'no meta.thesis')})")
 # An idea or a finding ends on its point: nothing after the scene that says it (a "habits" scene of extra numbers
 # after harness_zero's result read as an afterthought). A tool says its thesis up front, so it's exempt.
 if at != "hook":
-    says = [s["id"] for s in body if any(thesis and len(words(x) & thesis) / len(thesis) >= REPEAT for x in s["narration"])]
+    says = [s["id"] for s in body if any(thesis and len(words(x) & thesis) / len(thesis) >= REPEAT for x in said_in[s["id"]])]
     ids = [s["id"] for s in body]
     after = ids[ids.index(says[-1]) + 1:] if says else []
     gate(not after, f"ends on the thesis: no scene after the one that says it ({listed(after, 'none')})")
@@ -98,7 +105,7 @@ if at != "hook":
 # Jargon: an on-screen glossary term needs its plain phrase said in the same or an earlier scene.
 said, unexplained = "", []
 for s in scenes:
-    said += " " + " ".join(s["narration"]).lower()
+    said += " " + " ".join(said_in[s["id"]]).lower()
     shown = json.dumps(s["data"]).lower()
     unexplained += [f"{s['id']}:{g['term']}" for g in spec["meta"].get("glossary", [])
                     if g["term"].lower() in shown and g["plain"].lower() not in said]
@@ -133,8 +140,9 @@ def quoted(x):
             yield x["cmd"]
         if isinstance(x.get("code"), list):
             yield from (line.strip() for line in x["code"] if line.strip())
-        for v in x.values():
-            yield from quoted(v)
+        for k, v in x.items():
+            if k != "beats":  # beat names are step ids (a step may be called "code"), not on-screen text
+                yield from quoted(v)
     elif isinstance(x, list):
         for v in x:
             yield from quoted(v)
@@ -147,7 +155,7 @@ for f in facts:
 ungrounded, unlabelled = [], []
 for s in scenes:
     shown = list(strings(s["data"]))
-    for text in shown + s["narration"]:
+    for text in shown + said_in[s["id"]]:
         for n in NUM.findall(text.replace(",", "")):
             matches = by_num.get(float(n))
             if not matches:
@@ -159,6 +167,59 @@ gate(not unlabelled, f"illustrative numbers labelled on screen ({listed(sorted(s
 fact_text = "\n".join(" ".join(str(f.get(k, "")) for k in ("claim", "value", "source")) for f in facts).replace("\\n", "\n")
 unquoted = [f"{s['id']}:{c}" for s in scenes for c in quoted(s["data"]) if c not in fact_text]
 gate(not unquoted, f"commands and code appear verbatim in facts.json ({listed(unquoted)})")
+
+# ---- cast (specs with meta.cast) --------------------------------------------------------------------------------
+cast = spec["meta"].get("cast")
+if cast:
+    roles = set(cast["roles"])
+    lines = {s["id"]: [skins.line(x) for x in s["narration"]] for s in scenes}
+    used = {f"{sid}:{who}" for sid, ls in lines.items() for who, _, _ in ls if who not in roles}
+    for s in scenes:
+        st = s["data"].get("set", {})
+        who = set(st.get("cast", [])) | set(st.get("tags", {})) | {a["who"] for a in st.get("acts", [])}
+        who |= {s["data"]["who"]} if s["type"] == "interview" else set()
+        used |= {f"{s['id']}:{w}" for w in who - roles}
+    gate(not used, f"every speaker and cast member is one of meta.cast.roles {sorted(roles)} ({listed(sorted(used))})")
+    gate(skins.skin_name(spec) in skins.SKINS, f"skin {skins.skin_name(spec)!r} exists in skins.py")
+    silent = [f"{sid}:{i}" for sid, ls in lines.items() for i, (who, _, _) in enumerate(ls) if who == "reactor"]
+    gate(not silent, f"the reactor never speaks ({listed(silent)})")
+    # A wrong guess is the misconception the scene exists to fix: the explainer must answer it before the scene ends.
+    unanswered = [f"{sid}:{i}" for sid, ls in lines.items() for i, (who, _, kind) in enumerate(ls)
+                  if kind == "wrong" and not any(w == "explainer" for w, _, _ in ls[i + 1:])]
+    gate(not unanswered, f"every wrong guess is answered by the explainer in the same scene ({listed(unanswered)})")
+    # Numbers are claims; only the explainer states them (a wrong guess with a number would be a wrong number).
+    digits = [f"{sid}:{i}" for sid, ls in lines.items() for i, (who, text, _) in enumerate(ls)
+              if who != "explainer" and re.search(r"\d", text)]
+    gate(not digits, f"no digits in asker lines ({listed(digits)})")
+    no_cast = [s["id"] for s in scenes if s["type"] not in ("title", "source", "interview") and not s["data"].get("set")]
+    gate(not no_cast, f"every body scene puts the cast on set ({listed(no_cast)})")
+    tok = lambda text: re.findall(r"[a-z0-9']+", text.lower())
+    lost = []
+    for s in scenes:
+        heard = tok(" ".join(said_in[s["id"]]))
+        for a in s["data"].get("set", {}).get("acts", []):
+            if isinstance(a["at"], str) and not any(heard[k:k + len(tok(a["at"]))] == tok(a["at"]) for k in range(len(heard))):
+                lost.append(f"{s['id']}:{a['at']}")
+    gate(not lost, f"act phrases appear in their scene's narration ({listed(lost)})")
+    # The exposure sheet: Whisper's transcript of each clip against the script. Numbers are skipped (it writes
+    # digits where the script spells them), and words are compared by their consonants, so homophones it can't
+    # tell apart (plain/plane, weak/week, seatbelt/seat belt) match; a slurred name or a dropped word still doesn't.
+    words_path = OUT / "voice" / "words.json"
+    if words_path.exists():
+        NUMWORDS = set("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
+                       "sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety "
+                       "hundred thousand million billion point percent".split())
+        plain = lambda text: "".join(re.sub(r"(?<=.)[aeiouy']", "", w)
+                                     for w in re.findall(r"[a-z']+", text.lower()) if w not in NUMWORDS)
+        heard = json.loads(words_path.read_text())
+        off = []
+        for sid, ls in lines.items():
+            for i, (_, text, _) in enumerate(ls):
+                got = heard.get(sid, [])[i]["said"] if i < len(heard.get(sid, [])) else ""
+                ratio = difflib.SequenceMatcher(None, plain(text), plain(got)).ratio()
+                if ratio < 0.8:
+                    off.append(f"{sid}:{i} heard {got!r} ({ratio:.2f})")
+        gate(not off, f"voice says the script (Whisper transcript match >= 0.8) ({listed(off)})")
 
 # ---- plan (dry run, before rendering) ---------------------------------------------------------------------------
 if PLAN:

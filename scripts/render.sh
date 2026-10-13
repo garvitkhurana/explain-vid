@@ -2,19 +2,24 @@
 # Usage: ./scripts/render.sh <video>   (renders video-specs/<video>/spec.json)
 # narration → voice + timing → Manim, one process per scene in parallel → concat → mux audio.
 # Outputs in out/<video>/: final.mp4 (video + narration), manim.mp4 (silent), subtitles.srt. Then runs the gates.
-# Env: THEME (default brutalist),
+# Env: THEME (default brutalist), SKIN (cast setting for specs with meta.cast; output goes to out/<video>-<skin>),
 #      DRY=1 (stop after the dry run: spec gates + predicted stills, ~30 s with the voice),
 #      JOBS (parallel scene renders, default = CPU cores),
 #      SCENES=id,id (re-render only these; reuse the other scenes' existing renders — narration must be unchanged).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SPEC="${1:?usage: ./scripts/render.sh <video>   (a folder in video-specs/)}"
-OUT="out/$SPEC"
+OUT="out/$SPEC${SKIN:+-$SKIN}"
 JOBS="${JOBS:-$(sysctl -n hw.ncpu)}"
 mkdir -p "$OUT"
 start=$(date +%s)
 
 uv run scripts/voice.py "$SPEC"
+cast=$(uv run --no-project python -c "import json; print(1 if json.load(open('video-specs/$SPEC/spec.json'))['meta'].get('cast') else '')")
+if [[ -n "$cast" ]]; then
+  uv run scripts/words.py "$SPEC"  # word timings: mouths and phrase-anchored acts
+  export THEME="${THEME:-pixel}"
+fi
 # Dry run: every scene's timeline without drawing a frame (~15 s), then the spec gates and predicted still screens.
 # A failure here stops before the render.
 rm -rf "$OUT/plan"
@@ -57,5 +62,12 @@ if [[ -f "$OUT/voice/narration.wav" ]]; then
 else
   cp "$OUT/manim.mp4" "$OUT/final.mp4"
 fi
-echo "render: $(( $(date +%s) - start ))s ($JOBS jobs) → $OUT/final.mp4, $OUT/subtitles.srt"
+# Contact sheet: one frame from the middle of every narration sentence, for a quick look at overlaps and crops.
+times=$(uv run --no-project python -c "
+import json; t=json.load(open('$OUT/voice/timing.json'))['scenes']
+print(' '.join(f\"{s['start']+(l['start']+l['end'])/2:.2f}\" for s in t.values() for l in s.get('lines', [])))")
+rm -rf "$OUT/contact" && mkdir -p "$OUT/contact"
+k=0; for t in $times; do ffmpeg -v error -y -ss "$t" -i "$OUT/final.mp4" -frames:v 1 -vf scale=480:-1 "$OUT/contact/$(printf %03d $k).png"; k=$((k+1)); done
+[[ $k -gt 0 ]] && ffmpeg -v error -y -pattern_type glob -i "$OUT/contact/*.png" -vf "tile=4x$(( (k+3)/4 )):padding=6:color=white" "$OUT/contact.png"
+echo "render: $(( $(date +%s) - start ))s ($JOBS jobs) → $OUT/final.mp4, $OUT/subtitles.srt, $OUT/contact.png"
 uv run scripts/check.py "$SPEC"
