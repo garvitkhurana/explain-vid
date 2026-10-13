@@ -1,0 +1,562 @@
+[
+ {
+  "id": "problem-tied",
+  "claim": "Harness optimization improves the external scaffolding, not the model, so gains stay tied to the harness at deployment",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"its gains remain tied to that harness at deployment\"",
+  "kind": "measured"
+ },
+ {
+  "id": "problem-varies",
+  "claim": "The best harness varies across domains, instances and base models",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"the best harness varies across domains, instances, and base models\"",
+  "kind": "measured"
+ },
+ {
+  "id": "problem-tradeoff",
+  "claim": "A shared harness forgoes specialized gains; many harnesses need routing and recurring cost in context, model calls, tool calls and orchestration",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Maintaining many harnesses instead requires routing and incurs recurring costs in context, model calls, tool calls, and orchestration\"",
+  "kind": "measured"
+ },
+ {
+  "id": "problem-neither",
+  "claim": "Neither choice moves the discovered harness improvements into the model",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Neither choice moves the discovered harness improvements into the model.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "problem-mismatch",
+  "claim": "Source and target harness can differ in action space and information, so trajectories from the source harness cannot be imitated directly under the target harness",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"making trajectories collected under the source harness unsuitable for direct imitation under the target harness\"",
+  "kind": "measured"
+ },
+ {
+  "id": "def-harness",
+  "claim": "A harness is the external system that organizes tool use, manages context and state, and controls interaction with the environment",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"the external system that organizes tool use, manages context and state, and controls interaction with the environment\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-wrap",
+  "claim": "Agent-as-harness wraps the student agent with a harnessing agent at its response boundary",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"which wraps the student agent with a harnessing agent at its response boundary\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-review",
+  "claim": "During data collection the harnessing agent reviews each proposed response before it is executed; it passes sound proposals unchanged, otherwise makes the smallest coherent correction as a complete response in the student's action space",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"It passes sound proposals unchanged and otherwise makes the smallest coherent correction, expressed as a complete response in the student’s action space.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-execute",
+  "claim": "The accepted response is executed through the target harness h and the observation is appended to the student's trajectory; the private review stays outside it",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The accepted response is executed through h , and the resulting observation is appended to the student’s trajectory.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-blind",
+  "claim": "The harnessing agent cannot inspect the student sandbox or hidden task solutions; extra evidence must come from an action available under h, e.g. replacing a premature completion with code that checks the student's work",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"For example, it can replace a premature completion with code that checks the student’s work.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-stages",
+  "claim": "Three stages: (1) evolve a student-side harness h* and adapt it into a private reference harness K; (2) agent-as-harness trajectory collection; (3) SFT on the reviewed trajectories, deployed under h alone",
+  "value": "3",
+  "unit": "stages",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The method has three stages\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-sft",
+  "claim": "SFT on accepted responses in reviewed rollouts, both unchanged student proposals and harness-guided replacements; reviewer-perspective reasoning is masked from the loss",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"We mask such reasoning from the loss\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-deploy",
+  "claim": "At deployment the distilled student runs under h alone, without h*, K or the harnessing agent",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The deployed system is therefore (\\pi_{\\hat{\\theta}},h) , without h^{\\star} , \\mathcal{K} , or the harnessing agent.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-adapt",
+  "claim": "Adapting h* to K: tools become specifications for student-native equivalents; middleware becomes review middleware that privately alerts the harnessing agent; skills and memory become diagnostic criteria and intervention guidance",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Tools become specifications for constructing student-native equivalents; student-side middleware becomes review middleware that privately alerts the harnessing agent when the corresponding condition is met; and skills and memory become diagnostic criteria and intervention guidance.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-example-mw",
+  "claim": "Example: a middleware rule in h* that blocks risky actions becomes a review-time warning in K, activated when the student proposes such an action",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"a middleware rule in h^{\\star} that blocks risky actions becomes a review-time warning in \\mathcal{K}\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-h-star",
+  "claim": "h* follows the DeepAgents abstraction: tools, middleware, skills and memory",
+  "value": "4",
+  "unit": "components",
+  "source": "https://arxiv.org/abs/2609.24974 + \"which includes tools, middleware, skills, and memory\"",
+  "kind": "measured"
+ },
+ {
+  "id": "mech-same-model",
+  "claim": "In the Table 1 agent-as-harness runs the same model plays student and harnessing agent, so gains cannot come from a stronger supervising model",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"the same model plays student and harnessing agent, so the gains cannot come from a stronger supervising model\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-domains",
+  "claim": "Three domains: spreadsheet-based knowledge work (SpreadsheetBench Verified), multi-application tool use (AppWorld), scientific reasoning (USPTO Retrosynthesis)",
+  "value": "3",
+  "unit": "domains",
+  "source": "https://arxiv.org/abs/2609.24974 + \"spreadsheet-based knowledge work (SpreadsheetBench Verified), multi-application tool use (AppWorld), and scientific reasoning (USPTO Retrosynthesis)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-target-harness",
+  "claim": "Target harness h is a minimal mini-SWE-agent with one Bash execute tool",
+  "value": "1",
+  "unit": "tool",
+  "source": "https://arxiv.org/abs/2609.24974 + \"a fixed, minimal mini-SWE-agent  [ SWE-agent Team, 2025 ] with one Bash execute tool\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-models",
+  "claim": "Training-free experiments use GPT-5.6 Sol and DeepSeek-V4-Pro; distillation uses Qwen3.5-9B as student and GPT-5.6 Sol as harnessing agent; harness evolution uses Kimi K3 under Kimi Code",
+  "value": "9B",
+  "unit": "student parameters",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The distillation experiments use Qwen3.5-9B  [ Qwen Team, 2026 ] as the base model and GPT-5.6 Sol as the harnessing agent\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-sb",
+  "claim": "SpreadsheetBench Verified: 400 tasks, 300 for harness evolution and training data collection, 100 held out",
+  "value": "400",
+  "unit": "tasks",
+  "source": "https://arxiv.org/abs/2609.24974 + \"SpreadsheetBench Verified contains 400 real-world spreadsheet-manipulation tasks\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-sb-split",
+  "claim": "SpreadsheetBench split: 300 train / 100 test",
+  "value": "300",
+  "unit": "train tasks",
+  "source": "https://arxiv.org/abs/2609.24974 + \"we use 300 for harness evolution and training data collection and hold out 100 for evaluation\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-aw",
+  "claim": "AppWorld: 147-task training split, 168 test_normal tasks in 56 three-task scenarios",
+  "value": "147",
+  "unit": "train tasks",
+  "source": "https://arxiv.org/abs/2609.24974 + \"we merge its official train and development sets into a 147-task training split and hold out the 168 test_normal tasks, grouped into 56 three-task scenarios\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-us",
+  "claim": "USPTO Retrosynthesis: 500-task training split balanced over ten reaction classes, disjoint 100-task test split",
+  "value": "500",
+  "unit": "train tasks",
+  "source": "https://arxiv.org/abs/2609.24974 + \"we use a 500-task training split balanced across its ten reaction classes and a disjoint 100-task test split\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-metric",
+  "claim": "Metrics: pass@1 success (%) for SpreadsheetBench and USPTO, scenario goal completion (SGC, %) for AppWorld",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"We report single-run task success (pass@1, %) for SpreadsheetBench and USPTO and scenario goal completion (SGC, %) for AppWorld.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-data",
+  "claim": "Training data after filtering: 487 rollouts SpreadsheetBench, 282 AppWorld, 500 USPTO",
+  "value": "487 / 282 / 500",
+  "unit": "rollouts",
+  "source": "https://arxiv.org/abs/2609.24974 + \"the training data comprise 487 rollouts for SpreadsheetBench, 282 for AppWorld, and 500 for USPTO\"",
+  "kind": "measured"
+ },
+ {
+  "id": "setup-lora",
+  "claim": "LoRA SFT on Qwen3.5-9B for two epochs using the Tinker recipe",
+  "value": "2",
+  "unit": "epochs",
+  "source": "https://arxiv.org/abs/2609.24974 + \"We perform LoRA SFT on Qwen3.5-9B for two epochs using the Tinker recipe\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-base",
+  "claim": "Qwen3.5-9B base under h alone: macro-average 23.3% (SpreadsheetBench 31.0, AppWorld 26.8, USPTO 12.0)",
+  "value": "23.3%",
+  "unit": "macro-avg success",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Harness-Zero raises the macro average from 23.3% to 44.3%\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-hz",
+  "claim": "Harness-Zero distilled Qwen3.5-9B under h alone: macro-average 44.3% (SpreadsheetBench 44.0, AppWorld 58.9, USPTO 30.0)",
+  "value": "44.3%",
+  "unit": "macro-avg success",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Harness-Zero raises the macro average from 23.3% to 44.3%, a 21.0-point absolute gain and a 90.1% relative improvement.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-gain",
+  "claim": "Absolute gain +21.0 points, 90.1% relative improvement (23.3 to 44.3)",
+  "value": "21.0 points; 90.1%",
+  "unit": "",
+  "source": "https://arxiv.org/abs/2609.24974 + \"a 21.0-point absolute gain and a 90.1% relative improvement\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-hstar",
+  "claim": "Base model with h* still attached: macro-average 41.7% (39.0, 48.2, 38.0); Harness-Zero under h alone exceeds it",
+  "value": "41.7%",
+  "unit": "macro-avg success",
+  "source": "https://arxiv.org/abs/2609.24974 + \"It also exceeds the 41.7% macro average of the base model equipped with h^{\\star} .\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-hstar-gain",
+  "claim": "Base model with h* is +18.4 points over base under h",
+  "value": "18.4",
+  "unit": "points",
+  "source": "https://arxiv.org/abs/2609.24974 + \"41.7 \\uparrow 18.4\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-generic",
+  "claim": "General-purpose harnesses do not help the 9B base model: DeepAgents 20.5% and Claude Code 15.9% macro-average, vs 23.3% under h",
+  "value": "20.5% / 15.9%",
+  "unit": "macro-avg success",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Neither general-purpose harness benefits the base model.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-procedural",
+  "claim": "On SpreadsheetBench (44.0 vs 39.0) and AppWorld (58.9 vs 48.2) Harness-Zero under h alone surpasses h*; procedural behavior is easier to internalize than deep domain knowledge",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"On SpreadsheetBench and AppWorld, Harness-Zero under h alone surpasses h^{\\star} .\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-uspto",
+  "claim": "On USPTO Harness-Zero improves over base (30.0% vs 12.0%) but trails h* (38.0%)",
+  "value": "30.0% vs 12.0% vs 38.0%",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"On USPTO, Harness-Zero improves over the base model (30.0% vs. 12.0%) but trails h^{\\star} (38.0%).\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah",
+  "claim": "Agent-as-harness vs code-as-harness on frontier models (GPT-5.6 Sol, DeepSeek-V4-Pro), no training, average of six benchmark-model settings: 81.1% vs 78.1% (meta-harness h*); mini-SWE-agent 68.6%",
+  "value": "81.1% vs 78.1%",
+  "unit": "avg over 6 settings",
+  "source": "https://arxiv.org/abs/2609.24974 + \"agent-as-harness with the adapted \\mathcal{K} averages 81.1%, against 78.1% for meta-harness and 68.6% for mini-SWE-agent\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah-empty",
+  "claim": "Agent-as-harness with an empty reference harness averages only 69.2%, so review alone explains little of the gain",
+  "value": "69.2%",
+  "unit": "avg over 6 settings",
+  "source": "https://arxiv.org/abs/2609.24974 + \"With an empty \\mathcal{K} it averages only 69.2%, so review alone explains little of the gain.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah-rel",
+  "claim": "Relative improvement over mini-SWE-agent: meta-harness +22.5%, agent-as-harness with evolved K +27.6%",
+  "value": "+27.6%",
+  "unit": "relative improvement",
+  "source": "https://arxiv.org/abs/2609.24974 + \"+27.6%\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah-sb",
+  "claim": "SpreadsheetBench DeepSeek-V4-Pro: mini-SWE 76.0, meta-harness 77.0, agent-as-harness w/ evolved 86.0 (+10.0)",
+  "value": "86.0",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"86.0   \\uparrow 10.0\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah-uspto",
+  "claim": "USPTO DeepSeek-V4-Pro: mini-SWE 31.0, meta-harness 56.0, agent-as-harness w/ evolved 60.0",
+  "value": "60.0",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"60.0   \\uparrow 29.0\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-aah-aw",
+  "claim": "AppWorld DeepSeek-V4-Pro: meta-harness 91.1 beats agent-as-harness 89.3 (code-as-harness wins here); GPT-5.6 Sol AppWorld 94.6 vs 96.4",
+  "value": "91.1 vs 89.3",
+  "unit": "SGC",
+  "source": "https://arxiv.org/abs/2609.24974 + \"91.1   \\uparrow 16.1\"",
+  "kind": "measured"
+ },
+ {
+  "id": "res-adapt",
+  "claim": "Agent-as-harness moves harness adaptation into inference: the harnessing agent interprets K against the current trajectory, so a stronger harnessing model directly improves how guidance is applied",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Agent-as-harness moves that adaptation into inference\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-teacher",
+  "claim": "Ablation (USPTO test pass@1 under h): fine-tuning on GPT-5.6 Sol trajectories (52.0% collection success) leaves the student at 12.0%",
+  "value": "12.0% (source 52.0%)",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Directly fine-tuning on GPT-5.6 Sol trajectories leaves the student at the 12% base result, even though that source succeeds on 52.0% of the collection tasks.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-teacher-hstar",
+  "claim": "Ablation (USPTO): teacher under h* has 62.0% collection success but the distilled student falls to 3.0%, from 12.0%",
+  "value": "3.0% (source 62.0%)",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"the resulting distilled student falls from 12% to 3%\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-mismatch",
+  "claim": "Why teacher-under-h* fails: action-space mismatch; the student extensively attempts unavailable harness-tool calls and many trials exhaust the turn limit",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The model distilled from teacher trajectories under h^{\\star} extensively attempts unavailable harness-tool calls, and many trials thus exhaust the turn limit.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-empty",
+  "claim": "Ablation (USPTO): review with empty K reaches 11.0% (collection success 44.2%)",
+  "value": "11.0%",
+  "unit": "pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Review with an empty \\mathcal{K} reaches only 11%.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-oracle",
+  "claim": "Ablation (USPTO): review with oracle answer has 98.6% collection success but the student reaches only 15.0% pass@1",
+  "value": "98.6% collection vs 15.0% pass@1",
+  "unit": "",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Providing oracle answers raises collection success to 98.6%, yet the distilled model reaches only 15%.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-k",
+  "claim": "Ablation (USPTO): Harness-Zero with K has lower collection success 59.4% yet the student reaches 30.0% pass@1; K contains no task answers",
+  "value": "59.4% collection vs 30.0% pass@1",
+  "unit": "",
+  "source": "https://arxiv.org/abs/2609.24974 + \"reaches a lower collection success of 59.4%, yet the student distilled from its trajectories reaches 30% pass@1\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-headline",
+  "claim": "Harness-guided review beats the alternative supervision sources: 30% vs 3-15%",
+  "value": "30% vs 3-15%",
+  "unit": "USPTO pass@1",
+  "source": "https://arxiv.org/abs/2609.24974 + \"(30% vs. 3–15%)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-student-hstar",
+  "claim": "Ablation (USPTO): student under h* has 39.4% collection success and returns to 12.0% after SFT",
+  "value": "39.4% -> 12.0%",
+  "unit": "",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The student-generated counterpart also succeeds on 39.4% of collection tasks but returns to 12% after SFT.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-insight",
+  "claim": "Collection success does not predict distillation value; oracle access encourages non-generalizable shortcut corrections, while K instills reusable procedural behavior",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Collection success therefore does not predict distillation value.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "abl-start-from-student",
+  "claim": "Effective supervision needs starting from the student's own trajectory and translating guidance into corrections compatible with its current state and target action space",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"translating harness guidance into corrections compatible with its current state and target action space\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-recovery",
+  "claim": "Distilled model recovers 82.3% of harness-exclusive behaviors on average across 28 patterns",
+  "value": "82.3%",
+  "unit": "avg recovery over 28 patterns",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Averaged over the 28 patterns in Table 4 , Harness-Zero recovers 82.3% of the harness-exclusive behaviors.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-patterns",
+  "claim": "28 patterns: 18 SpreadsheetBench, 6 USPTO, 4 AppWorld; a pattern is kept only when at least 10 tasks show it under h* but not h",
+  "value": "28",
+  "unit": "patterns",
+  "source": "https://arxiv.org/abs/2609.24974 + \"This yields 18 harness-exclusive patterns on SpreadsheetBench, 6 on USPTO, and 4 on AppWorld\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-baseline",
+  "claim": "Base model scores 0% on every pattern by construction, so recovery measures behavior distillation adds",
+  "value": "0%",
+  "unit": "base recovery",
+  "source": "https://arxiv.org/abs/2609.24974 + \"so the base model scores 0% on every pattern by construction\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-def",
+  "claim": "Recovery rate = fraction of selected tasks on which Harness-Zero shows the same behavior",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"its recovery rate is the fraction of the selected tasks on which Harness-Zero exhibits the same behavior\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-prefilled",
+  "claim": "Pattern 'Protect pre-filled cells' (SpreadsheetBench middleware): recovered on 24/26 tasks (92%)",
+  "value": "24/26 (92%)",
+  "unit": "recovery",
+  "source": "https://arxiv.org/abs/2609.24974 + \"24/26 (92%)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-inspect",
+  "claim": "Pattern 'Inspect before editing' (SpreadsheetBench skill): 32/32 (100%)",
+  "value": "32/32 (100%)",
+  "unit": "recovery",
+  "source": "https://arxiv.org/abs/2609.24974 + \"32/32 (100%)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-rdkit",
+  "claim": "Pattern 'Validate with RDKit' (USPTO tool): 60/60 (100%)",
+  "value": "60/60 (100%)",
+  "unit": "recovery",
+  "source": "https://arxiv.org/abs/2609.24974 + \"60/60 (100%)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "beh-low",
+  "claim": "Lowest recovery: AppWorld 'Retrieve complete pages' 21/53 (40%)",
+  "value": "21/53 (40%)",
+  "unit": "recovery",
+  "source": "https://arxiv.org/abs/2609.24974 + \"21/53 (40%)\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ex-prefilled",
+  "claim": "RUNNING EXAMPLE CANDIDATE (SpreadsheetBench): tasks put a few already-filled example cells inside the answer range; they are the specification. Overwriting an example is a common failure",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Many SpreadsheetBench tasks place a few already-filled example cells inside the requested answer range. Those cells are the specification.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ex-prefilled-code",
+  "claim": "In h*, middleware diffs input and output workbooks in the answer range at finish time and rejects the finish if a pre-filled literal changed",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"rejects the finish if any pre-filled literal has changed\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ex-prefilled-review",
+  "claim": "In K, review middleware scans the visible trajectory; if the student tries to finish without a pre-filled-cell comparison, it privately tells the harnessing agent to REPLACE the finish with a verification action",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"If the student tries to finish without that evidence, the middleware adds a private instruction asking the harnessing agent to replace the finish with a verification action\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ex-prefilled-script",
+  "claim": "Replacement is a student-native Bash command that writes and runs prefilled_diff.py (e.g. on range B3:B40); prints PASS or FAIL with changed cells; its output becomes visible to the student next turn (illustrative range in the paper's code listing)",
+  "value": "B3:B40",
+  "unit": "cell range",
+  "source": "https://arxiv.org/abs/2609.24974 + \"python3 . agent - tools / prefilled_diff . py INPUT . xlsx OUTPUT . xlsx B3 : B40\"",
+  "kind": "measured"
+ },
+ {
+  "id": "ex-prefilled-why",
+  "claim": "Harnessing agent cannot run the check privately: it has no separate interface to the student environment, otherwise the behavior could not be internalized",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"The harnessing agent cannot run this check privately because it has no separate interface to the student environment, and it should not have one.\"",
+  "kind": "measured"
+ },
+ {
+  "id": "lim-cost",
+  "claim": "Limitation: review adds cost during collection only; mean USPTO latency is 2.4x (237.2 s vs 100.1 s per trial), absent after distillation",
+  "value": "2.4x",
+  "unit": "USPTO latency during collection",
+  "source": "https://arxiv.org/abs/2609.24974 + \"raising mean USPTO latency to 2.4\\times\"",
+  "kind": "measured"
+ },
+ {
+  "id": "lim-weak",
+  "claim": "Limitation: needs a capable harnessing model; with weaker models review can become harmful (on Qwen3.6-35B-A3B -12.0% vs meta-harness)",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"With weaker models, review can become harmful and agent-as-harness loses its advantage over code-as-harness\"",
+  "kind": "measured"
+ },
+ {
+  "id": "lim-domain",
+  "claim": "SFT may not fully internalize deep domain knowledge; some harness mechanisms like context management are not expressible as student responses",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"SFT may also fail to fully internalize deep domain knowledge encoded by h^{\\star} .\"",
+  "kind": "measured"
+ },
+ {
+  "id": "thesis",
+  "claim": "Harness-Zero does not remove the need for a harness but narrows what it must provide",
+  "value": "-",
+  "unit": "-",
+  "source": "https://arxiv.org/abs/2609.24974 + \"Harness-Zero therefore does not remove the need for a harness, but narrows what that harness must provide\"",
+  "kind": "measured"
+ },
+ {
+  "id": "meta-title",
+  "claim": "Paper: Harness-Zero: Harness Distillation via Agent-as-Harness, arXiv:2609.24974, 21 Sep 2026",
+  "value": "2609.24974",
+  "unit": "arXiv id",
+  "source": "https://arxiv.org/abs/2609.24974 + \"arXiv:2609.24974v1 [cs.AI] 21 Sep 2026\"",
+  "kind": "measured"
+ }
+]

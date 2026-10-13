@@ -1,0 +1,509 @@
+{
+  "meta": {
+    "title": "Atomic Habits",
+    "source": {
+      "kind": "blog",
+      "url": "https://jamesclear.com/atomic-habits-summary",
+      "credit": "James Clear, Atomic Habits"
+    },
+    "arc": "concept",
+    "thesis": "You fall to the level of your systems.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.15
+    },
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "role": "hook",
+      "duration_s": 3,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "Can a tiny habit really change anything?",
+          "kind": "question"
+        },
+        "Atomic Habits says yes, if you understand how habits work."
+      ],
+      "data": {
+        "title": "Atomic Habits",
+        "subtitle": "Tiny changes, remarkable results",
+        "kicker": "James Clear",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "tiny habit"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "how habits work"
+            }
+          ]
+        },
+        "beats": {
+          "title": 1
+        }
+      }
+    },
+    {
+      "id": "compound",
+      "type": "metrics",
+      "role": "hook",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "One percent? That's basically nothing.",
+          "kind": "wrong"
+        },
+        "Get one percent better each day for one year.",
+        "You end up thirty-seven times better.",
+        "Get one percent worse each day, and you decline nearly down to zero."
+      ],
+      "data": {
+        "title": "1% a day, for one year",
+        "cards": [
+          {
+            "label": "1% better each day",
+            "value": "37x",
+            "compare": "after one year"
+          },
+          {
+            "label": "1% worse each day",
+            "value": "~0",
+            "compare": "after one year"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": "thirty-seven times better"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "thirty-seven times"
+            }
+          ]
+        },
+        "beats": {
+          "title": 1,
+          "card0": 2,
+          "card1": 3
+        }
+      }
+    },
+    {
+      "id": "interview",
+      "type": "interview",
+      "role": "hook",
+      "duration_s": 4,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So I don't need one big change."
+        },
+        {
+          "who": "asker",
+          "say": "I need a tiny one, every single day."
+        }
+      ],
+      "data": {
+        "who": "asker",
+        "set": {
+          "acts": [
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": [
+                1,
+                0.3
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "loop",
+      "type": "cycle",
+      "role": "how",
+      "duration_s": 14,
+      "narration": [
+        "Every habit runs the same loop.",
+        {
+          "who": "asker",
+          "say": "What loop?",
+          "kind": "question"
+        },
+        "A cue triggers a craving.",
+        "The craving motivates a response.",
+        "The response provides a reward.",
+        "And the reward ties back to the cue, so the loop runs again."
+      ],
+      "data": {
+        "title": "The habit loop",
+        "nodes": [
+          {
+            "id": "cue",
+            "label": "Cue",
+            "sub": "triggers"
+          },
+          {
+            "id": "craving",
+            "label": "Craving",
+            "sub": "motivates"
+          },
+          {
+            "id": "response",
+            "label": "Response",
+            "sub": "provides"
+          },
+          {
+            "id": "reward",
+            "label": "Reward",
+            "sub": "satisfies"
+          }
+        ],
+        "steps": [
+          {
+            "id": "ring"
+          },
+          {
+            "id": "cue",
+            "at": "cue"
+          },
+          {
+            "id": "craving",
+            "at": "craving"
+          },
+          {
+            "id": "response",
+            "at": "response"
+          },
+          {
+            "id": "reward",
+            "at": "reward"
+          },
+          {
+            "id": "again",
+            "at": "cue"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "A cue triggers"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "provides a reward"
+            }
+          ]
+        },
+        "beats": {
+          "ring": [
+            0,
+            0.3
+          ],
+          "cue": 2,
+          "craving": [
+            2,
+            0.55
+          ],
+          "response": 3,
+          "reward": 4,
+          "again": 5
+        }
+      }
+    },
+    {
+      "id": "laws",
+      "type": "compare",
+      "role": "how",
+      "duration_s": 16,
+      "narration": [
+        "Each step of the loop is a lever. Four laws pull them.",
+        "Make the cue obvious.",
+        "Make the craving attractive.",
+        "Make the response easy.",
+        "Make the reward satisfying.",
+        {
+          "who": "asker",
+          "say": "And to quit a bad habit, I need a whole new system?",
+          "kind": "wrong"
+        },
+        "No. Flip the same four laws: invisible, unattractive, difficult, unsatisfying."
+      ],
+      "data": {
+        "title": "The four laws",
+        "left": {
+          "label": "Build a good habit",
+          "role": "c3"
+        },
+        "right": {
+          "label": "Break a bad habit",
+          "role": "c5"
+        },
+        "winner": "both",
+        "rows": [
+          {
+            "left": "Make it obvious",
+            "right": "Make it invisible"
+          },
+          {
+            "left": "Make it attractive",
+            "right": "Make it unattractive"
+          },
+          {
+            "left": "Make it easy",
+            "right": "Make it difficult"
+          },
+          {
+            "left": "Make it satisfying",
+            "right": "Make it unsatisfying"
+          }
+        ],
+        "footer": "Same loop, laws flipped",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "facepalm",
+              "at": "whole new system"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "Flip the same"
+            }
+          ]
+        },
+        "beats": {
+          "title": 0,
+          "row0": 1,
+          "row1": 2,
+          "row2": 3,
+          "row3": 4,
+          "footer": 6
+        }
+      }
+    },
+    {
+      "id": "identity",
+      "type": "flow",
+      "role": "why",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So why do my habits never stick?",
+          "kind": "question"
+        },
+        "Your current behaviors are simply a reflection of your current identity.",
+        "So first, decide the type of person you want to be.",
+        "Then prove it to yourself with small wins."
+      ],
+      "data": {
+        "title": "Habits follow identity",
+        "roles": {
+          "decide": "c2",
+          "wins": "c1",
+          "who": "c3"
+        },
+        "nodes": [
+          {
+            "id": "decide",
+            "role": "decide",
+            "label": "Decide",
+            "sub": "the person you want to be"
+          },
+          {
+            "id": "wins",
+            "role": "wins",
+            "label": "Small wins",
+            "sub": "repeated daily"
+          },
+          {
+            "id": "who",
+            "role": "who",
+            "label": "New identity",
+            "sub": "behaviors reflect it"
+          }
+        ],
+        "edges": [
+          {
+            "from": "decide",
+            "to": "wins"
+          },
+          {
+            "from": "wins",
+            "to": "who",
+            "label": "proves it"
+          }
+        ],
+        "steps": [
+          {
+            "id": "now",
+            "do": "highlight",
+            "targets": [
+              "who"
+            ]
+          },
+          {
+            "id": "decide",
+            "do": "reveal",
+            "targets": [
+              "decide"
+            ]
+          },
+          {
+            "id": "prove",
+            "do": "flow",
+            "path": [
+              "decide",
+              "wins",
+              "who"
+            ],
+            "kind": "change"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "tags": {
+            "asker": "the new you"
+          },
+          "acts": [
+            {
+              "who": "asker",
+              "do": "level_up",
+              "at": "small wins"
+            }
+          ]
+        },
+        "beats": {
+          "now": 1,
+          "decide": 2,
+          "prove": 3
+        }
+      }
+    },
+    {
+      "id": "systems",
+      "type": "compare",
+      "role": "takeaway",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So I should just set bigger goals?",
+          "kind": "wrong"
+        },
+        "Goals are about the results you want to achieve.",
+        "Systems are about the processes that get you there.",
+        "You fall to the level of your systems."
+      ],
+      "data": {
+        "title": "Goals vs systems",
+        "left": {
+          "label": "Goals",
+          "role": "neutral"
+        },
+        "right": {
+          "label": "Systems",
+          "role": "c3"
+        },
+        "winner": "right",
+        "rows": [
+          {
+            "left": "About results",
+            "right": "About processes"
+          },
+          {
+            "left": "What you want",
+            "right": "What you do daily"
+          }
+        ],
+        "footer": "You fall to the level of your systems",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": "fall to the level"
+            },
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "processes that get"
+            }
+          ]
+        },
+        "beats": {
+          "title": 0,
+          "row0": 1,
+          "row1": 2,
+          "footer": 3
+        }
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

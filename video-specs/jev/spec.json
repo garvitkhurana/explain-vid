@@ -1,0 +1,501 @@
+{
+  "meta": {
+    "title": "Jev",
+    "source": {
+      "kind": "blog",
+      "url": "https://typesafe.ai/blog/introducing-system-one-models-and-jev",
+      "credit": "TypeSafe AI"
+    },
+    "arc": "concept",
+    "thesis": "Jev is a function call: state in, a typed decision out.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.15
+    },
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    },
+    "glossary": [
+      {
+        "term": "RLCD",
+        "plain": "calibrated decisions"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "role": "hook",
+      "duration_s": 3,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "Great, another chatbot?",
+          "kind": "wrong"
+        },
+        "No. Jev is a System One model: it makes decisions, not conversation."
+      ],
+      "data": {
+        "title": "Jev",
+        "subtitle": "A System One model",
+        "kicker": "TypeSafe AI",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "another chatbot"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "System One model"
+            }
+          ]
+        },
+        "beats": {
+          "title": 1
+        }
+      }
+    },
+    {
+      "id": "systems",
+      "type": "compare",
+      "role": "how",
+      "duration_s": 10,
+      "narration": [
+        "The name comes from Kahneman's two modes of thinking.",
+        "System one is fast and intuitive. That's Jev.",
+        "System two is slow and deliberate, like a model writing out its reasoning."
+      ],
+      "data": {
+        "title": "Named after Kahneman",
+        "left": {
+          "label": "System 1",
+          "role": "c3"
+        },
+        "right": {
+          "label": "System 2",
+          "role": "c2"
+        },
+        "winner": "both",
+        "rows": [
+          {
+            "left": "Fast, intuitive",
+            "right": "Slow, deliberate"
+          },
+          {
+            "left": "Jev",
+            "right": "Reasoning in text"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "fast and intuitive"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "writing out its reasoning"
+            }
+          ]
+        },
+        "beats": {
+          "title": 0,
+          "row0": 1,
+          "row1": 2
+        }
+      }
+    },
+    {
+      "id": "call",
+      "type": "flow",
+      "role": "how",
+      "duration_s": 12,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So I prompt it, and it writes me a reply?",
+          "kind": "wrong"
+        },
+        "No. Think of it as a function call.",
+        "Unstructured state goes in: text, or your program's state.",
+        "A typed value comes out, with a calibrated probability."
+      ],
+      "data": {
+        "title": "A function call, not a chat",
+        "roles": {
+          "in": "c1",
+          "jev": "c2",
+          "out": "c3"
+        },
+        "nodes": [
+          {
+            "id": "in",
+            "role": "in",
+            "shape": "stack",
+            "art": "lines",
+            "label": "Unstructured state",
+            "sub": "text, program state"
+          },
+          {
+            "id": "jev",
+            "role": "jev",
+            "shape": "trapezoid",
+            "label": "Jev",
+            "sub": "decides"
+          },
+          {
+            "id": "out",
+            "role": "out",
+            "label": "Typed decision",
+            "sub": "value + probability"
+          }
+        ],
+        "edges": [
+          {
+            "from": "in",
+            "to": "jev"
+          },
+          {
+            "from": "jev",
+            "to": "out"
+          }
+        ],
+        "steps": [
+          {
+            "id": "fn",
+            "do": "highlight",
+            "targets": [
+              "jev"
+            ]
+          },
+          {
+            "id": "in",
+            "do": "flow",
+            "path": [
+              "in",
+              "jev"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "out",
+            "do": "flow",
+            "path": [
+              "jev",
+              "out"
+            ],
+            "kind": "response"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "a function call"
+            },
+            {
+              "who": "asker",
+              "do": "facepalm",
+              "at": "writes me a reply"
+            }
+          ]
+        },
+        "beats": {
+          "fn": 1,
+          "in": 2,
+          "out": 3
+        }
+      }
+    },
+    {
+      "id": "uses",
+      "type": "checklist",
+      "role": "why",
+      "duration_s": 10,
+      "narration": [
+        "So what do you call it for?",
+        "Classify a message.",
+        "Route it to the right place.",
+        "Score it, or extract a field.",
+        "Or branch your code, like a smart if-statement."
+      ],
+      "data": {
+        "title": "What you call it for",
+        "rows": [
+          {
+            "label": "Classify",
+            "tag": "what is this?"
+          },
+          {
+            "label": "Route",
+            "tag": "where does it go?"
+          },
+          {
+            "label": "Score / extract",
+            "tag": "how much? which field?"
+          },
+          {
+            "label": "Branch",
+            "tag": "smart if-statement"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "smart if-statement"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "numbers",
+      "type": "metrics",
+      "role": "why",
+      "duration_s": 10,
+      "narration": [
+        "TypeSafe's own numbers.",
+        "Seventy to five hundred milliseconds per answer.",
+        "Forty to two hundred times faster than frontier models, on these queries.",
+        "And about four cents per million input tokens."
+      ],
+      "data": {
+        "title": "TypeSafe's own numbers",
+        "cards": [
+          {
+            "label": "Response time",
+            "value": "70-500ms",
+            "compare": "end to end"
+          },
+          {
+            "label": "vs frontier models",
+            "value": "40x-200x",
+            "compare": "faster, System One queries"
+          },
+          {
+            "label": "Input price",
+            "value": "$0.042",
+            "compare": "per million tokens"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": "times faster"
+            },
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "on these queries"
+            }
+          ]
+        },
+        "beats": {
+          "title": 0,
+          "card0": 1,
+          "card1": 2,
+          "card2": 3
+        }
+      }
+    },
+    {
+      "id": "interview",
+      "type": "interview",
+      "role": "why",
+      "duration_s": 4,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So it's not a chatbot."
+        },
+        {
+          "who": "asker",
+          "say": "It's a very fast, very honest yes or no."
+        }
+      ],
+      "data": {
+        "who": "asker",
+        "set": {
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": [
+                1,
+                0.5
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trust",
+      "type": "flow",
+      "role": "takeaway",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "But why trust its confidence?",
+          "kind": "question"
+        },
+        "It's trained with reinforcement learning for calibrated decisions.",
+        "So its probabilities are meant to be honest, and your code can branch on them.",
+        "Jev is a function call: state in, a typed decision out."
+      ],
+      "data": {
+        "title": "Why the probability matters",
+        "roles": {
+          "t": "c2",
+          "p": "c1",
+          "c": "c3"
+        },
+        "nodes": [
+          {
+            "id": "train",
+            "role": "t",
+            "label": "RLCD training",
+            "sub": "rewards honest confidence"
+          },
+          {
+            "id": "prob",
+            "role": "p",
+            "label": "Calibrated probability",
+            "sub": "meant to be honest"
+          },
+          {
+            "id": "code",
+            "role": "c",
+            "label": "Your code",
+            "sub": "branches on it"
+          }
+        ],
+        "edges": [
+          {
+            "from": "train",
+            "to": "prob"
+          },
+          {
+            "from": "prob",
+            "to": "code"
+          }
+        ],
+        "steps": [
+          {
+            "id": "train",
+            "do": "reveal",
+            "targets": [
+              "train"
+            ]
+          },
+          {
+            "id": "prob",
+            "do": "flow",
+            "path": [
+              "train",
+              "prob"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "code",
+            "do": "flow",
+            "path": [
+              "prob",
+              "code"
+            ],
+            "kind": "response"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "state in"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "your code can branch"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "Jev is a function call"
+            }
+          ]
+        },
+        "beats": {
+          "train": 1,
+          "prob": [
+            1,
+            0.6
+          ],
+          "code": [
+            2,
+            0.45
+          ]
+        }
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

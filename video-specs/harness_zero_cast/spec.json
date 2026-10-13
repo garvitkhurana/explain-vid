@@ -1,0 +1,532 @@
+{
+  "meta": {
+    "title": "Harness-Zero (cast)",
+    "source": {
+      "kind": "paper",
+      "url": "https://arxiv.org/abs/2609.24974"
+    },
+    "arc": "result",
+    "thesis": "The harness's gains now live in the model's weights.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.15
+    },
+    "glossary": [
+      {
+        "term": "harnessing agent",
+        "plain": "second agent"
+      }
+    ],
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title",
+      "role": "hook",
+      "duration_s": 3,
+      "narration": [
+        "Harness-Zero trains a harness's skills into a small model."
+      ],
+      "data": {
+        "title": "Harness-Zero",
+        "subtitle": "Move a harness's skills into the model",
+        "kicker": "arXiv:2609.24974",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": [
+                0,
+                0.4
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tied",
+      "type": "flow",
+      "role": "problem",
+      "duration_s": 8,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So a harness is, like, a seatbelt for the robot?",
+          "kind": "wrong"
+        },
+        "No. A harness is the system around a model: tools, state, rules.",
+        "Tune one for a single job, and scores jump.",
+        "But the skill lives in the harness, not the model.",
+        "Swap in a plain harness, and the gains are gone."
+      ],
+      "data": {
+        "roles": {
+          "model": "c2",
+          "special": "c4",
+          "plain": "neutral"
+        },
+        "nodes": [
+          {
+            "id": "model",
+            "shape": "trapezoid",
+            "role": "model",
+            "label": "Model",
+            "sub": "reasons, decides"
+          },
+          {
+            "id": "special",
+            "role": "special",
+            "label": "Special harness",
+            "sub": "tuned for one job",
+            "items": [
+              "tools",
+              "rules",
+              "skills",
+              "memory"
+            ]
+          },
+          {
+            "id": "plain",
+            "role": "plain",
+            "label": "Plain harness",
+            "sub": "one Bash tool"
+          }
+        ],
+        "edges": [
+          {
+            "from": "model",
+            "to": "special",
+            "label": "scores jump"
+          },
+          {
+            "from": "model",
+            "to": "plain",
+            "style": "dashed",
+            "label": "moved"
+          }
+        ],
+        "steps": [
+          {
+            "id": "harness",
+            "do": "flow",
+            "path": [
+              "model",
+              "special"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "tuned",
+            "do": "highlight",
+            "targets": [
+              "special"
+            ]
+          },
+          {
+            "id": "lives",
+            "do": "highlight",
+            "targets": [
+              "model"
+            ]
+          },
+          {
+            "id": "moved",
+            "do": "flow",
+            "path": [
+              "model",
+              "plain"
+            ],
+            "kind": "request"
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "the system around a model"
+            },
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": "the gains are gone"
+            }
+          ]
+        },
+        "beats": {
+          "harness": 1,
+          "tuned": 2,
+          "lives": 3,
+          "moved": 4
+        }
+      }
+    },
+    {
+      "id": "interview",
+      "type": "interview",
+      "role": "problem",
+      "duration_s": 5,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "Great. So all the smarts live in the fancy harness."
+        },
+        {
+          "who": "asker",
+          "say": "And the fancy harness does not come with us."
+        }
+      ],
+      "data": {
+        "who": "asker",
+        "set": {
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": [
+                1,
+                0.5
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "review",
+      "type": "cycle",
+      "role": "how",
+      "duration_s": 20,
+      "narration": [
+        "The fix: during training, a second agent plays the harness.",
+        {
+          "who": "asker",
+          "say": "Wait, who's the second agent?",
+          "kind": "question"
+        },
+        "Picture it: you're the student model. You propose your next step.",
+        "I'm the harnessing agent. I review it, using the harness's rules.",
+        "Sound steps pass unchanged.",
+        "Weak ones get the smallest fix.",
+        "The plain harness runs it.",
+        "The result joins your own history."
+      ],
+      "data": {
+        "title": "Agent as harness",
+        "nodes": [
+          {
+            "id": "propose",
+            "label": "Propose",
+            "sub": "student model\nsuggests a step"
+          },
+          {
+            "id": "review",
+            "label": "Review",
+            "sub": "harnessing agent\npasses or fixes it"
+          },
+          {
+            "id": "run",
+            "label": "Run",
+            "sub": "plain harness\nexecutes it"
+          },
+          {
+            "id": "observe",
+            "label": "Observe",
+            "sub": "result joins the\nstudent's history",
+            "edge": "next step"
+          }
+        ],
+        "panel": {
+          "title": "Review",
+          "lines": [
+            {
+              "role": "sound step",
+              "text": "passes unchanged"
+            },
+            {
+              "role": "weak step",
+              "text": "smallest fix"
+            },
+            {
+              "role": "student sees",
+              "text": "only its own steps"
+            }
+          ]
+        },
+        "steps": [
+          {
+            "id": "ring"
+          },
+          {
+            "id": "propose",
+            "at": "propose"
+          },
+          {
+            "id": "review",
+            "at": "review"
+          },
+          {
+            "id": "sound",
+            "at": "review",
+            "show": 1
+          },
+          {
+            "id": "weak",
+            "at": "review",
+            "show": 2
+          },
+          {
+            "id": "run",
+            "at": "run"
+          },
+          {
+            "id": "observe",
+            "at": "observe",
+            "show": 3
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "tags": {
+            "explainer": "the reviewer",
+            "asker": "the model"
+          },
+          "acts": [
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "I review it"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "Sound steps pass"
+            },
+            {
+              "who": "asker",
+              "do": "facepalm",
+              "at": "Weak ones"
+            }
+          ]
+        },
+        "beats": {
+          "ring": [
+            0,
+            0.4
+          ],
+          "propose": 2,
+          "review": 3,
+          "sound": 4,
+          "weak": 5,
+          "run": 6,
+          "observe": 7
+        }
+      }
+    },
+    {
+      "id": "train",
+      "type": "flow",
+      "role": "how",
+      "duration_s": 8,
+      "narration": [
+        "Those reviewed runs become the student's training data.",
+        "At test time, the reviewer and special harness are gone.",
+        {
+          "who": "asker",
+          "say": "So I'm on my own?",
+          "kind": "question"
+        },
+        "Just the small model, plain harness."
+      ],
+      "data": {
+        "title": "Train, then drop the helpers",
+        "roles": {
+          "data": "c1",
+          "train": "c2",
+          "deploy": "c3"
+        },
+        "nodes": [
+          {
+            "id": "runs",
+            "shape": "stack",
+            "role": "data",
+            "label": "Reviewed runs",
+            "art": "lines"
+          },
+          {
+            "id": "tune",
+            "role": "train",
+            "label": "Train",
+            "sub": "student model"
+          },
+          {
+            "id": "deploy",
+            "role": "deploy",
+            "label": "Student + plain harness",
+            "sub": "no reviewer, no special harness"
+          }
+        ],
+        "edges": [
+          {
+            "from": "runs",
+            "to": "tune"
+          },
+          {
+            "from": "tune",
+            "to": "deploy",
+            "label": "at test time"
+          }
+        ],
+        "steps": [
+          {
+            "id": "train",
+            "do": "flow",
+            "path": [
+              "runs",
+              "tune"
+            ],
+            "kind": "request"
+          },
+          {
+            "id": "deploy",
+            "do": "flow",
+            "path": [
+              "tune",
+              "deploy"
+            ],
+            "kind": "change"
+          },
+          {
+            "id": "alone",
+            "do": "highlight",
+            "targets": [
+              "deploy"
+            ]
+          }
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "tags": {
+            "asker": "the model"
+          },
+          "acts": [
+            {
+              "who": "asker",
+              "do": "level_up",
+              "at": "Just the small model"
+            }
+          ]
+        },
+        "beats": {
+          "train": 0,
+          "deploy": 1,
+          "alone": 3
+        }
+      }
+    },
+    {
+      "id": "result",
+      "type": "metrics",
+      "role": "proof",
+      "duration_s": 12,
+      "narration": [
+        "Tested on a small model, across three domains.",
+        "Plain harness: twenty-three point three percent.",
+        "Special harness attached: forty-one point seven.",
+        "Harness-Zero, plain harness only: forty-four point three.",
+        {
+          "who": "asker",
+          "say": "So the skill moved into the model?",
+          "kind": "question"
+        },
+        "The harness's gains now live in the model's weights."
+      ],
+      "data": {
+        "title": "9B model, average over 3 domains",
+        "cards": [
+          {
+            "label": "Base, plain harness",
+            "value": "23.3%",
+            "compare": "success"
+          },
+          {
+            "label": "Base, special harness",
+            "value": "41.7%",
+            "compare": "harness attached"
+          },
+          {
+            "label": "Harness-Zero",
+            "value": "44.3%",
+            "compare": "plain harness only"
+          }
+        ],
+        "footnote": "The harness's gains, now inside the model",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "look_camera",
+              "at": "forty-four point three"
+            },
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "now live in the model's weights"
+            }
+          ]
+        },
+        "beats": {
+          "title": 0,
+          "card0": 1,
+          "card1": 2,
+          "card2": 3,
+          "footnote": 4
+        }
+      }
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "duration_s": 3.5,
+      "narration": [],
+      "data": {}
+    }
+  ]
+}

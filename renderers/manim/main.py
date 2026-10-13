@@ -1,6 +1,7 @@
 """Render video-specs/<video>/spec.json as one Manim scene. Usage: SPEC=<video> uv run manim -qh main.py Explainer
 
-Env: SPEC=<video folder name in video-specs/> (required), THEME=<preset in theme.py>, SCENES=<comma-separated scene ids to render only those>.
+Env: SPEC=<video folder name in video-specs/> (required), THEME=<preset in theme.py>, SCENES=<comma-separated scene ids to render only those>,
+     SKIN=<skin in skins.py> (specs with meta.cast; reads out/<video>-<skin>).
 Needs out/<video>/voice/timing.json from scripts/voice.py (scene lengths + caption cues come from the narration).
 """
 
@@ -16,12 +17,14 @@ from manim import (
     DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Line, Rectangle, Transform,
     LaggedStart, RoundedRectangle, Scene, Square, Text, ValueTracker, VGroup, VMobject, config, linear, rate_functions,
     DashedVMobject, Dot, Arc, Circle, MoveAlongPath, Polygon, Succession, AnimationGroup, Intersection, ManimColor,
-    interpolate_color, Wait,
+    interpolate_color, Wait, MovingCameraScene, ORIGIN,
 )
 
 from manim.animation.animation import prepare_animation
 
 import theme as T
+import cast as C
+import skins
 from layout import layout as layout_graph
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,10 +33,18 @@ if not VIDEO:
     raise SystemExit("Set SPEC=<video> (a folder in video-specs/).")
 SPEC = json.loads((ROOT / "video-specs" / VIDEO / "spec.json").read_text())
 ONLY = {x for x in os.environ.get("SCENES", "").split(",") if x}
-TIMING_PATH = ROOT / "out" / VIDEO / "voice" / "timing.json"
+TIMING_PATH = ROOT / "out" / (VIDEO + (f"-{os.environ['SKIN']}" if os.environ.get("SKIN") else "")) / "voice" / "timing.json"
 if not TIMING_PATH.exists():
     raise SystemExit(f"Missing {TIMING_PATH}: run `uv run scripts/voice.py {VIDEO}` first.")
 TIMING = json.loads(TIMING_PATH.read_text())["scenes"]
+WORDS_PATH = TIMING_PATH.parent / "words.json"
+WORDS = json.loads(WORDS_PATH.read_text()) if WORDS_PATH.exists() else {}
+
+# A cast (meta.cast) puts scenes on a set; the skin decides who plays each role and what the set looks like.
+SKIN_NAME = skins.skin_name(SPEC) if SPEC["meta"].get("cast") else None
+SKIN = skins.SKINS[SKIN_NAME] if SKIN_NAME else None
+if SKIN:
+    T.BG = SKIN["set"]["board"]  # templates mask with BG, so it must match the board they are drawn on
 
 config.background_color = T.BG
 config.frame_rate = SPEC["meta"]["fps"]
@@ -104,7 +115,7 @@ def panel(w, h, radius, stroke=None, stroke_w=None, fill=None):
     return VGroup(shadow, card)
 
 
-class Explainer(Scene):
+class Explainer(MovingCameraScene):
     def wait(self, duration=1.0, **kw):
         # Manim writes a *static* wait as int(duration * fps) frames (rounds down) but an animated one as
         # ceil(duration * fps). Always take the animated path so silent scenes stay frame-exact too.
@@ -122,12 +133,16 @@ class Explainer(Scene):
         if not any(moves(a) for a in args):  # self.wait() plays a Wait: time passes, nothing moves
             return super().play(*args, **kw)
         if self.time - self.moved_at > 1:
-            self.stills.append([self.sid, round(self.moved_at - self.scene_start, 2), round(self.time - self.moved_at, 2)])
+            # A cast gesture (point, nod, shrug...) is motion too; mouth flaps and blinks are not.
+            pts = [self.moved_at, *[m for m in self.gestures if self.moved_at < m < self.time], self.time]
+            for a, b in zip(pts, pts[1:]):
+                if b - a > 1:
+                    self.stills.append([self.sid, round(a - self.scene_start, 2), round(b - a, 2)])
         super().play(*args, **kw)
         self.moved_at = self.time
 
     def construct(self):
-        self.stills, self.moved_at = [], 0.0
+        self.stills, self.moved_at, self.gestures = [], 0.0, []
         if os.environ.get("PLAN"):  # jump each animation to its end: timing only, no frames (seconds, not minutes)
             self.renderer._original_skipping_status = True
         for s in SPEC["scenes"]:
@@ -137,11 +152,16 @@ class Explainer(Scene):
             timing = TIMING[s["id"]]
             self.scene_start, self.sentences, self.beats = start, timing["sentences"], s["data"].get("beats", {})
             self.scene_end = start + timing["frames"] / config.frame_rate
+            shot = "interview" if s["type"] == "interview" else s["data"].get("set", {}).get("shot")
+            self.zoom = C.BOARD_ZOOM if shot == "board" else 1.0
+            self.camera.frame.set(width=config.frame_width * self.zoom).move_to(ORIGIN)
+            self.gestures = []  # absolute start/end times of cast gestures in this scene (stage() fills it)
+            self.decor = self.stage(s, shot) if shot else []
             cue_objs = self.cues(timing["cues"], start)
             self.add(*cue_objs)
             getattr(self, f"scene_{s['type']}")(s["data"])
             if timing["cues"]:
-                self.check_caption_band(s["id"], set(cue_objs))
+                self.check_caption_band(s["id"], set(cue_objs) | set(self.decor))
             # End on exactly timing["frames"] frames. Manim turns a duration into ceil(duration * fps) frames, and
             # float noise can tip an exact value up by one, so ask for n - 0.5 frames to get exactly n.
             fps = config.frame_rate
@@ -150,6 +170,8 @@ class Explainer(Scene):
             if rest > 0:
                 self.wait((rest - 0.5) / fps)
             self.play(*[FadeOut(m) for m in self.mobjects], run_time=(fade - 0.5) / fps)
+            self.remove(*self.mobjects)
+            self.camera.frame.set(width=config.frame_width).move_to(ORIGIN)
         if os.environ.get("PLAN"):
             (TIMING_PATH.parent / "plan.json").write_text(json.dumps({"stills": self.stills}, indent=1) + "\n")
 
@@ -157,7 +179,8 @@ class Explainer(Scene):
         """One caption per narration cue, visible only during its spoken time window."""
         out = []
         for c in cues:
-            cap = self.caption(c["text"]).set_opacity(0)
+            color = SKIN["roles"][c.get("who", "explainer")]["caption"] if SKIN else T.CAPTION_FG
+            cap = self.caption(c["text"], color).scale(self.zoom, about_point=ORIGIN).set_opacity(0)
             # dt in the signature makes this a time-based updater, so Manim keeps updating during waits.
             cap.add_updater(lambda m, dt, c=c: m.set_opacity(
                 1 if c["start"] <= self.time - scene_start < c["end"] else 0))
@@ -166,11 +189,117 @@ class Explainer(Scene):
 
     def check_caption_band(self, sid, captions):
         """Fail the render if anything on screen reaches into the caption band (subtitles would cover it)."""
+        z = self.zoom  # the band is in camera space: zoomed out, it sits lower in the world
         low = [(m.get_bottom()[1], type(m).__name__) for m in self.mobjects
-               if m not in captions and m.get_bottom()[1] < CAPTION_TOP and m.get_top()[1] > -config.frame_height / 2]
+               if m not in captions and m.get_bottom()[1] < CAPTION_TOP * z and m.get_top()[1] > -config.frame_height / 2 * z]
         if low:
             y, kind = min(low)
             raise ValueError(f"scene {sid!r}: {kind} reaches y={y:.2f}, into the caption band (keep content above {CAPTION_TOP})")
+
+    # ---- cast: sets, actors, acts (specs with meta.cast) ------------------------------------------------------
+
+    def spoken_words(self, sid, whisper=True):
+        """[(who, start, end, [(word, start, end)])] for each sentence of a scene, scene-relative. Word times come from
+        Whisper (words.json) when there, else the sentence's time is shared out over its script words by length."""
+        scene = next(x for x in SPEC["scenes"] if x["id"] == sid)
+        out = []
+        for i, span in enumerate(TIMING[sid].get("lines", [])):
+            heard = WORDS.get(sid, [])
+            if whisper and i < len(heard) and heard[i]["words"]:
+                words = [(w["w"].lower(), w["start"], w["end"]) for w in heard[i]["words"]]
+            else:
+                toks = C.words_of(skins.line(scene["narration"][i])[1])
+                total, t, words = sum(len(w) + 1 for w in toks) or 1, span["start"], []
+                for w in toks:
+                    d = (span["end"] - span["start"]) * (len(w) + 1) / total
+                    words.append((w, t, t + d * 0.85))
+                    t += d
+            out.append((span["who"], span["start"], span["end"], words))
+        return out
+
+    def act_time(self, sid, at):
+        """Scene-relative time for an act: a sentence index, [sentence, fraction], or a phrase from the narration
+        (lands on its first word, like a storyboard beat hung off the words being said)."""
+        sent = TIMING[sid]["sentences"]
+        if isinstance(at, str):
+            want = C.words_of(at)
+            for whisper in (True, False):
+                flat = [(tok, ws) for *_, words in self.spoken_words(sid, whisper) for w, ws, _ in words
+                        for tok in C.words_of(w)]
+                for k in range(len(flat) - len(want) + 1):
+                    if [x[0] for x in flat[k:k + len(want)]] == want:
+                        return flat[k][1]
+            raise ValueError(f"scene {sid!r}: act phrase {at!r} is not in the narration")
+        i, frac = (at if isinstance(at, list) else (at, 0.0))
+        nxt = sent[i + 1] if i + 1 < len(sent) else TIMING[sid]["spoken"]
+        return sent[i] + frac * (nxt - sent[i])
+
+    def stage(self, s, shot):
+        """Put the set and the cast on screen for a board or interview shot. Returns the decoration (set, actors,
+        tags, effects) so the caption-band check skips it. Actors are added before the template draws, so content
+        always sits in front of them."""
+        if not SKIN:
+            raise ValueError(f"scene {s['id']!r}: a set or an interview needs meta.cast in the spec")
+        d, clock = s["data"], (lambda: self.time - self.scene_start)
+        st = d.get("set", {})
+        who = [d["who"]] if shot == "interview" else st.get("cast", [])
+        mono = lambda text, size, color, weight=None: txt(text, size, color, font=T.MONO, weight=weight or "BOLD")
+        if shot == "board":
+            back, feet = C.board_set(SKIN, SKIN_NAME)
+            front, px, spots = None, C.BOARD_PX, [(feet[0], 1), (feet[1], -1)]
+        else:
+            back, front, feet = C.interview_set(SKIN, SKIN_NAME)
+            px, spots = C.INTERVIEW_PX, [(feet, 1)]
+        if len(who) > len(spots):
+            raise ValueError(f"scene {s['id']!r}: {len(who)} cast members; a {shot} shot has room for {len(spots)}")
+        acts = {}
+        for a in st.get("acts", []):
+            t0 = self.act_time(s["id"], a["at"])
+            acts.setdefault(a["who"], []).append((t0, a["do"]))
+            if a["do"] != "look_camera":  # a glance moves one pixel: it reads as still
+                self.gestures += [self.scene_start + t0, self.scene_start + t0 + C.ACTS[a["do"]]]
+        lines = self.spoken_words(s["id"])
+        self.add(back)
+        decor, self.actors = [back], {}
+        for role, (pos, facing) in zip(who, spots):
+            mine = [(a, b, w) for r, a, b, w in lines if r == role]
+            actor = C.Actor(SKIN["roles"][role], role, px, pos, facing, mine,
+                            [x for x in acts.get(role, []) if x[1] != "level_up"])
+            m = actor.attach(clock)
+            self.add(actor.feet, m)
+            decor += [actor.feet, m]
+            top = actor.head_top()
+            if role in st.get("tags", {}):
+                tag = C.name_tag(mono, st["tags"][role], pos[0], top + 0.4)
+                self.add(tag)
+                decor.append(tag)
+            for t0, do in acts.get(role, []):
+                if do == "level_up":
+                    fx = C.level_up(mono, pos[0], top + 1.1)
+                    fx.add_updater(lambda m, dt, t0=t0: m.set_opacity(1 if t0 <= clock() < t0 + C.ACTS["level_up"] else 0))
+                    self.add(fx)
+                    decor.append(fx)
+            self.actors[role] = actor
+        if front:
+            self.add(front)
+            decor.append(front)
+        return decor
+
+    def scene_interview(self, d):
+        """A talking head: one cast member at a desk, to camera, with a lower third: their name and, if given, what
+        they stand for in this video (`label`, e.g. "the student model").
+        Each sentence starts with a small bob, so the shot never sits still while they talk.
+        data: {who: role, label?, set?: {acts}}"""
+        actor, char = self.actors[d["who"]], SKIN["roles"][d["who"]]
+        card = C.lower_third(lambda t, size, color, weight=None: txt(t, size, color, weight=weight), char, 0.9, -1.35,
+                             SKIN["set"]["accent"], d.get("label"))
+        self.beat("card", 0)
+        self.play(FadeIn(card, shift=RIGHT * 0.3), run_time=0.4)
+        for i in range(len(self.sentences)):
+            for frac in (0.1, 0.6):
+                self.beat(f"line{i}", i, frac)
+                self.play(actor.feet.animate.shift(UP * actor.px), run_time=0.15)
+                self.play(actor.feet.animate.shift(DOWN * actor.px), run_time=0.15)
 
     def beat(self, step, default, frac=0.0):
         """Hold until the narration sentence this step belongs to starts (spec data.beats overrides the default);
@@ -193,8 +322,8 @@ class Explainer(Scene):
         nxt = self.sentences[i + 1] if i + 1 < len(self.sentences) else self.sentences[i] + 2
         return nxt - self.sentences[i]
 
-    def caption(self, text):
-        t = fit(txt(text, 34, T.CAPTION_FG), 13.4)
+    def caption(self, text, color=None):
+        t = fit(txt(text, 34, color or T.CAPTION_FG), 13.4)
         bg = Rectangle(width=t.width + 0.4, height=t.height + 0.3, fill_color=T.CAPTION_BG,
                        fill_opacity=T.CAPTION_OPACITY, stroke_width=0).move_to(t)
         return VGroup(bg, t).to_edge(DOWN, buff=0.55)

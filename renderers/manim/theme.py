@@ -31,6 +31,14 @@ PRESETS = {
         BORDER="#1d1d1d", BORDER_W=6, RADIUS=1.6, SHADOW=(0.14, -0.14),
         CAPTION_BG="#1d1d1d", CAPTION_OPACITY=1.0, CAPTION_FG="#ffd60a",
     ),
+    # Pixel cast videos (specs with meta.cast; render.sh picks it for them): square everything, bold mono type.
+    # BG is replaced by the skin's board colour at render time, so templates mask with the board they sit on.
+    "pixel": dict(
+        BG="#f7f5ee", PANEL="#ffffff", FG="#1b1b1b", MUTED="#555555", ACCENT="#b03a2e", WARN="#1f3fd6",
+        EMPTY="#e2dccf", ON_ACCENT="#ffffff", FONT="Menlo", MONO="Menlo", WEIGHT="BOLD", MONO_WEIGHT="BOLD",
+        BORDER="#1b1b1b", BORDER_W=5, RADIUS=0.0, SHADOW=(0.12, -0.12),
+        CAPTION_BG="#1b1b1b", CAPTION_OPACITY=1.0, CAPTION_FG="#f3ede2",
+    ),
 }
 
 NAME = os.environ.get("THEME", "brutalist")
