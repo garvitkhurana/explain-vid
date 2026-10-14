@@ -25,6 +25,6 @@ Turn software projects into short explainer videos from a JSON scene spec; autom
 - 2026-09-27 — Tool videos follow a tool arc (hook formula → flow → why → how you use it → commands) for a first-time viewer; no disclaimers. User preferred a plainer cut over mechanism detail.
 - 2026-09-28 — Narration voice: Kokoro-82M via mlx-audio, local (voice `af_heart`), replacing macOS `say` as default. Free, offline after first run and deterministic; `say` sounded bad. User picked it over their own cloned voice.
 - 2026-09-28 — Cleanup: dropped the semif and long_running_agents videos (no facts.json) with their one-off templates, unused templates, silent figure mode, `say` TTS and the render-checker agent. Every video needs facts.json. Fewer parts to keep in sync.
-
+- 2026-10-13 — Pixel cast, office skin, is the look of the "AI explained" series on The Uninitiated (16:9, one channel). Body scenes sit close on the board (readable on a phone; zooming out to the cast each time looked odd) and the asker pops up in the corner; title and end card carry the channel wordmark (renderers/manim/brand/). Clean and credible like Money Lens; the asker is "the uninitiated".
 ## Notes
 Judgment calls are logged in video-specs/NOTES.md; the agent prompts in `.claude/agents/` cite them by number.

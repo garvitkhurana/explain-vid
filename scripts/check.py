@@ -46,6 +46,7 @@ ARCS = {
 # finding lands it at the end. A video once promised "one bitter lesson" and never said what it was.
 THESIS_AT = {"tool": "hook", "concept": "takeaway", "result": "proof"}
 MAX_CUE = 64      # caption characters per cue (voice.py splits to this)
+MAX_BLANK_S = 1.0  # a board shot may open on a blank board for a breath, not a sentence
 MAX_STILL_S = 4.5  # user flagged a ~5 s screen with only a title and voice as "nothing comes up"
 REPEAT = 0.6       # share of a closing sentence's words already said in the opening that counts as a repeat
 
@@ -227,6 +228,10 @@ if PLAN:
     long = [f"{sid} sentence {sum(t >= x for x in timing[sid]['sentences']) - 1}: {d}s from {t}s"
             for sid, t, d in json.loads((OUT / "voice" / "plan.json").read_text())["stills"] if d > MAX_STILL_S]
     gate(not long, f"predicted still screens <= {MAX_STILL_S:.1f}s ({listed(long)})")
+    # A cast member talking in front of a blank board (harness_zero_cast 0:30): the first sentence needs something on it.
+    blank = [f"{sid}: {d}s blank from {t}s" for sid, t, d in json.loads((OUT / "voice" / "plan.json").read_text()).get(
+        "empty", []) if d > MAX_BLANK_S]
+    gate(not blank, f"board scenes show content within {MAX_BLANK_S:.1f}s of their first sentence ({listed(blank)})")
     sys.exit(1 if failures else 0)
 
 # ---- render ----------------------------------------------------------------------------------------------------
@@ -264,8 +269,10 @@ for sid, sc in timing["scenes"].items():
 gate(not wrong, f"scene frame counts match narration timing ({listed(wrong, 'all exact')})")
 
 # Black stretches (a scene that failed to draw) and still screens (nothing moves while the voice talks). The caption
-# band is cropped out: captions change on their own.
-log = subprocess.run(["ffmpeg", "-v", "info", "-i", str(final), "-vf",
+# band is cropped out: captions change on their own. The closing source card is left out: it holds still on purpose,
+# as the backdrop for YouTube's end screen (Subscribe and a next video: at least the last 5 s).
+end = timing["scenes"][scenes[-1]["id"]]["start"] if scenes[-1]["type"] == "source" else expected
+log = subprocess.run(["ffmpeg", "-v", "info", "-t", f"{end:.3f}", "-i", str(final), "-vf",
                       "blackdetect=d=0.5:pix_th=0.02,crop=iw:ih*0.82:0:0,freezedetect=n=0.001:d=1",
                       "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
 black = re.findall(r"black_duration:(\S+)", log)

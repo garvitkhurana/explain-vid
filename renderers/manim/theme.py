@@ -31,20 +31,29 @@ PRESETS = {
         BORDER="#1d1d1d", BORDER_W=6, RADIUS=1.6, SHADOW=(0.14, -0.14),
         CAPTION_BG="#1d1d1d", CAPTION_OPACITY=1.0, CAPTION_FG="#ffd60a",
     ),
-    # Pixel cast videos (specs with meta.cast; render.sh picks it for them): square everything, bold mono type.
+    # Pixel cast videos (specs with meta.cast; render.sh picks it for them). The board reads like a marker sketch:
+    # hand lettering, bright flat fills with a darker outline of the same hue, rounded corners, no hard shadow.
     # BG is replaced by the skin's board colour at render time, so templates mask with the board they sit on.
     "pixel": dict(
         BG="#f7f5ee", PANEL="#ffffff", FG="#1b1b1b", MUTED="#555555", ACCENT="#b03a2e", WARN="#1f3fd6",
-        EMPTY="#e2dccf", ON_ACCENT="#ffffff", FONT="Menlo", MONO="Menlo", WEIGHT="BOLD", MONO_WEIGHT="BOLD",
-        BORDER="#1b1b1b", BORDER_W=5, RADIUS=0.0, SHADOW=(0.12, -0.12),
+        EMPTY="#e2dccf", ON_ACCENT="#ffffff", FONT="Chalkboard SE", MONO="Menlo", WEIGHT="BOLD", MONO_WEIGHT="BOLD",
+        BORDER="#1b1b1b", BORDER_W=3, RADIUS=1.0, SHADOW=None, NODE_TEXT=1.4,
         CAPTION_BG="#1b1b1b", CAPTION_OPACITY=1.0, CAPTION_FG="#f3ede2",
+        ROLES={
+            "neutral": ("#ffffff", "#1b1b1b", "#111111"),
+            "c1": ("#f9d65c", "#9a7400", "#111111"),   # yellow
+            "c2": ("#c9b0f7", "#6b3fd6", "#111111"),   # violet
+            "c3": ("#86dca5", "#1e7a4f", "#111111"),   # green
+            "c4": ("#9cc2f7", "#1f3fd6", "#111111"),   # blue
+            "c5": ("#f8b08a", "#c93a00", "#111111"),   # orange
+        },
     ),
 }
 
 NAME = os.environ.get("THEME", "brutalist")
 if NAME not in PRESETS:
     raise SystemExit(f"Unknown THEME={NAME!r}; choose from {', '.join(PRESETS)}")
-globals().update({"MONO_WEIGHT": "NORMAL", **PRESETS[NAME]})
+globals().update({"MONO_WEIGHT": "NORMAL", "NODE_TEXT": 1.0, **PRESETS[NAME]})  # NODE_TEXT: flow node text scale
 
 
 # ---- Flow figures: colour = concept ------------------------------------------------------------------------------
@@ -77,4 +86,4 @@ def _is_dark(hex_color: str) -> bool:
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5
 
 
-ROLES = _ROLES_DARK if _is_dark(BG) else _ROLES_LIGHT  # noqa: F821 (BG comes from the preset above)
+ROLES = PRESETS[NAME].get("ROLES") or (_ROLES_DARK if _is_dark(BG) else _ROLES_LIGHT)  # noqa: F821 (BG: preset)

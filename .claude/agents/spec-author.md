@@ -48,6 +48,15 @@ report what it would need to show. The main session decides whether `template-bu
    the way a narrator says them. Label illustrative values "illustrative" on screen (#5, #12, #24).
 10. Compare like with like and don't mix workloads (#4, #10).
 11. Aim for about 60–110 s. Keep each caption cue ≤ 64 chars; voice.py splits at commas.
+12. Cast (the series look: `meta.cast` {skin: "office", roles: ["explainer", "asker"]}, examples: ai_harness, jev). Every body
+    scene gets `data.set` {shot: "board", cast: ["explainer", "asker"], acts}; plain-string narration is the explainer's.
+    The asker is the viewer ("the uninitiated"): a few scenes open with their wrong guess ({who: "asker", say, kind: "wrong"})
+    that the explainer answers in the same scene, or a plain question (kind: "question"); no digits in asker lines.
+    Body scenes are filmed close on the board; the asker pops up in the corner for his lines and his acts (a nod or a
+    look to camera as a reaction to the explainer), the explainer stays off screen. Use asker reactions to break up
+    long explainer sentences. The first sentence of a board scene must put something on the board (title or first step).
+13. A vendor's own announcement is a claim, not a fact: attribute performance and cost numbers on screen and in narration
+    ("<vendor> says…"); describing what the thing is needs no attribution.
 
 ## Verify before reporting
 `DRY=1 ./scripts/render.sh <video>` (~30 s: the real voice for exact timing, then a dry run with the spec gates and

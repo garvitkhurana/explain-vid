@@ -3,6 +3,9 @@
 A character's look at any moment is a small state (pose, mouth, eyes, gaze, head bob), so an Actor redraws only when
 that state changes. Pixels of one colour are merged into runs and drawn as one shape, which keeps a frame cheap.
 Board shots zoom the camera out by BOARD_ZOOM so the scene template lands on the set's board with the cast either side.
+Body scenes then sit close on the board (CLOSE_ZOOM, CLOSE_Y: the template's own frame, nudged up so the board's top
+edge shows and the captions still sit below the content); only the title stays wide. In a close shot the asker pops
+up small in the bottom-right corner while he talks.
 """
 
 import math
@@ -15,6 +18,9 @@ import numpy as np
 from manim import DOWN, LEFT, RIGHT, UP, Dot, Rectangle, VGroup, VMobject
 
 BOARD_ZOOM = 1.7
+CLOSE_ZOOM, CLOSE_Y = 1.08, 0.2  # close on the board: text reads BOARD_ZOOM / CLOSE_ZOOM = 1.7 / 1.08 ≈ 1.6x larger than wide
+CORNER_PX = 0.135                 # the asker popping up in the corner of a close shot
+CORNER_FEET = [6.55, -3.45, 0]    # bottom right of the close shot, face above the caption band
 BOARD = dict(x=0.0, y=0.55, w=14.7, h=7.3)  # the board, in the template's own frame coordinates
 FLOOR_Y = -4.5                               # board-shot feet: just above the caption band once zoomed out
 BOARD_PX = 0.30                              # one sprite pixel in board shots

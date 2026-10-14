@@ -210,3 +210,25 @@ Sources: README.md (Speed, Quality, Calibration tables), examples/decisions.json
     (tool videos state it in the hook, so they're exempt). The source's coinages ("habits", "patterns", "h*") never
     go on screen as labels; that one is a spec-author rule, since code can't tell a coinage from a plain word.
     An arXiv abs link is only the abstract: /make-explainer now fetches the full paper from /html/<id>.
+
+## Pass 14 (2026-10-13): the "AI explained" series (office cast)
+74. **Readable on a phone:** the wide board shot shrank templates to ~60% of the frame. Body scenes now sit close on
+    the board (template frame, text ~1.6x); the title stays wide to introduce the cast. A first cut zoomed out for
+    every asker line and act: the user found it "very weird to do it each time". Now the camera never moves; the
+    asker pops up small in the bottom-right corner for his lines and reactions (his acts), like a reaction cam. Flow node text is 1.4x in the cast theme, and the set sits behind flow rails (z -10):
+    rails at z -1 were hidden behind the board, so every board flow lost its arrows.
+77. **Board style** follows the user's "four caches" reference: hand lettering (Chalkboard SE), bright flat fills
+    with a same-hue outline, rounded corners, no hard shadow (theme `pixel`).
+75. **No blank board:** a character talking at an empty board is dead air (harness_zero_cast 0:30). The dry run logs
+    when a board scene first draws; check.py fails over 1 s past its first sentence.
+76. **Vendor claims are claims:** Jev's speed and price come from TypeSafe's own launch post, so narration and the
+    board say "TypeSafe says"; what the thing is needs no attribution.
+78. **Bake-off: templates vs one-shot (Jev).** Same narration, voice and cast; visuals written as one bespoke Manim
+    file (`renderers/manim/oneshot_jev.py`) vs fixed templates. The owner preferred the one-shot: its visuals explain
+    (calibration dots settling on the line, an if/else fork, fast vs slow lanes) where templates squeezed ideas into
+    the nearest box (a ticked checklist of plain words, word-only metric cards). Next: one-shot visuals per video on a
+    shared base (voice, captions, cast, end card), no subagents, parallel draft renders. Not built yet.
+79. **Attribute once.** "They say" before every number read as nagging. One spoken "TypeSafe says" on the first number
+    and one heading on screen; the description carries the rest.
+80. **End card 5 s.** YouTube end screens (Subscribe, next video) need the last 5 s and exist only on regular videos,
+    not Shorts. The still-screen check skips the end card; 8 s was too long for 75-125 s videos.

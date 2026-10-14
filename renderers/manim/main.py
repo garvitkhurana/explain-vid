@@ -17,7 +17,7 @@ from manim import (
     DOWN, LEFT, RIGHT, UP, Arrow, Create, FadeIn, FadeOut, GrowFromEdge, Line, Rectangle, Transform,
     LaggedStart, RoundedRectangle, Scene, Square, Text, ValueTracker, VGroup, VMobject, config, linear, rate_functions,
     DashedVMobject, Dot, Arc, Circle, MoveAlongPath, Polygon, Succession, AnimationGroup, Intersection, ManimColor,
-    interpolate_color, Wait, MovingCameraScene, ORIGIN,
+    interpolate_color, Wait, MovingCameraScene, ORIGIN, ImageMobject, Group,
 )
 
 from manim.animation.animation import prepare_animation
@@ -45,6 +45,10 @@ SKIN_NAME = skins.skin_name(SPEC) if SPEC["meta"].get("cast") else None
 SKIN = skins.SKINS[SKIN_NAME] if SKIN_NAME else None
 if SKIN:
     T.BG = SKIN["set"]["board"]  # templates mask with BG, so it must match the board they are drawn on
+
+# The channel's mark on the title and the closing card. brand/ holds a copy of the brand source (name, handle, accent and
+# the wordmark rendered in Inter Black), so the mark is the channel's own, not a look-alike set in another font.
+BRAND = json.loads((Path(__file__).parent / "brand" / "brand.json").read_text())
 
 config.background_color = T.BG
 config.frame_rate = SPEC["meta"]["fps"]
@@ -130,19 +134,26 @@ class Explainer(MovingCameraScene):
                 return any(moves(x) for x in a.animations)
             return not isinstance(a, (Wait, MoveAlongPath))
 
+        if self.first_content is None and any(moves(a) for a in args):
+            self.first_content = self.time  # the first animation that draws (templates add hidden helpers early)
         if not any(moves(a) for a in args):  # self.wait() plays a Wait: time passes, nothing moves
             return super().play(*args, **kw)
-        if self.time - self.moved_at > 1:
-            # A cast gesture (point, nod, shrug...) is motion too; mouth flaps and blinks are not.
-            pts = [self.moved_at, *[m for m in self.gestures if self.moved_at < m < self.time], self.time]
-            for a, b in zip(pts, pts[1:]):
-                if b - a > 1:
-                    self.stills.append([self.sid, round(a - self.scene_start, 2), round(b - a, 2)])
+        self.log_still(self.time)
         super().play(*args, **kw)
         self.moved_at = self.time
 
+    def log_still(self, now):
+        if now - self.moved_at > 1:
+            # A cast gesture (point, nod, shrug...) or a camera move is motion too; mouth flaps and blinks are not.
+            pts = [self.moved_at, *[m for m in self.gestures if self.moved_at < m < now], now]
+            for a, b in zip(pts, pts[1:]):
+                if b - a > 1:
+                    self.stills.append([self.sid, round(a - self.scene_start, 2), round(b - a, 2)])
+
+    first_content = 0.0  # set per scene in construct(); None until a board scene draws something
+
     def construct(self):
-        self.stills, self.moved_at, self.gestures = [], 0.0, []
+        self.stills, self.moved_at, self.gestures, self.empties = [], 0.0, [], []
         if os.environ.get("PLAN"):  # jump each animation to its end: timing only, no frames (seconds, not minutes)
             self.renderer._original_skipping_status = True
         for s in SPEC["scenes"]:
@@ -155,11 +166,20 @@ class Explainer(MovingCameraScene):
             shot = "interview" if s["type"] == "interview" else s["data"].get("set", {}).get("shot")
             self.zoom = C.BOARD_ZOOM if shot == "board" else 1.0
             self.camera.frame.set(width=config.frame_width * self.zoom).move_to(ORIGIN)
+            self.band = CAPTION_TOP * self.zoom  # top of the caption band in the world, for the strictest shot
             self.gestures = []  # absolute start/end times of cast gestures in this scene (stage() fills it)
             self.decor = self.stage(s, shot) if shot else []
+            if shot == "board" and s["type"] != "title":  # a title stays wide: it introduces the cast
+                self.close_on_board()
             cue_objs = self.cues(timing["cues"], start)
             self.add(*cue_objs)
+            # Board scenes log when the first drawing starts: a character talking to a blank board is dead air.
+            self.first_content = None if shot == "board" else start
             getattr(self, f"scene_{s['type']}")(s["data"])
+            if self.sentences and self.first_content is None:
+                self.first_content = self.time
+            if self.sentences and self.first_content - start > self.sentences[0]:
+                self.empties.append([s["id"], round(self.sentences[0], 2), round(self.first_content - start - self.sentences[0], 2)])
             if timing["cues"]:
                 self.check_caption_band(s["id"], set(cue_objs) | set(self.decor))
             # End on exactly timing["frames"] frames. Manim turns a duration into ceil(duration * fps) frames, and
@@ -173,14 +193,17 @@ class Explainer(MovingCameraScene):
             self.remove(*self.mobjects)
             self.camera.frame.set(width=config.frame_width).move_to(ORIGIN)
         if os.environ.get("PLAN"):
-            (TIMING_PATH.parent / "plan.json").write_text(json.dumps({"stills": self.stills}, indent=1) + "\n")
+            (TIMING_PATH.parent / "plan.json").write_text(json.dumps({"stills": self.stills, "empty": self.empties},
+                                                                     indent=1) + "\n")
 
     def cues(self, cues, scene_start):
         """One caption per narration cue, visible only during its spoken time window."""
         out = []
         for c in cues:
             color = SKIN["roles"][c.get("who", "explainer")]["caption"] if SKIN else T.CAPTION_FG
-            cap = self.caption(c["text"], color).scale(self.zoom, about_point=ORIGIN).set_opacity(0)
+            f = self.camera.frame  # captions sit in the camera's frame, wherever the scene put the camera
+            cap = self.caption(c["text"], color).scale(f.width / config.frame_width, about_point=ORIGIN)
+            cap.shift(f.get_center()).set_opacity(0)
             # dt in the signature makes this a time-based updater, so Manim keeps updating during waits.
             cap.add_updater(lambda m, dt, c=c: m.set_opacity(
                 1 if c["start"] <= self.time - scene_start < c["end"] else 0))
@@ -191,7 +214,7 @@ class Explainer(MovingCameraScene):
         """Fail the render if anything on screen reaches into the caption band (subtitles would cover it)."""
         z = self.zoom  # the band is in camera space: zoomed out, it sits lower in the world
         low = [(m.get_bottom()[1], type(m).__name__) for m in self.mobjects
-               if m not in captions and m.get_bottom()[1] < CAPTION_TOP * z and m.get_top()[1] > -config.frame_height / 2 * z]
+               if m not in captions and m.get_bottom()[1] < self.band - 1e-6 and m.get_top()[1] > -config.frame_height / 2 * z]
         if low:
             y, kind = min(low)
             raise ValueError(f"scene {sid!r}: {kind} reaches y={y:.2f}, into the caption band (keep content above {CAPTION_TOP})")
@@ -244,7 +267,13 @@ class Explainer(MovingCameraScene):
         st = d.get("set", {})
         who = [d["who"]] if shot == "interview" else st.get("cast", [])
         mono = lambda text, size, color, weight=None: txt(text, size, color, font=T.MONO, weight=weight or "BOLD")
-        if shot == "board":
+        close = shot == "board" and s["type"] != "title"
+        if close:  # filmed close on the board: the asker pops up in the corner while he talks (see corner())
+            back, _ = C.board_set(SKIN, SKIN_NAME)
+            who = [r for r in who if r != "explainer" and (any(skins.line(x)[0] == r for x in s["narration"])
+                                                           or any(a["who"] == r for a in st.get("acts", [])))]
+            front, px, spots = None, C.CORNER_PX, [(C.CORNER_FEET, -1)]
+        elif shot == "board":
             back, feet = C.board_set(SKIN, SKIN_NAME)
             front, px, spots = None, C.BOARD_PX, [(feet[0], 1), (feet[1], -1)]
         else:
@@ -253,12 +282,13 @@ class Explainer(MovingCameraScene):
         if len(who) > len(spots):
             raise ValueError(f"scene {s['id']!r}: {len(who)} cast members; a {shot} shot has room for {len(spots)}")
         acts = {}
-        for a in st.get("acts", []):
+        for a in [a for a in st.get("acts", []) if not close or a["who"] in who]:  # the explainer is off screen
             t0 = self.act_time(s["id"], a["at"])
             acts.setdefault(a["who"], []).append((t0, a["do"]))
             if a["do"] != "look_camera":  # a glance moves one pixel: it reads as still
                 self.gestures += [self.scene_start + t0, self.scene_start + t0 + C.ACTS[a["do"]]]
         lines = self.spoken_words(s["id"])
+        back.set_z_index(-10)  # behind everything: templates draw some parts (flow rails) at z -1, behind their boxes
         self.add(back)
         decor, self.actors = [back], {}
         for role, (pos, facing) in zip(who, spots):
@@ -266,10 +296,13 @@ class Explainer(MovingCameraScene):
             actor = C.Actor(SKIN["roles"][role], role, px, pos, facing, mine,
                             [x for x in acts.get(role, []) if x[1] != "level_up"])
             m = actor.attach(clock)
+            if close:  # up for each line and each reaction, in front of the board's content
+                self.corner(actor, [(a, b) for a, b, _ in mine] + [(t0, t0 + C.ACTS[do]) for t0, do in acts.get(role, [])])
+                m.set_z_index(5)
             self.add(actor.feet, m)
             decor += [actor.feet, m]
             top = actor.head_top()
-            if role in st.get("tags", {}):
+            if role in st.get("tags", {}) and not close:
                 tag = C.name_tag(mono, st["tags"][role], pos[0], top + 0.4)
                 self.add(tag)
                 decor.append(tag)
@@ -284,6 +317,31 @@ class Explainer(MovingCameraScene):
             self.add(front)
             decor.append(front)
         return decor
+
+    def close_on_board(self):
+        """Body scenes on a board: the camera sits close on the board for the whole scene, so its text reads on a
+        phone. Cut-aways to the cast looked odd every time the asker spoke; the asker is heard (voice, caption colour)
+        pops up in the bottom corner while he talks (corner())."""
+        self.camera.frame.set(width=config.frame_width * C.CLOSE_ZOOM).move_to([0, C.CLOSE_Y, 0])
+        self.band = C.CLOSE_Y + CAPTION_TOP * C.CLOSE_ZOOM
+
+    def corner(self, actor, spans):
+        """Slide `actor` up from below the frame for each (start, end) span and back down after; slides are motion."""
+        bottom = C.CLOSE_Y - config.frame_height / 2 * C.CLOSE_ZOOM  # the close shot's bottom edge
+        hide, up = bottom - 16 * actor.px - 0.2, C.CORNER_FEET[1]  # hidden = wholly below the frame
+        slide = 0.3
+        for a, b in spans:
+            self.gestures += [self.scene_start + a - slide, self.scene_start + a,
+                              self.scene_start + b, self.scene_start + b + slide]
+
+        def place(m, dt=0):
+            t = self.time - self.scene_start
+            k = max([min(1.0, max(0.0, (t - a + slide) / slide), max(0.0, (b + slide - t) / slide)) for a, b in spans]
+                    or [0.0])
+            k = k * k * (3 - 2 * k)
+            m.move_to([C.CORNER_FEET[0], hide + (up - hide) * k, 0])
+        place(actor.feet)
+        actor.feet.add_updater(place)
 
     def scene_interview(self, d):
         """A talking head: one cast member at a desk, to camera, with a lower third: their name and, if given, what
@@ -328,10 +386,16 @@ class Explainer(MovingCameraScene):
                        fill_opacity=T.CAPTION_OPACITY, stroke_width=0).move_to(t)
         return VGroup(bg, t).to_edge(DOWN, buff=0.55)
 
+    def wordmark(self, height):
+        """The channel's wordmark (white on black, the strike bar through "un"), as a badge `height` units tall."""
+        return ImageMobject(str(Path(__file__).parent / "brand" / BRAND["wordmark"])).set(height=height)
+
     def scene_title(self, d):
         title = fit(txt(d["title"], 160, T.ACCENT, weight="BOLD"), 13).shift(UP * 1.2)  # long titles shrink to fit
         sub = fit(txt(d["subtitle"], 56), 13).next_to(title, DOWN, buff=0.4)
         kick = fit(txt(d["kicker"], 36, T.MUTED), 13).next_to(sub, DOWN, buff=0.6)
+        mark = self.wordmark(1.0).next_to(title, UP, buff=0.45)
+        self.play(FadeIn(mark), run_time=0.3)  # the channel opens every video, before the first word
         self.beat("title", 0)
         self.play(FadeIn(title, shift=UP * 0.2), run_time=0.4)
         self.play(FadeIn(sub, shift=UP * 0.2), run_time=0.35)
@@ -1491,9 +1555,10 @@ class Explainer(MovingCameraScene):
         shape = n.get("shape", "box")
 
         def label_block(size=26):
-            parts = [txt(n["label"], size, text, weight="BOLD")] if n.get("label") else []
+            k = T.NODE_TEXT  # the cast theme sets larger node text: board figures must read on a phone
+            parts = [txt(n["label"], round(size * k), text, weight="BOLD")] if n.get("label") else []
             if n.get("sub"):
-                parts.append(txt(n["sub"], 20, T.MUTED))
+                parts.append(txt(n["sub"], round(20 * k), T.MUTED))
             block = VGroup(*parts).arrange(DOWN, buff=0.08)
             if not n.get("art"):
                 return block
@@ -1542,10 +1607,16 @@ class Explainer(MovingCameraScene):
         head = {"repo": "Clone the repo to get started", "blog": "Read the full post at",
                 "paper": "Read the full paper at"}[src["kind"]]
         url = src["url"].removeprefix("https://").removeprefix("http://").rstrip("/")
-        h = fit(txt(head, 72, weight="BOLD"), 13).shift(UP * 0.7)
+        h = fit(txt(head, 72, weight="BOLD"), 13)
         u = fit(txt(url, 40, T.ACCENT, font=T.MONO), 13).next_to(h, DOWN, buff=0.45)
         parts = [h, u]
         if src.get("credit"):
             parts.append(fit(txt(src["credit"], 30, T.MUTED), 13).next_to(u, DOWN, buff=0.4))
+        # Sign-off: the wordmark and the handle, under the source.
+        mark = self.wordmark(0.8).next_to(parts[-1], DOWN, buff=0.9)
+        handle = txt(BRAND["handle"], 30, T.MUTED, font=T.MONO).next_to(mark, DOWN, buff=0.22)
+        block = Group(*parts, mark, handle)
+        block.shift(UP * ((4.0 + CAPTION_TOP) / 2 - block.get_center()[1]))  # centred between frame top and captions
         self.play(FadeIn(h, shift=UP * 0.2), run_time=0.35)
         self.play(*[FadeIn(m, shift=UP * 0.1) for m in parts[1:]], run_time=0.35)
+        self.play(FadeIn(mark), FadeIn(handle), run_time=0.35)

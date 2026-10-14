@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "agent-unwrapped",
+    "title": "What is an AI agent, really?",
     "source": {
       "kind": "repo",
       "url": "https://github.com/garvitkhurana/agent-unwrapped"
@@ -14,7 +14,7 @@
     ],
     "voice": {
       "voice": "af_heart",
-      "speed": 1.0
+      "speed": 1.15
     },
     "glossary": [
       {
@@ -33,7 +33,14 @@
         "term": "venv",
         "plain": "virtual environment"
       }
-    ]
+    ],
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    }
   },
   "scenes": [
     {
@@ -42,12 +49,36 @@
       "role": "hook",
       "duration_s": 3,
       "narration": [
+        {
+          "who": "asker",
+          "say": "So what actually is an AI agent?",
+          "kind": "question"
+        },
         "agent-unwrapped shows what an AI agent really is, without a framework."
       ],
       "data": {
-        "title": "agent-unwrapped",
-        "subtitle": "The raw agent loop, no framework required",
-        "kicker": "The model asks. Your code runs the tool."
+        "title": "What is an AI agent?",
+        "subtitle": "agent-unwrapped: the raw loop, no framework",
+        "kicker": "The model asks. Your code runs the tool.",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "actually is"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "without a framework"
+            }
+          ]
+        }
       }
     },
     {
@@ -58,6 +89,11 @@
       "narration": [
         "Start with a simple question: what's twenty-one times two?",
         "Your code sends it to the model, with a list of tools.",
+        {
+          "who": "asker",
+          "say": "So the model runs the calculator itself?",
+          "kind": "wrong"
+        },
         "The model never runs anything. It only asks.",
         "Your code runs the calculator function.",
         "Then it hands the result back to the model."
@@ -75,7 +111,7 @@
             "shape": "stack",
             "role": "input",
             "label": "Task",
-            "sub": "calculator for 21 * 2"
+            "sub": "21 * 2"
           },
           {
             "id": "model",
@@ -93,7 +129,7 @@
             "id": "tool",
             "role": "tool",
             "label": "calculator()",
-            "sub": "plain Python function"
+            "sub": "Python function"
           }
         ],
         "edges": [
@@ -103,8 +139,7 @@
           },
           {
             "from": "model",
-            "to": "code",
-            "label": "tool_call"
+            "to": "code"
           },
           {
             "from": "code",
@@ -160,7 +195,31 @@
             ],
             "kind": "response"
           }
-        ]
+        ],
+        "beats": {
+          "ask": 3,
+          "run": 4,
+          "result": 5
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "runs the calculator"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "It only asks"
+            }
+          ]
+        }
       }
     },
     {
@@ -271,6 +330,14 @@
             4,
             0.55
           ]
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": []
         }
       }
     },
@@ -280,6 +347,11 @@
       "role": "why",
       "duration_s": 8,
       "narration": [
+        {
+          "who": "asker",
+          "say": "So I need a framework like LangChain to build one?",
+          "kind": "wrong"
+        },
         "Every agent library runs this same loop.",
         "LangChain just writes it for you.",
         "Here, you write it, so nothing is hidden.",
@@ -390,12 +462,31 @@
         ],
         "beats": {
           "loop": 0,
-          "framework": 1,
-          "diy": 2,
-          "py": 3,
+          "framework": 2,
+          "diy": 3,
+          "py": 4,
           "mcp": [
-            3,
+            4,
             0.4
+          ]
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "to build one"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "runs this same loop"
+            }
           ]
         }
       }
@@ -526,7 +617,15 @@
             ],
             "kind": "change"
           }
-        ]
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": []
+        }
       }
     },
     {
@@ -538,6 +637,11 @@
         "Evals check two things.",
         "Output: does the answer contain forty-two?",
         "Behaviour: did it use the right tool, the calculator?",
+        {
+          "who": "asker",
+          "say": "If the answer's right, isn't the agent right?",
+          "kind": "wrong"
+        },
         "A right answer reached the wrong way is still a bad agent."
       ],
       "data": {
@@ -552,7 +656,29 @@
             "tag": "behaviour eval"
           }
         ],
-        "footer": "good answer + wrong path = bad agent"
+        "footer": "good answer + wrong path = bad agent",
+        "beats": {
+          "footer": 4
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "isn't the agent right"
+            },
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "still a bad agent"
+            }
+          ]
+        }
       }
     },
     {
@@ -578,13 +704,21 @@
           {
             "cmd": "python lessons/00_mental_model.py"
           }
-        ]
+        ],
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": []
+        }
       }
     },
     {
       "id": "source",
       "type": "source",
-      "duration_s": 3.5,
+      "duration_s": 5,
       "narration": [
         "Clone the repo to get started."
       ],
