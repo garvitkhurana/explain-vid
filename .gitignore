@@ -2,3 +2,6 @@ out/
 .venv/
 __pycache__/
 .DS_Store
+
+# Third-party logos (trademarks) stay local, never in the repo
+renderers/manim/brand/logos/
