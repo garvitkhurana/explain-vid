@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "title": "Muse Wonder",
+    "source": {
+      "kind": "blog",
+      "url": "https://research.meta.ai/blog/muse-wonder",
+      "credit": "Meta"
+    },
+    "thesis": "Muse Wonder is built to remember you, and keep going until the job is done.",
+    "fps": 30,
+    "size": [1920, 1080],
+    "voice": {"voice": "af_heart", "speed": 1.15},
+    "cast": {"skin": "office", "roles": ["explainer", "asker"]}
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "duration_s": 3,
+      "narration": [
+        {"who": "asker", "say": "Meta has a new model? What's it for?", "kind": "question"},
+        "Muse Wonder is Meta's new model for agents: AI that does tasks for you, at work and at home."
+      ]
+    },
+    {
+      "id": "memory",
+      "duration_s": 10,
+      "narration": [
+        "Two ideas carry it. The first, Meta calls Active Memory.",
+        "It keeps what matters about you from past chats.",
+        "And when a new task needs it, it pulls that detail back up on its own."
+      ]
+    },
+    {
+      "id": "focus",
+      "duration_s": 10,
+      "narration": [
+        "The second is Active Focus: staying on a hard goal.",
+        "When it hits a blocker, it tries another way instead of giving up.",
+        "And before an important step, it checks with you first."
+      ]
+    },
+    {
+      "id": "unknown",
+      "duration_s": 10,
+      "narration": [
+        {"who": "asker", "say": "Don't all new models top the tests?", "kind": "question"},
+        "That's the catch. Two models can score the same on tests, and still differ on tasks they've never seen.",
+        "Meta plotted both: tasks it practised for, against tasks it never saw.",
+        "The new model sits above the old model's line: on new tasks, it does better than its test scores predict.",
+        "Meta says that's because it's built on a bigger, stronger base model."
+      ]
+    },
+    {
+      "id": "interview",
+      "duration_s": 4,
+      "narration": [
+        {"who": "asker", "say": "So it remembers me, keeps at it, and handles new stuff."},
+        {"who": "asker", "say": "Where do I get it?"}
+      ]
+    },
+    {
+      "id": "access",
+      "duration_s": 10,
+      "narration": [
+        "Developers can use it today, through Meta's Model API and Muse Code.",
+        "A second version, called Full, is for Muse Code subscribers.",
+        "It comes to the Muse app soon, subscribers first."
+      ]
+    },
+    {
+      "id": "trust",
+      "duration_s": 10,
+      "narration": [
+        {"who": "asker", "say": "An agent with my messages and calendar? Is that safe?", "kind": "question"},
+        "Meta says it's trained to resist bad instructions, and to be careful with private information.",
+        "A full safety report is coming soon.",
+        "So Muse Wonder is built to remember you, and keep going until the job is done."
+      ]
+    },
+    {
+      "id": "source",
+      "duration_s": 5,
+      "narration": []
+    }
+  ]
+}

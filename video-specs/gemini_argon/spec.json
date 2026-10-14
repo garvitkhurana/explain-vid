@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "title": "Gemini 4 Argon",
+    "source": {
+      "kind": "blog",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-argon/",
+      "credit": "Google"
+    },
+    "thesis": "Argon is built for the long, hard job, not the quick question.",
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "voice": {
+      "voice": "af_heart",
+      "speed": 1.15
+    },
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "duration_s": 3,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "Another Gemini? What's actually new?",
+          "kind": "question"
+        },
+        "Gemini 4 Argon is Google's new top model, built to work longer on hard problems."
+      ]
+    },
+    {
+      "id": "chrome",
+      "duration_s": 10,
+      "narration": [
+        "Take Chrome: forty million lines of code.",
+        "About six million sat in one old, tangled folder.",
+        "Argon helped pull the core web page code out of it. Google says months of work took weeks."
+      ]
+    },
+    {
+      "id": "faster",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "So it just writes code faster?",
+          "kind": "wrong"
+        },
+        "It also makes code run faster. Models write in word pieces, called tokens.",
+        "In a few days, Argon took Google's Gemma models from about thirty eight thousand tokens a second to over a hundred and eight thousand.",
+        "And the output stayed exactly the same."
+      ]
+    },
+    {
+      "id": "robot",
+      "duration_s": 10,
+      "narration": [
+        "It learns from the physical world too. Argon watched a video of someone playing cornhole, the bean bag toss.",
+        "From the video, it wrote a simulation: the board, and how each joint should move.",
+        "Moved onto a humanoid robot, it sank seven shots in a row."
+      ]
+    },
+    {
+      "id": "interview",
+      "duration_s": 4,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "Okay. Long jobs, real results."
+        },
+        {
+          "who": "asker",
+          "say": "But can I use it, and what does it cost?"
+        }
+      ]
+    },
+    {
+      "id": "price",
+      "duration_s": 10,
+      "narration": [
+        "Developers pay two dollars per million tokens in, and ten per million out.",
+        "That's an intro price. After November thirtieth, it doubles: four dollars in, twenty out.",
+        "In the Gemini app, it's for Pro and Ultra subscribers."
+      ]
+    },
+    {
+      "id": "trust",
+      "duration_s": 10,
+      "narration": [
+        {
+          "who": "asker",
+          "say": "If it works alone for hours, can't someone trick it?",
+          "kind": "question"
+        },
+        "That's the risk: a web page can hide instructions that hijack the agent. That's called prompt injection.",
+        "Google says even with fifteen tries per attack, attackers got through zero point seven percent of the time.",
+        "So Argon is built for the long, hard job, not the quick question."
+      ]
+    },
+    {
+      "id": "source",
+      "duration_s": 5,
+      "narration": []
+    }
+  ]
+}
