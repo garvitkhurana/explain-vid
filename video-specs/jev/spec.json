@@ -67,9 +67,6 @@
               "at": "System One model"
             }
           ]
-        },
-        "beats": {
-          "title": 1
         }
       }
     },
@@ -119,6 +116,11 @@
             {
               "who": "explainer",
               "do": "point",
+              "at": "writing out its reasoning"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
               "at": "writing out its reasoning"
             }
           ]
@@ -239,66 +241,17 @@
       }
     },
     {
-      "id": "uses",
-      "type": "checklist",
-      "role": "why",
-      "duration_s": 10,
-      "narration": [
-        "So what do you call it for?",
-        "Classify a message.",
-        "Route it to the right place.",
-        "Score it, or extract a field.",
-        "Or branch your code, like a smart if-statement."
-      ],
-      "data": {
-        "title": "What you call it for",
-        "rows": [
-          {
-            "label": "Classify",
-            "tag": "what is this?"
-          },
-          {
-            "label": "Route",
-            "tag": "where does it go?"
-          },
-          {
-            "label": "Score / extract",
-            "tag": "how much? which field?"
-          },
-          {
-            "label": "Branch",
-            "tag": "smart if-statement"
-          }
-        ],
-        "set": {
-          "shot": "board",
-          "cast": [
-            "explainer",
-            "asker"
-          ],
-          "acts": [
-            {
-              "who": "asker",
-              "do": "nod",
-              "at": "smart if-statement"
-            }
-          ]
-        }
-      }
-    },
-    {
       "id": "numbers",
       "type": "metrics",
       "role": "why",
       "duration_s": 10,
       "narration": [
-        "TypeSafe's own numbers.",
-        "Seventy to five hundred milliseconds per answer.",
+        "TypeSafe says each answer takes seventy to five hundred milliseconds.",
         "Forty to two hundred times faster than frontier models, on these queries.",
         "And about four cents per million input tokens."
       ],
       "data": {
-        "title": "TypeSafe's own numbers",
+        "title": "TypeSafe's numbers",
         "cards": [
           {
             "label": "Response time",
@@ -337,9 +290,9 @@
         },
         "beats": {
           "title": 0,
-          "card0": 1,
-          "card1": 2,
-          "card2": 3
+          "card0": 0,
+          "card1": 1,
+          "card2": 2
         }
       }
     },
@@ -355,7 +308,7 @@
         },
         {
           "who": "asker",
-          "say": "It's a very fast, very honest yes or no."
+          "say": "A fast yes or no, with a probability attached."
         }
       ],
       "data": {
@@ -474,6 +427,11 @@
               "who": "explainer",
               "do": "point",
               "at": "Jev is a function call"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "a typed decision out"
             }
           ]
         },
@@ -493,7 +451,7 @@
     {
       "id": "source",
       "type": "source",
-      "duration_s": 3.5,
+      "duration_s": 5,
       "narration": [],
       "data": {}
     }

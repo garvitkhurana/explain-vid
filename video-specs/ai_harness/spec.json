@@ -15,7 +15,7 @@
     ],
     "voice": {
       "voice": "af_heart",
-      "speed": 1.0
+      "speed": 1.15
     },
     "glossary": [
       {
@@ -46,7 +46,14 @@
         "term": "context rot",
         "plain": "reasoning gets worse"
       }
-    ]
+    ],
+    "cast": {
+      "skin": "office",
+      "roles": [
+        "explainer",
+        "asker"
+      ]
+    }
   },
   "scenes": [
     {
@@ -55,12 +62,36 @@
       "role": "hook",
       "duration_s": 3,
       "narration": [
+        {
+          "who": "asker",
+          "say": "So an AI agent is just a really smart model?",
+          "kind": "wrong"
+        },
         "An AI agent isn't just a model. It's a model plus a harness."
       ],
       "data": {
         "title": "Agent = Model + Harness",
         "subtitle": "The model thinks. The harness lets it act.",
-        "kicker": "From the Databricks blog"
+        "kicker": "From the Databricks blog",
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "really smart model"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "a model plus a harness"
+            }
+          ]
+        }
       }
     },
     {
@@ -70,6 +101,11 @@
       "duration_s": 8,
       "narration": [
         "The model is the brain: it reasons, and decides what to do.",
+        {
+          "who": "asker",
+          "say": "Can't the model just run the code itself?",
+          "kind": "wrong"
+        },
         "Alone, it can only answer. It can't run code, call tools, or remember earlier work.",
         "The harness is the body around it: it acts, keeps memory, and enforces rules."
       ],
@@ -176,15 +212,34 @@
         ],
         "beats": {
           "brain": 0,
-          "answer": 1,
+          "answer": 2,
           "cant": [
-            1,
+            2,
             0.45
           ],
-          "harness": 2,
+          "harness": 3,
           "acts": [
-            2,
+            3,
             0.5
+          ]
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "run the code itself"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "It can only answer"
+            }
           ]
         }
       }
@@ -200,6 +255,11 @@
         "Reason: the model proposes a code change.",
         "Act: the harness runs it in an isolated sandbox.",
         "Observe: the test results go back to the model.",
+        {
+          "who": "asker",
+          "say": "And if the fix is wrong, it just gives up?",
+          "kind": "wrong"
+        },
         "Then round again: the model works out what went wrong, and tries a new fix.",
         "That's the ReAct loop, for reasoning and acting.",
         "It repeats until the job is done."
@@ -266,7 +326,31 @@
             "id": "done",
             "at": "exit"
           }
-        ]
+        ],
+        "beats": {
+          "again": 6,
+          "react": 7,
+          "done": 8
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "just gives up"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "Then round again"
+            }
+          ]
+        }
       }
     },
     {
@@ -276,6 +360,11 @@
       "duration_s": 10,
       "narration": [
         "A harness is that loop, plus knobs to control it.",
+        {
+          "who": "asker",
+          "say": "What kind of knobs?",
+          "kind": "question"
+        },
         "The post lists eight building blocks.",
         "Instructions: a standing prompt with its rules.",
         "Tools: the actions it may take.",
@@ -370,7 +459,30 @@
             "at": "observe",
             "show": 6
           }
-        ]
+        ],
+        "beats": {
+          "blocks": 2,
+          "instructions": 3,
+          "tools": 4,
+          "sandbox": 5,
+          "memory": 6,
+          "context": 7,
+          "checks": 8
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "eight building blocks"
+            }
+          ]
+        }
       }
     },
     {
@@ -379,6 +491,11 @@
       "role": "why",
       "duration_s": 8,
       "narration": [
+        {
+          "who": "asker",
+          "say": "So when an agent fails, it's the model's fault?",
+          "kind": "wrong"
+        },
         "Most operational failures come from the harness, not the model.",
         "As history grows, reasoning gets worse: context rot.",
         "Hand it too many tools, and it gets confused before it starts.",
@@ -402,7 +519,37 @@
             "compare": "to respond"
           }
         ],
-        "title": "Most operational failures come from the harness, not the model"
+        "title": "Failures come from the harness",
+        "beats": {
+          "title": 0,
+          "card0": 2,
+          "card1": 3,
+          "card2": 4
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "shrug",
+              "at": "the model's fault"
+            },
+            {
+              "who": "explainer",
+              "do": "point",
+              "at": "come from the harness"
+            },
+            {
+              "who": "asker",
+              "do": "nod",
+              "at": "not the model"
+            }
+          ]
+        }
       }
     },
     {
@@ -411,6 +558,11 @@
       "role": "takeaway",
       "duration_s": 6,
       "narration": [
+        {
+          "who": "asker",
+          "say": "So I should just buy the best model?",
+          "kind": "wrong"
+        },
         "A strong harness makes an average model useful.",
         "A weak one wastes the best model there is."
       ],
@@ -426,13 +578,38 @@
             "value": "Best model",
             "compare": "wasted"
           }
-        ]
+        ],
+        "title": "Model vs harness",
+        "beats": {
+          "title": 0,
+          "card0": 1,
+          "card1": 2
+        },
+        "set": {
+          "shot": "board",
+          "cast": [
+            "explainer",
+            "asker"
+          ],
+          "acts": [
+            {
+              "who": "asker",
+              "do": "facepalm",
+              "at": "buy the best model"
+            },
+            {
+              "who": "explainer",
+              "do": "nod",
+              "at": "makes an average model useful"
+            }
+          ]
+        }
       }
     },
     {
       "id": "source",
       "type": "source",
-      "duration_s": 3.5,
+      "duration_s": 5,
       "narration": [],
       "data": {}
     }

@@ -14,7 +14,7 @@ PANEL_PAD = 0.4    # inside a panel frame
 HEADER_H = 0.75    # panel pill header + subtitle
 PANEL_GAP = 0.35   # between panels
 SWEEPS = 4         # barycenter crossing-reduction passes (fixed → deterministic)
-MAX_SCALE = 1.5    # small figures grow to use the frame (never shrink-only)
+MAX_SCALE = 2.0    # small figures grow to use the frame (never shrink-only)
 ROW_GAP = 0.9      # between wrapped rows (the connector to the next row runs in this gap)
 
 
